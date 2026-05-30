@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash('D:/MySQL Server 9.0/bin/mysql.exe' -u root -p123456 --default-character-set=utf8mb4 flower_shop -e ' *)",
+      "Bash(\"D:/MySQL Server 9.0/bin/mysql.exe\" -u root -p123456 --default-character-set=utf8mb4 flower_shop -e \"SELECT id, username, tel, email FROM user ORDER BY id;\")",
+      "Read(//c/Users/guitu/AppData/Local/JetBrains/IntelliJIdea2026.1/tomcat/094f24da-be8b-4fb7-8ba2-6944b9d3384b/**)"
+    ]
+  }
+}
