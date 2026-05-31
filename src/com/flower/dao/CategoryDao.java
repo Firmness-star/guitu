@@ -15,7 +15,7 @@ public class CategoryDao {
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) list.add(mapResultSetToCategory(rs));
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return list;
     }
 
@@ -26,7 +26,7 @@ public class CategoryDao {
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) list.add(mapResultSetToCategory(rs));
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return list;
     }
 
@@ -40,7 +40,7 @@ public class CategoryDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) list.add(mapResultSetToCategory(rs));
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return list;
     }
 
@@ -53,7 +53,7 @@ public class CategoryDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return mapResultSetToCategory(rs);
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return null;
     }
 
@@ -66,7 +66,7 @@ public class CategoryDao {
             pstmt.setInt(2, category.getParentId());
             pstmt.setString(3, category.getDescription());
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -76,7 +76,7 @@ public class CategoryDao {
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
             if (rs.next()) return rs.getInt(1) == 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -89,7 +89,7 @@ public class CategoryDao {
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             if (e.getMessage() == null || !e.getMessage().contains("foreign key")) {
-                System.err.println("DAO ERROR: " + e.getMessage());
+                System.err.println("[DAO] " + e.getMessage());
             }
         }
         return false;

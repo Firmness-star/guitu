@@ -74,7 +74,7 @@ public class BannerUploadController extends HttpServlet {
                 session.setAttribute("adminError", "请选择图片并填写商品ID");
             }
         } catch (Exception e) {
-            System.err.println("ERROR: " + e.getMessage());
+            System.err.println("[CTRL] " + e.getMessage());
             session.setAttribute("adminError", "上传失败：" + e.getMessage());
         }
 

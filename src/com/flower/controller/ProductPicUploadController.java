@@ -61,7 +61,7 @@ public class ProductPicUploadController extends HttpServlet {
             }
             resp.getWriter().write("{\"success\":false,\"message\":\"未收到文件\"}");
         } catch (Exception e) {
-            System.err.println("ERROR: " + e.getMessage());
+            System.err.println("[CTRL] " + e.getMessage());
             resp.getWriter().write("{\"success\":false,\"message\":\"上传失败\"}");
         }
     }

@@ -28,7 +28,7 @@
 <body>
 <div class="register-container">
     <div class="brand-header">
-        <h1>创建账户</h1>
+        <h1 style="background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px; font-weight: 700;">🌸 归途</h1>
         <p>加入花店商城，开启美好生活</p>
     </div>
 

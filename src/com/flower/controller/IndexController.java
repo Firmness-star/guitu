@@ -27,12 +27,16 @@ public class IndexController extends HttpServlet {
 
     private ISpService spService;
     private ICategoryService categoryService;
+    private BannerDao bannerDao;
+    private OrderDao orderDao;
 
     @Override
     public void init() throws ServletException {
         super.init();
         this.spService = ServiceFactory.getSpService();
         this.categoryService = ServiceFactory.getCategoryService();
+        this.bannerDao = new BannerDao();
+        this.orderDao = new OrderDao();
     }
 
     /**
@@ -62,7 +66,6 @@ public class IndexController extends HttpServlet {
         req.setAttribute("parentCategories", parentCategories);
 
         // 加载首页海报
-        BannerDao bannerDao = new BannerDao();
         List<Banner> banners = bannerDao.findAll();
         req.setAttribute("banners", banners);
 
@@ -125,7 +128,6 @@ public class IndexController extends HttpServlet {
         // 登录用户加载待处理订单数量
         Integer userId = (Integer) req.getSession().getAttribute("userId");
         if (userId != null) {
-            OrderDao orderDao = new OrderDao();
             List<com.flower.entity.Order> userOrders = orderDao.findByUserId(userId);
             long pendingOrderCount = userOrders.stream()
                     .filter(o -> "待付款".equals(o.getStatus()) || "已付款".equals(o.getStatus()) || "已发货".equals(o.getStatus()))

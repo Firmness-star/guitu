@@ -24,7 +24,7 @@
 <body>
 <div class="login-container">
     <div class="brand-header">
-        <h1>欢迎回来</h1>
+        <h1 style="background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px; font-weight: 700;">🌸 归途</h1>
         <p>登录您的花店商城账户</p>
     </div>
 

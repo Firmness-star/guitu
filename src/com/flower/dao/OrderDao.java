@@ -49,7 +49,7 @@ public class OrderDao {
             for (int r : pstmtItem.executeBatch()) if (r <= 0) throw new SQLException("插入订单明细失败");
             return true;
         } catch (SQLException e) {
-            System.err.println("DAO ERROR: " + e.getMessage());
+            System.err.println("[DAO] " + e.getMessage());
             throw new RuntimeException("保存订单失败：" + e.getMessage(), e);
         } finally {
             closeQuietly(rs); closeQuietly(pstmtItem); closeQuietly(pstmtOrder);
@@ -70,7 +70,7 @@ public class OrderDao {
                     orders.add(order);
                 }
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return orders;
     }
 
@@ -85,7 +85,7 @@ public class OrderDao {
                 order.setItems(findOrderItemsByOrderId(rs.getInt("id"), conn));
                 orders.add(order);
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return orders;
     }
 
@@ -103,7 +103,7 @@ public class OrderDao {
                     orders.add(order);
                 }
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return orders;
     }
 
@@ -120,7 +120,7 @@ public class OrderDao {
                     return order;
                 }
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return null;
     }
 
@@ -149,7 +149,7 @@ public class OrderDao {
                 items.add(item);
             }
         } catch (SQLException e) {
-            System.err.println("DAO ERROR: " + e.getMessage());
+            System.err.println("[DAO] " + e.getMessage());
         } finally {
             closeQuietly(rs); closeQuietly(pstmt);
             if (ownConn && conn != null) { try { conn.close(); } catch (SQLException e) {} }
@@ -186,7 +186,7 @@ public class OrderDao {
             pstmt.setString(1, wlNo);
             pstmt.setInt(2, orderId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -197,7 +197,7 @@ public class OrderDao {
             pstmt.setString(1, wlNo);
             pstmt.setString(2, orderNo);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 

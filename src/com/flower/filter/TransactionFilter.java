@@ -69,7 +69,7 @@ public class TransactionFilter implements Filter {
                 try {
                     TransactionManager.closeConnection();
                 } catch (Exception e) {
-                    System.err.println("ERROR: " + e.getMessage());
+                    System.err.println("[SYS] " + e.getMessage());
                 }
             }
         }

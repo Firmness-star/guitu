@@ -18,7 +18,7 @@ public class UserDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return mapResultSetToUser(rs);
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return null;
     }
 
@@ -31,7 +31,7 @@ public class UserDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return mapResultSetToUser(rs);
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return null;
     }
 
@@ -45,7 +45,7 @@ public class UserDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return mapResultSetToUser(rs);
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return null;
     }
 
@@ -63,7 +63,7 @@ public class UserDao {
             pstmt.setString(7, user.getRole() != null ? user.getRole() : "用户");
             pstmt.setInt(8, user.getJf());
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -76,7 +76,7 @@ public class UserDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return rs.getInt(1) > 0;
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -89,7 +89,7 @@ public class UserDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return rs.getInt(1) > 0;
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -103,7 +103,7 @@ public class UserDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return rs.getInt(1) > 0;
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -116,7 +116,7 @@ public class UserDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return rs.getInt(1) > 0;
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -130,7 +130,7 @@ public class UserDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return rs.getInt(1) > 0;
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -141,7 +141,7 @@ public class UserDao {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, userId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -152,7 +152,7 @@ public class UserDao {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, username);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -164,7 +164,7 @@ public class UserDao {
             pstmt.setString(1, state);
             pstmt.setInt(2, userId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -176,7 +176,7 @@ public class UserDao {
             pstmt.setString(1, role);
             pstmt.setInt(2, userId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -188,7 +188,7 @@ public class UserDao {
             pstmt.setString(1, MD5Util.encrypt(newPassword));
             pstmt.setInt(2, userId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -201,7 +201,7 @@ public class UserDao {
             pstmt.setString(2, email);
             pstmt.setInt(3, userId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -213,7 +213,7 @@ public class UserDao {
             pstmt.setString(1, gender);
             pstmt.setInt(2, userId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -225,7 +225,7 @@ public class UserDao {
             pstmt.setString(1, avatarPath);
             pstmt.setInt(2, userId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -245,7 +245,7 @@ public class UserDao {
             pstmt.setInt(2, userId);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("DAO ERROR: " + e.getMessage());
+            System.err.println("[DAO] " + e.getMessage());
         } finally {
             if (pstmt != null) { try { pstmt.close(); } catch (SQLException e) { /* ignore */ } }
             if (ownConn && conn != null) { try { conn.close(); } catch (SQLException e) { /* ignore */ } }
@@ -270,7 +270,7 @@ public class UserDao {
             pstmt.setInt(3, amount);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("DAO ERROR: " + e.getMessage());
+            System.err.println("[DAO] " + e.getMessage());
         } finally {
             if (pstmt != null) { try { pstmt.close(); } catch (SQLException e) { /* ignore */ } }
             if (ownConn && conn != null) { try { conn.close(); } catch (SQLException e) { /* ignore */ } }
@@ -287,7 +287,7 @@ public class UserDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return rs.getInt("jf");
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return 0;
     }
 
@@ -300,7 +300,7 @@ public class UserDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return mapResultSetToUser(rs);
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return null;
     }
 
@@ -313,7 +313,7 @@ public class UserDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return mapResultSetToUser(rs);
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return null;
     }
 
@@ -327,7 +327,7 @@ public class UserDao {
             pstmt.setString(3, ip != null ? ip : "未知");
             pstmt.setString(4, userAgent != null ? userAgent : "未知");
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -348,7 +348,7 @@ public class UserDao {
                     logs.add(log);
                 }
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return logs;
     }
 
@@ -359,7 +359,7 @@ public class UserDao {
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) users.add(mapResultSetToUser(rs));
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return users;
     }
 
@@ -373,7 +373,7 @@ public class UserDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) users.add(mapResultSetToUser(rs));
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return users;
     }
 

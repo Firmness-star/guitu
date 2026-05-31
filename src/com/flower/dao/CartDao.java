@@ -17,7 +17,7 @@ public class CartDao {
             pstmt.setInt(2, item.getProductId());
             pstmt.setInt(3, item.getQuantity());
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -30,7 +30,7 @@ public class CartDao {
             pstmt.setInt(2, userId);
             pstmt.setInt(3, productId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -42,7 +42,7 @@ public class CartDao {
             pstmt.setInt(1, userId);
             pstmt.setInt(2, productId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -65,7 +65,7 @@ public class CartDao {
                     list.add(item);
                 }
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return list;
     }
 
@@ -76,7 +76,7 @@ public class CartDao {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, userId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 

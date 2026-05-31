@@ -21,7 +21,7 @@ public class BannerDao {
                 b.setProductId(rs.getInt("pro_id"));
                 list.add(b);
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return list;
     }
 
@@ -32,7 +32,7 @@ public class BannerDao {
             pstmt.setString(1, b.getImgUrl());
             pstmt.setInt(2, b.getProductId());
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -42,7 +42,7 @@ public class BannerDao {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 }

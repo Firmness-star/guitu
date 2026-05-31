@@ -69,7 +69,7 @@ public class QrCodeUploadController extends HttpServlet {
                 }
             }
         } catch (Exception e) {
-            System.err.println("ERROR: " + e.getMessage());
+            System.err.println("[CTRL] " + e.getMessage());
             session.setAttribute("adminError", "上传失败：" + e.getMessage());
         }
 

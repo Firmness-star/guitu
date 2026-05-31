@@ -15,7 +15,7 @@ public class SpDao {
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) list.add(mapResultSetToSp(rs));
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return list;
     }
 
@@ -28,7 +28,7 @@ public class SpDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return mapResultSetToSp(rs);
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return null;
     }
 
@@ -54,7 +54,7 @@ public class SpDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) list.add(mapResultSetToSp(rs));
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return list;
     }
 
@@ -68,7 +68,7 @@ public class SpDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) list.add(mapResultSetToSp(rs));
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return list;
     }
 
@@ -84,7 +84,7 @@ public class SpDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) list.add(mapResultSetToSp(rs));
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return list;
     }
 
@@ -102,7 +102,7 @@ public class SpDao {
             pstmt.setInt(7, sp.getSales());
             pstmt.setInt(8, sp.getStatus());
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -119,7 +119,7 @@ public class SpDao {
             pstmt.setInt(6, sp.getCategoryId());
             pstmt.setInt(7, sp.getId());
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -131,7 +131,7 @@ public class SpDao {
             pstmt.setInt(1, newStock);
             pstmt.setInt(2, productId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -153,7 +153,7 @@ public class SpDao {
             pstmt.setInt(1, status);
             pstmt.setInt(2, productId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -164,7 +164,7 @@ public class SpDao {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, productId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -174,7 +174,7 @@ public class SpDao {
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
             if (rs.next()) return rs.getInt(1) == 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 

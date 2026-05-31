@@ -30,6 +30,9 @@ public class AdminController extends HttpServlet {
     private UserDao userDao;
     private OrderDao orderDao;
     private SpDao spDao;
+    private CategoryDao categoryDao;
+    private BannerDao bannerDao;
+    private MessageDao messageDao;
 
     @Override
     public void init() throws ServletException {
@@ -37,6 +40,9 @@ public class AdminController extends HttpServlet {
         this.userDao = new UserDao();
         this.orderDao = new OrderDao();
         this.spDao = new SpDao();
+        this.categoryDao = new CategoryDao();
+        this.bannerDao = new BannerDao();
+        this.messageDao = new MessageDao();
     }
 
     /**
@@ -146,9 +152,9 @@ public class AdminController extends HttpServlet {
         req.setAttribute("totalUsers", totalUsers);
         req.setAttribute("totalMerchants", totalMerchants);
         req.setAttribute("totalSales", totalSales);
-        req.setAttribute("totalCategories", new CategoryDao().findAll().size());
-        req.setAttribute("totalBanners", new BannerDao().findAll().size());
-        req.setAttribute("unreadMessages", new MessageDao().countUnreadForAdmin());
+        req.setAttribute("totalCategories", categoryDao.findAll().size());
+        req.setAttribute("totalBanners", bannerDao.findAll().size());
+        req.setAttribute("unreadMessages", messageDao.countUnreadForAdmin());
         if (!allOrders.isEmpty())
             req.setAttribute("recentOrders", allOrders.subList(0, Math.min(10, allOrders.size())));
         List<User> regularUsers = allUsers.stream()
@@ -398,7 +404,7 @@ public class AdminController extends HttpServlet {
                         .filter(o -> !o.getCreateTime().before(start))
                         .collect(Collectors.toList());
             } catch (Exception e) {
-                System.err.println("ERROR: " + e.getMessage());
+                System.err.println("[CTRL] " + e.getMessage());
             }
         }
 
@@ -416,7 +422,7 @@ public class AdminController extends HttpServlet {
                         .filter(o -> o.getCreateTime().before(finalEnd))
                         .collect(Collectors.toList());
             } catch (Exception e) {
-                System.err.println("ERROR: " + e.getMessage());
+                System.err.println("[CTRL] " + e.getMessage());
             }
         }
 
@@ -472,7 +478,7 @@ public class AdminController extends HttpServlet {
                     }
                 } catch (Exception e) {
                     session.setAttribute("adminError", "操作失败：" + e.getMessage());
-                    System.err.println("ERROR: " + e.getMessage());
+                    System.err.println("[CTRL] " + e.getMessage());
                 }
                 resp.sendRedirect(req.getContextPath() + "/admin/products?tab=products");
                 return;
@@ -492,7 +498,7 @@ public class AdminController extends HttpServlet {
                     session.setAttribute("adminSuccess", "商品已新增");
                 } catch (Exception e) {
                     session.setAttribute("adminError", "新增失败：" + e.getMessage());
-                    System.err.println("ERROR: " + e.getMessage());
+                    System.err.println("[CTRL] " + e.getMessage());
                 }
                 resp.sendRedirect(req.getContextPath() + "/admin/products?tab=products");
                 return;
@@ -583,7 +589,6 @@ public class AdminController extends HttpServlet {
 
     private void showMessages(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        MessageDao messageDao = new MessageDao();
         HttpSession session = req.getSession();
 
         // 处理操作
@@ -845,7 +850,6 @@ public class AdminController extends HttpServlet {
 
     private void showCategories(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        CategoryDao categoryDao = new CategoryDao();
         HttpSession session = req.getSession();
 
         // 处理操作
@@ -879,7 +883,6 @@ public class AdminController extends HttpServlet {
 
     private void handleCategoryAction(HttpServletRequest req, HttpServletResponse resp, String action)
             throws ServletException, IOException {
-        CategoryDao categoryDao = new CategoryDao();
         HttpSession session = req.getSession();
         if ("add".equals(action)) {
             String name = req.getParameter("name");
@@ -901,7 +904,6 @@ public class AdminController extends HttpServlet {
 
     private void showBanners(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        com.flower.dao.BannerDao bannerDao = new com.flower.dao.BannerDao();
         HttpSession session = req.getSession();
 
         // 处理操作
@@ -912,7 +914,7 @@ public class AdminController extends HttpServlet {
                 bannerDao.deleteById(id);
                 session.setAttribute("adminSuccess", "海报已删除");
             } catch (NumberFormatException e) {
-                System.err.println("ERROR: " + e.getMessage());
+                System.err.println("[CTRL] " + e.getMessage());
             }
         } else if ("deleteQr".equals(action)) {
             getServletContext().removeAttribute("wechatQrPath");

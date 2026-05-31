@@ -18,7 +18,7 @@ public class MessageDao {
             pstmt.setString(2, msg.getUsername());
             pstmt.setString(3, msg.getContent());
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -28,7 +28,7 @@ public class MessageDao {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -41,7 +41,7 @@ public class MessageDao {
             pstmt.setString(1, reply);
             pstmt.setInt(2, msgId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -54,7 +54,7 @@ public class MessageDao {
             pstmt.setString(1, reply);
             pstmt.setInt(2, msgId);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -65,7 +65,7 @@ public class MessageDao {
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
             if (rs.next()) return rs.getInt(1);
-        } catch (SQLException e) { System.err.println("ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return 0;
     }
 
@@ -78,7 +78,7 @@ public class MessageDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
             }
-        } catch (SQLException e) { System.err.println("ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return 0;
     }
 
@@ -89,7 +89,7 @@ public class MessageDao {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, userId);
             pstmt.executeUpdate();
-        } catch (SQLException e) { System.err.println("ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
     }
 
     // 管理员进入留言管理 → 清零所有未读用户回复
@@ -98,7 +98,7 @@ public class MessageDao {
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.executeUpdate();
-        } catch (SQLException e) { System.err.println("ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
     }
 
     public List<Message> findByUserId(int userId) {
@@ -110,7 +110,7 @@ public class MessageDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
             }
-        } catch (SQLException e) { System.err.println("ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return list;
     }
 
@@ -121,7 +121,7 @@ public class MessageDao {
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) list.add(mapRow(rs));
-        } catch (SQLException e) { System.err.println("ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return list;
     }
 

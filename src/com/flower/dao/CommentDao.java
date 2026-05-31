@@ -27,7 +27,7 @@ public class CommentDao {
                     list.add(c);
                 }
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return list;
     }
 
@@ -42,7 +42,7 @@ public class CommentDao {
             pstmt.setString(4, comment.getContent());
             pstmt.setInt(5, comment.getRating());
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return false;
     }
 
@@ -54,7 +54,7 @@ public class CommentDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return rs.getDouble(1);
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return 0;
     }
 
@@ -66,7 +66,7 @@ public class CommentDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return 0;
     }
 }

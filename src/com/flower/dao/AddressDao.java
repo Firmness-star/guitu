@@ -19,7 +19,7 @@ public class AddressDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) addresses.add(mapResultSetToAddress(rs));
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return addresses;
     }
 
@@ -32,7 +32,7 @@ public class AddressDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return mapResultSetToAddress(rs);
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return null;
     }
 
@@ -45,7 +45,7 @@ public class AddressDao {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return mapResultSetToAddress(rs);
             }
-        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
         return null;
     }
 
@@ -85,7 +85,7 @@ public class AddressDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("ERROR: " + e.getMessage());
+            System.err.println("[DAO] " + e.getMessage());
         } finally {
             DBUtil.close(conn, pstmt);
         }
@@ -112,7 +112,7 @@ public class AddressDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("ERROR: " + e.getMessage());
+            System.err.println("[DAO] " + e.getMessage());
         } finally {
             DBUtil.close(conn, pstmt);
         }
@@ -143,7 +143,7 @@ public class AddressDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("ERROR: " + e.getMessage());
+            System.err.println("[DAO] " + e.getMessage());
         } finally {
             DBUtil.close(conn, pstmt);
         }
@@ -177,7 +177,7 @@ public class AddressDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("ERROR: " + e.getMessage());
+            System.err.println("[DAO] " + e.getMessage());
         } finally {
             DBUtil.close(conn, pstmt);
         }
