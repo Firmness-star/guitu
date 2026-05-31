@@ -1,6 +1,7 @@
 package com.flower.util;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -93,30 +94,52 @@ public class JsonUtil {
      * @return JSON 对象字符串
      */
     private static String objectToJson(Object obj) {
+        // Handle Date/Timestamp types specially to avoid reflection issues
+        if (obj instanceof java.util.Date) {
+            return "\"" + obj.toString() + "\"";
+        }
+
         StringBuilder sb = new StringBuilder();
         sb.append("{");
         boolean first = true;
-        
+
         Class<?> clazz = obj.getClass();
-        Field[] fields = clazz.getDeclaredFields();
-        
-        for (Field field : fields) {
-            field.setAccessible(true);
-            try {
-                Object value = field.get(obj);
-                if (!first) {
-                    sb.append(",");
-                }
-                sb.append("\"").append(escapeJson(field.getName())).append("\":");
-                sb.append(toJson(value));
-                first = false;
-            } catch (IllegalAccessException e) {
-                System.err.println("[SYS] " + e.getMessage());
+
+        // Try getter methods first (safer, avoids module access issues)
+        Method[] methods = clazz.getMethods();
+        Map<String, Object> values = new LinkedHashMap<>();
+        for (Method m : methods) {
+            String name = m.getName();
+            if (m.getParameterCount() == 0 && name.startsWith("get") && name.length() > 3
+                && !name.equals("getClass")) {
+                try {
+                    values.put(lowerFirst(name.substring(3)), m.invoke(obj));
+                } catch (Exception ignored) {}
+            } else if (m.getParameterCount() == 0 && name.startsWith("is") && name.length() > 2
+                && (m.getReturnType() == boolean.class || m.getReturnType() == Boolean.class)) {
+                try {
+                    values.put(lowerFirst(name.substring(2)), m.invoke(obj));
+                } catch (Exception ignored) {}
             }
         }
-        
+
+        for (Map.Entry<String, Object> entry : values.entrySet()) {
+            if (entry.getValue() == null && !first) continue;
+            if ("serialVersionUID".equals(entry.getKey())) continue;
+            if ("class".equals(entry.getKey())) continue;
+            if (!first) sb.append(",");
+            sb.append("\"").append(escapeJson(entry.getKey())).append("\":");
+            sb.append(toJson(entry.getValue()));
+            first = false;
+        }
+
         sb.append("}");
         return sb.toString();
+    }
+
+    private static String lowerFirst(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return Character.toLowerCase(s.charAt(0)) + s.substring(1);
     }
     
     /**

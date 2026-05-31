@@ -151,7 +151,7 @@ public class CartController extends HttpServlet {
                     item.setQuantity(item.getQuantity() + qty);
                     session.setAttribute("cart", cart);
                     Integer uid = (Integer) session.getAttribute("userId");
-                    if (uid != null) cartDao.addItem(uid, item);
+                    if (uid != null) cartDao.updateQuantity(uid, pid, item.getQuantity());
                     return;
                 }
             }

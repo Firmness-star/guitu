@@ -506,15 +506,15 @@
           <input type="hidden" name="productId" value="${product.id}">
           <div class="comment-form-row">
             <textarea name="content" placeholder="写下您对这件商品的评价..." required></textarea>
-            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
               <div class="rating-select">
-                <input type="radio" name="rating" value="5" id="star5" checked><label for="star5">★</label>
-                <input type="radio" name="rating" value="4" id="star4"><label for="star4">★</label>
-                <input type="radio" name="rating" value="3" id="star3"><label for="star3">★</label>
-                <input type="radio" name="rating" value="2" id="star2"><label for="star2">★</label>
-                <input type="radio" name="rating" value="1" id="star1"><label for="star1">★</label>
+                <input type="radio" name="rating" value="5" id="r5" checked><label for="r5">★</label>
+                <input type="radio" name="rating" value="4" id="r4"><label for="r4">★</label>
+                <input type="radio" name="rating" value="3" id="r3"><label for="r3">★</label>
+                <input type="radio" name="rating" value="2" id="r2"><label for="r2">★</label>
+                <input type="radio" name="rating" value="1" id="r1"><label for="r1">★</label>
               </div>
-              <button type="submit" class="btn btn-sm" style="background:var(--primary-red);color:white;border:none;padding:6px 20px;border-radius:4px;cursor:pointer;font-size:14px;white-space:nowrap;">发表评论</button>
+              <button type="submit" style="background:#e74c3c;color:#fff;border:none;padding:8px 24px;border-radius:6px;cursor:pointer;font-size:14px;font-weight:500;white-space:nowrap;">发表评论</button>
             </div>
           </div>
         </form>

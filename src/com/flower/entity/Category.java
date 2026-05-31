@@ -1,10 +1,7 @@
 package com.flower.entity;
 import java.io.Serializable;
+import java.util.List;
 
-/**
- * 商品分类实体类
- * 用于封装商品的层级分类信息，支持一级和二级分类
- */
 public class Category implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -12,21 +9,10 @@ public class Category implements Serializable {
     private String name;
     private int parentId;
     private String description;
+    private List<Category> children;
 
-    /**
-     * 无参构造函数
-     */
-    public Category() {
-    }
+    public Category() {}
 
-    /**
-     * 带参构造函数，初始化分类信息
-     *
-     * @param id          分类 ID
-     * @param name        分类名称
-     * @param parentId    父级分类 ID（0 表示一级分类）
-     * @param description 分类描述
-     */
     public Category(int id, String name, int parentId, String description) {
         this.id = id;
         this.name = name;
@@ -83,6 +69,9 @@ public class Category implements Serializable {
     public boolean isChild() {
         return parentId > 0;
     }
+
+    public List<Category> getChildren() { return children; }
+    public void setChildren(List<Category> children) { this.children = children; }
 
     @Override
     public String toString() {

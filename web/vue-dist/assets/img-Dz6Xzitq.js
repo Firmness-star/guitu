@@ -1,0 +1,1 @@
+function e(e){return e?e.startsWith(`http`)?e:`/`+e.replace(/^\//,``):``}export{e as t};
