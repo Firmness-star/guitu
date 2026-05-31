@@ -1,5 +1,6 @@
 package com.flower.controller;
 
+import com.flower.dao.CartDao;
 import com.flower.dao.SpDao;
 import com.flower.dao.UserDao;
 import com.flower.entity.CartItem;
@@ -24,6 +25,7 @@ public class CartController extends HttpServlet {
 
     private SpDao spDao = new SpDao();
     private UserDao userDao = new UserDao();
+    private CartDao cartDao = new CartDao();
 
     /**
      * 处理 GET 请求，根据 action 参数执行相应的购物车操作或展示购物车页面
@@ -85,6 +87,8 @@ public class CartController extends HttpServlet {
         else if ("clear".equals(action)) {
             cart.clear();
             session.setAttribute("cart", cart);
+            Integer uid = (Integer) session.getAttribute("userId");
+            if (uid != null) cartDao.clearCart(uid);
             resp.sendRedirect("cart");
             return;
         }
@@ -145,8 +149,9 @@ public class CartController extends HttpServlet {
             for (CartItem item : cart) {
                 if (item.getProductId() == pid) {
                     item.setQuantity(item.getQuantity() + qty);
-                    // 更新购物车到 session
                     session.setAttribute("cart", cart);
+                    Integer uid = (Integer) session.getAttribute("userId");
+                    if (uid != null) cartDao.addItem(uid, item);
                     return;
                 }
             }
@@ -161,12 +166,13 @@ public class CartController extends HttpServlet {
                 item.setQuantity(qty);
                 item.setSelected(true);
                 cart.add(item);
-                // 更新购物车到 session
                 session.setAttribute("cart", cart);
 
-                // 加购物车奖励积分：+5
                 Integer uid = (Integer) session.getAttribute("userId");
-                if (uid != null) userDao.addJf(uid, 5);
+                if (uid != null) {
+                    cartDao.addItem(uid, item);
+                    userDao.addJf(uid, 5);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -184,8 +190,9 @@ public class CartController extends HttpServlet {
         try {
             int pid = Integer.parseInt(req.getParameter("productId"));
             cart.removeIf(item -> item.getProductId() == pid);
-            // 更新购物车到 session
             session.setAttribute("cart", cart);
+            Integer uid = (Integer) session.getAttribute("userId");
+            if (uid != null) cartDao.removeItem(uid, pid);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -253,8 +260,9 @@ public class CartController extends HttpServlet {
             for (CartItem item : cart) {
                 if (item.getProductId() == pid) {
                     item.setQuantity(qty);
-                    // 更新购物车到 session
                     session.setAttribute("cart", cart);
+                    Integer uid = (Integer) session.getAttribute("userId");
+                    if (uid != null) cartDao.updateQuantity(uid, pid, qty);
                     break;
                 }
             }

@@ -4,6 +4,7 @@ import com.flower.service.ISpService;
 import com.flower.service.ICategoryService;
 import com.flower.service.ServiceFactory;
 import com.flower.dao.BannerDao;
+import com.flower.dao.OrderDao;
 import com.flower.entity.Sp;
 import com.flower.entity.Category;
 import com.flower.entity.Banner;
@@ -120,6 +121,17 @@ public class IndexController extends HttpServlet {
         hotList.sort((a, b) -> Integer.compare(b.getSales(), a.getSales()));
         List<Sp> hotProducts = hotList.subList(0, Math.min(10, hotList.size()));
         req.setAttribute("hotProducts", hotProducts);
+
+        // 登录用户加载待处理订单数量
+        Integer userId = (Integer) req.getSession().getAttribute("userId");
+        if (userId != null) {
+            OrderDao orderDao = new OrderDao();
+            List<com.flower.entity.Order> userOrders = orderDao.findByUserId(userId);
+            long pendingOrderCount = userOrders.stream()
+                    .filter(o -> "待付款".equals(o.getStatus()) || "已付款".equals(o.getStatus()) || "已发货".equals(o.getStatus()))
+                    .count();
+            req.setAttribute("pendingOrderCount", pendingOrderCount);
+        }
 
         req.getRequestDispatcher("index.jsp").forward(req, resp);
     }

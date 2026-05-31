@@ -3,9 +3,11 @@ package com.flower.controller;
 import com.flower.dao.CategoryDao;
 import com.flower.dao.OrderDao;
 import com.flower.dao.SpDao;
+import com.flower.dao.UserDao;
 import com.flower.entity.Category;
 import com.flower.entity.Order;
 import com.flower.entity.Sp;
+import com.flower.entity.User;
 import com.flower.util.JsonUtil;
 
 import javax.servlet.ServletException;
@@ -30,6 +32,7 @@ public class MerchantController extends HttpServlet {
     private SpDao spDao;
     private OrderDao orderDao;
     private CategoryDao categoryDao;
+    private UserDao userDao;
 
     @Override
     public void init() throws ServletException {
@@ -37,6 +40,7 @@ public class MerchantController extends HttpServlet {
         this.spDao = new SpDao();
         this.orderDao = new OrderDao();
         this.categoryDao = new CategoryDao();
+        this.userDao = new UserDao();
     }
 
     /**
@@ -62,6 +66,8 @@ public class MerchantController extends HttpServlet {
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || "/index".equals(pathInfo) || "/".equals(pathInfo)) {
             showDashboard(req, resp);
+        } else if ("/info".equals(pathInfo)) {
+            showPersonalInfo(req, resp);
         } else if ("/products".equals(pathInfo)) {
             showProductManagement(req, resp);
         } else if ("/orders".equals(pathInfo)) {
@@ -86,7 +92,6 @@ public class MerchantController extends HttpServlet {
             throws ServletException, IOException {
 
         req.setCharacterEncoding("UTF-8");
-        resp.setContentType("application/json;charset=UTF-8");
 
         HttpSession session = req.getSession();
         String role = (String) session.getAttribute("userRole");
@@ -100,9 +105,9 @@ public class MerchantController extends HttpServlet {
         String action = req.getParameter("action");
 
         if ("/products".equals(pathInfo)) {
-            handleProductAction(req, resp, action);
+            // 商品操作后重定向回商品管理页面
+            handleProductActionWithRedirect(req, resp, action);
         } else if ("/orders".equals(pathInfo)) {
-            // 订单操作后重定向回订单管理页面
             handleOrderActionWithRedirect(req, resp, action);
         } else {
             doGet(req, resp);
@@ -129,12 +134,12 @@ public class MerchantController extends HttpServlet {
         int totalProducts = allProducts.size();
         int totalOrders = allOrders.size();
         double totalSales = allOrders.stream()
-                .filter(o -> "已完成".equals(o.getStatus()))
+                .filter(o -> "已完成".equals(o.getStatus()) || "已收货".equals(o.getStatus()))
                 .mapToDouble(Order::getTotalAmount)
                 .sum();
 
         long pendingOrders = allOrders.stream()
-                .filter(o -> "待付款".equals(o.getStatus()) || "已付款".equals(o.getStatus()))
+                .filter(o -> "待付款".equals(o.getStatus()) || "已付款".equals(o.getStatus()) || "已发货".equals(o.getStatus()))
                 .count();
 
         long lowStockProducts = allProducts.stream()
@@ -200,18 +205,136 @@ public class MerchantController extends HttpServlet {
      * @throws ServletException Servlet 异常
      * @throws IOException      IO 异常
      */
+    private void showPersonalInfo(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        HttpSession session = req.getSession();
+        String username = (String) session.getAttribute("username");
+
+        // 处理更新
+        String action = req.getParameter("action");
+        if ("updateInfo".equals(action)) {
+            Integer userId = (Integer) session.getAttribute("userId");
+            String tel = req.getParameter("tel");
+            String email = req.getParameter("email");
+            if (tel != null && email != null) {
+                if (!tel.matches("^1[3-9]\\d{9}$")) {
+                    session.setAttribute("orderMessage", "请输入有效的11位手机号");
+                    session.setAttribute("orderMessageType", "danger");
+                } else if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+                    session.setAttribute("orderMessage", "请输入有效的邮箱地址");
+                    session.setAttribute("orderMessageType", "danger");
+                } else if (userDao.isTelUsedByOther(tel.trim(), userId)) {
+                    session.setAttribute("orderMessage", "该手机号已被其他用户使用");
+                    session.setAttribute("orderMessageType", "danger");
+                } else if (userDao.isEmailUsedByOther(email.trim(), userId)) {
+                    session.setAttribute("orderMessage", "该邮箱已被其他用户使用");
+                    session.setAttribute("orderMessageType", "danger");
+                } else {
+                    userDao.updateUserInfo(userId, tel.trim(), email.trim());
+                    session.setAttribute("userPhone", tel.trim());
+                    session.setAttribute("userEmail", email.trim());
+                    session.setAttribute("orderMessage", "信息已更新");
+                    session.setAttribute("orderMessageType", "success");
+                }
+                resp.sendRedirect(req.getContextPath() + "/merchant/info?tab=info");
+                return;
+            }
+        } else if ("changePwd".equals(action)) {
+            Integer userId = (Integer) session.getAttribute("userId");
+            String oldPwd = req.getParameter("oldPassword");
+            String newPwd = req.getParameter("newPassword");
+            if (oldPwd != null && newPwd != null && newPwd.length() >= 6) {
+                User u = userDao.findById(userId);
+                if (u != null && u.getPass().equals(com.flower.util.MD5Util.encrypt(oldPwd))) {
+                    userDao.updatePassword(userId, newPwd);
+                    session.setAttribute("orderMessage", "密码修改成功");
+                    session.setAttribute("orderMessageType", "success");
+                } else {
+                    session.setAttribute("orderMessage", "原密码错误");
+                    session.setAttribute("orderMessageType", "danger");
+                }
+            } else {
+                session.setAttribute("orderMessage", "新密码长度不能少于6位");
+                session.setAttribute("orderMessageType", "danger");
+            }
+            resp.sendRedirect(req.getContextPath() + "/merchant/info?tab=info");
+            return;
+        }
+
+        User user = userDao.findByUsername(username);
+        req.setAttribute("merchantInfo", user);
+        req.getRequestDispatcher("/merchant.jsp").forward(req, resp);
+    }
+
+    /**
+     * 展示商品管理页面，支持搜索、筛选、上下架及编辑/删除商品
+     *
+     * @param req  HTTP 请求对象
+     * @param resp HTTP 响应对象
+     * @throws ServletException Servlet 异常
+     * @throws IOException      IO 异常
+     */
     private void showProductManagement(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
+        HttpSession session = req.getSession();
+
+        // 处理 GET 操作
+        String action = req.getParameter("action");
+        if (action != null) {
+            try {
+                int id = Integer.parseInt(req.getParameter("id"));
+                if ("delete".equals(action)) {
+                    spDao.deleteById(id);
+                    session.setAttribute("orderMessage", "商品已删除");
+                    session.setAttribute("orderMessageType", "success");
+                } else if ("disable".equals(action)) {
+                    spDao.updateStatus(id, 0);
+                    session.setAttribute("orderMessage", "商品已下架");
+                    session.setAttribute("orderMessageType", "success");
+                } else if ("enable".equals(action)) {
+                    spDao.updateStatus(id, 1);
+                    session.setAttribute("orderMessage", "商品已上架");
+                    session.setAttribute("orderMessageType", "success");
+                }
+            } catch (Exception e) {
+                session.setAttribute("orderMessage", "操作失败");
+                session.setAttribute("orderMessageType", "danger");
+            }
+            resp.sendRedirect(req.getContextPath() + "/merchant/products?tab=products");
+            return;
+        }
+
+        // 显示消息
+        if (session.getAttribute("orderMessage") != null) {
+            req.setAttribute("orderMessage", session.getAttribute("orderMessage"));
+            req.setAttribute("orderMessageType", session.getAttribute("orderMessageType"));
+            session.removeAttribute("orderMessage");
+            session.removeAttribute("orderMessageType");
+        }
+
         String statusFilter = req.getParameter("status");
         String keyword = req.getParameter("keyword");
+        String lowStock = req.getParameter("lowStock");
 
         List<Sp> products = spDao.findAll();
 
         if (statusFilter != null && !statusFilter.isEmpty()) {
-            int status = Integer.parseInt(statusFilter);
+            if ("lowStock".equals(statusFilter)) {
+                products = products.stream()
+                        .filter(p -> p.isLowStock())
+                        .collect(Collectors.toList());
+            } else {
+                int status = Integer.parseInt(statusFilter);
+                products = products.stream()
+                        .filter(p -> p.getStatus() == status)
+                        .collect(Collectors.toList());
+            }
+        }
+
+        if ("1".equals(lowStock)) {
             products = products.stream()
-                    .filter(p -> p.getStatus() == status)
+                    .filter(p -> p.isLowStock())
                     .collect(Collectors.toList());
         }
 
@@ -224,11 +347,13 @@ public class MerchantController extends HttpServlet {
         }
 
         List<Category> categories = categoryDao.findAllCategories();
+        List<Category> parentCategories = categoryDao.findParentCategories();
 
         products.sort((p1, p2) -> Integer.compare(p2.getId(), p1.getId()));
 
         req.setAttribute("products", products);
         req.setAttribute("categories", categories);
+        req.setAttribute("parentCategories", parentCategories);
         req.setAttribute("statusFilter", statusFilter);
         req.setAttribute("keyword", keyword);
         req.getRequestDispatcher("/merchant.jsp").forward(req, resp);
@@ -245,6 +370,44 @@ public class MerchantController extends HttpServlet {
     private void showOrderManagement(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
+        HttpSession session = req.getSession();
+
+        // 处理 GET 操作
+        String action = req.getParameter("action");
+        if ("complete".equals(action) || "cancel".equals(action)) {
+            try {
+                String orderNo = req.getParameter("orderId");
+                if ("complete".equals(action)) {
+                    Order checkOrder = orderDao.findByOrderId(orderNo);
+                    if (checkOrder != null && !"已收货".equals(checkOrder.getStatus())) {
+                        session.setAttribute("orderMessage", "客户尚未确认收货，暂时无法完成订单");
+                        session.setAttribute("orderMessageType", "danger");
+                    } else {
+                        boolean ok = orderDao.updateStatus(orderNo, "已完成");
+                        session.setAttribute("orderMessage", ok ? "订单已完成" : "操作失败");
+                        session.setAttribute("orderMessageType", ok ? "success" : "danger");
+                    }
+                } else if ("cancel".equals(action)) {
+                    boolean ok = orderDao.updateStatus(orderNo, "已取消");
+                    session.setAttribute("orderMessage", ok ? "订单已取消" : "操作失败");
+                    session.setAttribute("orderMessageType", ok ? "success" : "danger");
+                }
+            } catch (Exception e) {
+                session.setAttribute("orderMessage", "操作失败");
+                session.setAttribute("orderMessageType", "danger");
+            }
+            resp.sendRedirect(req.getContextPath() + "/merchant/orders?tab=orders");
+            return;
+        }
+
+        // 显示操作结果消息
+        if (session.getAttribute("orderMessage") != null) {
+            req.setAttribute("orderMessage", session.getAttribute("orderMessage"));
+            req.setAttribute("orderMessageType", session.getAttribute("orderMessageType"));
+            session.removeAttribute("orderMessage");
+            session.removeAttribute("orderMessageType");
+        }
+
         String statusFilter = req.getParameter("status");
         String keyword = req.getParameter("keyword");
         String startDate = req.getParameter("startDate");
@@ -253,9 +416,17 @@ public class MerchantController extends HttpServlet {
         List<Order> orders = orderDao.findAllOrders();
 
         if (statusFilter != null && !statusFilter.isEmpty()) {
-            orders = orders.stream()
-                    .filter(o -> statusFilter.equals(o.getStatus()))
-                    .collect(Collectors.toList());
+            if ("未完成".equals(statusFilter)) {
+                orders = orders.stream()
+                        .filter(o -> !"已完成".equals(o.getStatus())
+                                  && !"已收货".equals(o.getStatus())
+                                  && !"已取消".equals(o.getStatus()))
+                        .collect(Collectors.toList());
+            } else {
+                orders = orders.stream()
+                        .filter(o -> statusFilter.equals(o.getStatus()))
+                        .collect(Collectors.toList());
+            }
         }
 
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -495,6 +666,48 @@ public class MerchantController extends HttpServlet {
         }
     }
 
+    private void handleProductActionWithRedirect(HttpServletRequest req, HttpServletResponse resp, String action)
+            throws ServletException, IOException {
+
+        HttpSession session = req.getSession();
+
+        try {
+            if ("add".equals(action)) {
+                addProduct(req, resp);
+                session.setAttribute("orderMessage", "商品添加成功");
+                session.setAttribute("orderMessageType", "success");
+            } else if ("update".equals(action)) {
+                updateProduct(req, resp);
+                session.setAttribute("orderMessage", "商品更新成功");
+                session.setAttribute("orderMessageType", "success");
+            } else if ("delete".equals(action)) {
+                int id = Integer.parseInt(req.getParameter("id"));
+                spDao.deleteById(id);
+                session.setAttribute("orderMessage", "商品已删除");
+                session.setAttribute("orderMessageType", "success");
+            } else if ("disable".equals(action)) {
+                int id = Integer.parseInt(req.getParameter("id"));
+                spDao.updateStatus(id, 0);
+                session.setAttribute("orderMessage", "商品已下架");
+                session.setAttribute("orderMessageType", "success");
+            } else if ("enable".equals(action)) {
+                int id = Integer.parseInt(req.getParameter("id"));
+                spDao.updateStatus(id, 1);
+                session.setAttribute("orderMessage", "商品已上架");
+                session.setAttribute("orderMessageType", "success");
+            } else if ("copy".equals(action)) {
+                copyProduct(req, resp);
+                session.setAttribute("orderMessage", "商品复制成功");
+                session.setAttribute("orderMessageType", "success");
+            }
+        } catch (Exception e) {
+            session.setAttribute("orderMessage", "操作失败：" + e.getMessage());
+            session.setAttribute("orderMessageType", "danger");
+        }
+
+        resp.sendRedirect(req.getContextPath() + "/merchant/products?tab=products");
+    }
+
     /**
      * 处理订单相关的异步操作（发货、完成、取消）
      *
@@ -523,13 +736,6 @@ public class MerchantController extends HttpServlet {
                 boolean success = orderDao.updateStatusById(orderId, "已发货");
                 
                 if (success) {
-                    // 记录发货日志（可以扩展保存到数据库）
-                    System.out.println("订单发货 - 订单ID: " + orderId);
-                    System.out.println("物流公司: " + (logisticsCompany != null ? logisticsCompany : "未填写"));
-                    System.out.println("物流单号: " + (trackingNumber != null ? trackingNumber : "未填写"));
-                    System.out.println("发货备注: " + (shipRemark != null ? shipRemark : "无"));
-                    System.out.println("发货时间: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-                    
                     result.put("success", true);
                     result.put("message", "发货成功");
                 } else {
@@ -599,22 +805,22 @@ public class MerchantController extends HttpServlet {
                 success = orderDao.updateStatusAndRemarkByOrderNo(orderNo, "已发货", remark);
                 
                 if (success) {
-                    // 记录发货日志
-                    System.out.println("=== 订单发货 ===");
-                    System.out.println("订单号: " + orderNo);
-                    System.out.println("物流公司: " + (logisticsCompany != null ? logisticsCompany : "未填写"));
-                    System.out.println("物流单号: " + (trackingNumber != null ? trackingNumber : "未填写"));
-                    System.out.println("发货备注: " + (shipRemark != null ? shipRemark : "无"));
-                    System.out.println("发货时间: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-                    System.out.println("================");
-                    
                     message = "发货成功！物流信息已保存。";
                 } else {
                     message = "发货失败，请重试";
                 }
             } else if ("complete".equals(action)) {
-                success = orderDao.updateStatus(orderNo, "已完成");
-                message = success ? "订单已完成" : "操作失败";
+                Order checkOrder = orderDao.findByOrderId(orderNo);
+                if (checkOrder != null && !"已收货".equals(checkOrder.getStatus())) {
+                    session.setAttribute("orderMessage", "客户尚未确认收货，暂时无法完成订单");
+                    session.setAttribute("orderMessageType", "danger");
+                } else {
+                    success = orderDao.updateStatus(orderNo, "已完成");
+                    session.setAttribute("orderMessage", success ? "订单已完成" : "操作失败");
+                    session.setAttribute("orderMessageType", success ? "success" : "danger");
+                }
+                resp.sendRedirect(req.getContextPath() + "/merchant/orders?tab=orders");
+                return;
             } else if ("cancel".equals(action)) {
                 success = orderDao.updateStatus(orderNo, "已取消");
                 message = success ? "订单已取消" : "操作失败";

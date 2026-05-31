@@ -450,8 +450,6 @@ public class OrderDao {
             pstmt.setString(3, orderNo);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            // 历史记录失败不影响主流程，只记录日志
-            System.err.println("记录订单状态历史失败: " + e.getMessage());
         } finally {
             closeQuietly(pstmt);
         }

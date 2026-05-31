@@ -80,7 +80,6 @@ public class C3p0Utils {
         } catch (Exception e) {
             initialized = false;
             initError = e.getMessage();
-            System.err.println("[C3P0] 连接池初始化失败：" + e.getMessage());
             e.printStackTrace();
         } finally {
             if (is != null) {
@@ -137,38 +136,30 @@ public class C3p0Utils {
      * @param args 命令行参数
      */
     public static void main(String[] args) {
-        System.out.println("========== C3P0连接池诊断测试 ==========");
-
         if (!initialized) {
-            System.err.println("[失败] 初始化失败！错误：" + initError);
             return;
         }
-
-        System.out.println("[成功] 初始化成功");
 
         Connection conn = null;
         try {
             conn = getDDs().getConnection();
-            System.out.println("[成功] 连接获取成功");
 
             java.sql.Statement stmt = conn.createStatement();
             java.sql.ResultSet rs = stmt.executeQuery("SELECT 1");
             if (rs.next()) {
-                System.out.println("[成功] 查询测试通过");
+                // 测试通过
             }
 
             rs.close();
             stmt.close();
-            System.out.println("[成功] 全部测试通过");
 
         } catch (SQLException e) {
-            System.err.println("[失败] 数据库操作失败：" + e.getMessage());
+            // 数据库操作失败
         } finally {
             if (conn != null) {
                 try {
                     conn.close();
                 } catch (SQLException e) {
-                    // 忽略
                 }
             }
         }

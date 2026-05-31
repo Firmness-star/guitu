@@ -591,6 +591,9 @@
         <li class="nav-item">
           <a href="orders">
             <i class="bi bi-receipt"></i> 我的订单
+            <c:if test="${pendingOrderCount > 0}">
+              <span class="cart-badge">${pendingOrderCount}</span>
+            </c:if>
           </a>
         </li>
       </c:if>
@@ -813,51 +816,87 @@
     <div>
       <h5 class="footer-title">关于公司</h5>
       <ul class="footer-links">
-        <li><a href="#">公司简介</a></li>
-        <li><a href="#">可持续发展</a></li>
-        <li><a href="#">信任中心</a></li>
-        <li><a href="#">管理层信息</a></li>
-        <li><a href="#">招贤纳士</a></li>
-        <li><a href="#">供应商</a></li>
+        <li><a href="javascript:void(0)" onclick="showInfo('intro')">公司简介</a></li>
+        <li><a href="javascript:void(0)" onclick="showInfo('green')">可持续发展</a></li>
+        <li><a href="javascript:void(0)" onclick="showInfo('trust')">信任中心</a></li>
+        <li><a href="javascript:void(0)" onclick="showInfo('team')">管理层信息</a></li>
+        <li><a href="javascript:void(0)" onclick="showInfo('jobs')">招贤纳士</a></li>
+        <li><a href="javascript:void(0)" onclick="showInfo('supplier')">供应商</a></li>
       </ul>
     </div>
     <div>
       <h5 class="footer-title">技术支持</h5>
       <ul class="footer-links">
-        <li><a href="#">消费者技术支持</a></li>
-        <li><a href="#">商城云技术支持</a></li>
-        <li><a href="#">运营商技术支持</a></li>
-        <li><a href="#">产品安全通告</a></li>
+        <li><a href="javascript:void(0)" onclick="showInfo('consumer')">消费者技术支持</a></li>
+        <li><a href="javascript:void(0)" onclick="showInfo('cloud')">商城云技术支持</a></li>
+        <li><a href="javascript:void(0)" onclick="showInfo('operator')">运营商技术支持</a></li>
+        <li><a href="javascript:void(0)" onclick="showInfo('security')">产品安全通告</a></li>
       </ul>
     </div>
     <div style="text-align: right;">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://example.com" alt="二维码" class="qr-code">
+      <c:choose>
+        <c:when test="${not empty applicationScope['wechatQrPath']}">
+          <img src="${pageContext.request.contextPath}/uploads/${applicationScope['wechatQrPath']}" alt="微信二维码" class="qr-code">
+        </c:when>
+        <c:otherwise>
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=BEGIN:VCARD%0AVERSION:3.0%0AFN:归途%0ATEL:18023154203%0AEMAIL:guitu2025@qq.com%0AURL:https://github.com/guitu%0ANOTE:归途花店%20-%20创始人%0AEND:VCARD" alt="扫码添加微信" class="qr-code">
+        </c:otherwise>
+      </c:choose>
     </div>
   </div>
 </footer>
 
+<!-- 公司信息弹出模态框 -->
+<div class="info-modal" id="companyInfoModal">
+  <div style="max-width:600px;width:90%;background:white;border-radius:12px;animation:modalSlideIn 0.3s ease;">
+    <div style="background:var(--primary-red);color:white;padding:16px 24px;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <h5 style="margin:0;font-size:18px;" id="companyInfoTitle">关于公司</h5>
+      <span style="cursor:pointer;font-size:28px;line-height:1;" onclick="closeCompanyInfo()">&times;</span>
+    </div>
+    <div style="padding:25px;line-height:1.8;color:#333;font-size:14px;max-height:70vh;overflow-y:auto;" id="companyInfoBody"></div>
+  </div>
+</div>
+
+<style>
+  .info-modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; }
+  .info-modal.show { display:flex; }
+</style>
+
 <script>
-  // 显示版权说明模态框
+  var companyInfo = {
+    intro: { title: '公司简介', text: '<p><strong>归途花店</strong>成立于2020年，致力于提供高品质花卉产品与服务。</p><p>全国超<strong>200家</strong>门店，总部位于深圳，<strong>5000+名</strong>员工。</p><p style="margin-top:15px;"><strong>使命：</strong>让每一束花传递温暖<br><strong>愿景：</strong>成为最值得信赖的花卉品牌</p>' },
+    green: { title: '可持续发展', text: '<ul style="padding-left:20px;"><li><strong>绿色种植：</strong>合作农场通过环保认证</li><li><strong>可降解包装：</strong>2023年起减少塑料<strong>80%</strong></li><li><strong>碳减排：</strong>年均减碳<strong>500吨</strong></li><li><strong>社区支持：</strong>年均赠送<strong>10万株</strong>绿植</li></ul>' },
+    trust: { title: '信任中心', text: '<ul style="padding-left:20px;"><li><strong>品质承诺：</strong>当天采摘配送，不新鲜无条件退款</li><li><strong>隐私保护：</strong>ISO 27001信息安全认证</li><li><strong>支付安全：</strong>银行级加密，支持支付宝/微信</li><li><strong>售后保障：</strong>7天无理由退换，7×24客服</li></ul>' },
+    team: { title: '管理层信息', text: '<table style="width:100%;border-collapse:collapse;"><tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>归途</strong></td><td>创始人 & CEO</td><td>归途花店品牌创始人</td></tr><tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>归途</strong></td><td>COO</td><td>运营与供应链管理</td></tr><tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>归途</strong></td><td>CTO</td><td>技术架构与产品研发</td></tr><tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>归途</strong></td><td>CFO</td><td>财务与投资管理</td></tr><tr><td style="padding:8px;"><strong>归途</strong></td><td>CMO</td><td>品牌营销与市场拓展</td></tr></table>' },
+    jobs: { title: '招贤纳士', text: '<p><strong>热招岗位：</strong></p><ul style="padding-left:20px;"><li>Java开发（深圳 · 15K-30K）</li><li>前端开发（深圳 · 15K-28K）</li><li>花艺设计师（深圳/上海/北京 · 10K-20K）</li><li>电商运营经理（深圳 · 18K-35K）</li></ul><p style="margin-top:15px;color:#e74c3c;">简历投递：<strong>hr@flowershop.com</strong></p>' },
+    supplier: { title: '供应商', text: '<ul style="padding-left:20px;"><li><strong>昆明花卉基地</strong> — 玫瑰/百合</li><li><strong>广州花卉中心</strong> — 多肉/观叶植物</li><li><strong>杭州绿植基地</strong> — 盆栽/绿植</li><li><strong>寿光花木市场</strong> — 切花/花艺配件</li></ul><p style="margin-top:15px;">合作联系：<strong>supplier@flowershop.com</strong></p>' },
+    consumer: { title: '消费者技术支持', text: '<ul style="padding-left:20px;"><li>客服热线：<strong>400-888-1234</strong></li><li>微信公众号：归途花店</li><li>帮助中心：help.flowershop.com</li><li>投诉建议：feedback@flowershop.com</li></ul>' },
+    cloud: { title: '商城云技术支持', text: '<ul style="padding-left:20px;"><li>分布式集群部署，<strong>99.99%</strong>可用性</li><li>技术栈：Java / Spring / MySQL / Redis</li><li>DDoS防护、WAF防火墙、HTTPS加密</li><li>技术合作：cloud-team@flowershop.com</li></ul>' },
+    operator: { title: '运营商技术支持', text: '<ul style="padding-left:20px;"><li>API文档：developer.flowershop.com</li><li>支持顺丰/圆通/中通等快递对接</li><li>支持金蝶/用友等ERP集成</li><li>合作热线：<strong>400-888-5678</strong></li></ul>' },
+    security: { title: '产品安全通告', text: '<ul style="padding-left:20px;"><li><strong>2026年5月：</strong>系统安全加固，修复漏洞3个</li><li><strong>2026年3月：</strong>全站启用HTTPS 2.0</li><li><strong>2025年12月：</strong>通过等保三级认证</li><li><strong>2025年9月：</strong>数据库灾备演练，RTO < 30s</li></ul><p style="margin-top:15px;">安全报告：<strong>security@flowershop.com</strong></p>' }
+  };
+  function showInfo(key) {
+    var info = companyInfo[key];
+    document.getElementById('companyInfoTitle').textContent = info.title;
+    document.getElementById('companyInfoBody').innerHTML = info.text;
+    document.getElementById('companyInfoModal').classList.add('show');
+  }
+  function closeCompanyInfo() {
+    document.getElementById('companyInfoModal').classList.remove('show');
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    var m = document.getElementById('companyInfoModal');
+    if (m) m.addEventListener('click', function(e) { if (e.target === m) closeCompanyInfo(); });
+    var cm = document.getElementById('copyrightModal');
+    if (cm) cm.addEventListener('click', function(e) { if (e.target === cm) closeCopyright(); });
+  });
+
   function showCopyright() {
     document.getElementById('copyrightModal').classList.add('show');
   }
-
-  // 关闭版权说明模态框
   function closeCopyright() {
     document.getElementById('copyrightModal').classList.remove('show');
   }
-
-  // 点击模态框背景关闭
-  document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('copyrightModal');
-    if (modal) {
-      modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-          closeCopyright();
-        }
-      });
-    }
-  });
 
   // 关闭欢迎弹窗并清理 URL 中的 welcome 参数
   function closeWelcome() {

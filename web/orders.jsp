@@ -442,16 +442,28 @@
                 </li>
                 <c:if test="${param.ref == 'uc'}">
                 <li class="nav-item">
+                    <a class="nav-link" href="index.jsp">
+                        <i class="bi bi-shop"></i> 继续购物
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="usercenter">
                         <i class="bi bi-person-circle"></i> 个人中心
                     </a>
                 </li>
                 </c:if>
+                <c:if test="${param.ref != 'uc'}">
+                <li class="nav-item">
+                    <a class="nav-link" href="usercenter">
+                        <i class="bi bi-person-circle"></i> 个人中心
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="index.jsp">
                         <i class="bi bi-shop"></i> 继续购物
                     </a>
                 </li>
+                </c:if>
                 <c:if test="${sessionScope.userRole == '管理员'}">
                 <li class="nav-item">
                     <a class="nav-link" href="admin/index" style="color:var(--primary-red);font-weight:600;">
@@ -469,6 +481,23 @@
         <i class="bi bi-receipt"></i> 我的订单
         <small class="text-muted">共 ${fn:length(orderList)} 个订单</small>
     </h4>
+
+    <!-- 状态筛选栏 -->
+    <div style="background:white;border-radius:12px;padding:15px 20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+        <form method="get" action="orders" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <select class="form-select" name="status" style="width:auto;min-width:140px;" onchange="this.form.submit()">
+                <option value="">全部订单</option>
+                <option value="待付款" ${statusFilter == '待付款' ? 'selected' : ''}>待付款</option>
+                <option value="已付款" ${statusFilter == '已付款' ? 'selected' : ''}>已付款</option>
+                <option value="已发货" ${statusFilter == '已发货' ? 'selected' : ''}>已发货</option>
+                <option value="已收货" ${statusFilter == '已收货' ? 'selected' : ''}>已收货</option>
+                <option value="已取消" ${statusFilter == '已取消' ? 'selected' : ''}>已取消</option>
+            </select>
+            <c:if test="${not empty statusFilter}">
+                <a href="orders" class="btn btn-sm btn-outline-secondary">清除筛选</a>
+            </c:if>
+        </form>
+    </div>
 
     <!-- 展示操作成功或失败的提示信息 -->
     <c:if test="${not empty sessionScope.message}">
@@ -547,12 +576,12 @@
                                 </c:when>
                                 <c:when test="${order.status == '已收货'}">
                                     <span class="status-badge status-completed">
-                                        <i class="bi bi-box-seam"></i> ${order.status}
+                                        <i class="bi bi-box-seam"></i> 已收货
                                     </span>
                                 </c:when>
                                 <c:when test="${order.status == '已完成'}">
                                     <span class="status-badge status-completed">
-                                        <i class="bi bi-check-all"></i> ${order.status}
+                                        <i class="bi bi-check-all"></i> 已收货
                                     </span>
                                 </c:when>
                                 <c:when test="${order.status == '已取消'}">

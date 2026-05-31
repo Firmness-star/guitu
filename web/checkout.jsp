@@ -179,6 +179,8 @@
             transition: all 0.3s; margin-top: 20px; }
         .btn-submit:hover { background: var(--dark-red); transform: translateY(-2px); }
 
+        .address-item-modal:hover { border-color: var(--primary-red) !important; background: #fff5f5 !important; }
+
         .error-alert { background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px;
             margin-bottom: 20px; border: 1px solid #f5c6cb; }
     </style>
@@ -243,26 +245,26 @@
                 <!-- 根据是否存在默认地址展示不同内容：有则显示详情，无则引导添加 -->
                 <c:choose>
                     <c:when test="${not empty defaultAddress}">
-                        <div class="address-display has-address">
+                        <div class="address-display has-address" id="currentAddressDisplay">
                             <div class="address-header">
                                 <div>
-                                    <span class="address-name">${defaultAddress.receiverName}</span>
-                                    <span class="address-phone">${defaultAddress.receiverPhone}</span>
-                                    <c:if test="${defaultAddress.isDefault()}">
-                                        <span class="default-badge">默认</span>
-                                    </c:if>
+                                    <span class="address-name" id="displayName">${defaultAddress.receiverName}</span>
+                                    <span class="address-phone" id="displayPhone">${defaultAddress.receiverPhone}</span>
+                                    <span class="default-badge">默认</span>
                                 </div>
                             </div>
-                            <div class="address-detail">
+                            <div class="address-detail" id="displayAddress">
                                 ${defaultAddress.province}${defaultAddress.city}${defaultAddress.district}${defaultAddress.detailAddress}
                             </div>
                             <div class="address-actions">
                                 <a href="address" class="btn-edit-address">
                                     <i class="bi bi-pencil"></i> 编辑地址
                                 </a>
-                                <a href="address" class="btn-change-address">
+                                <c:if test="${fn:length(allAddresses) > 1}">
+                                <a href="javascript:void(0)" class="btn-change-address" data-bs-toggle="modal" data-bs-target="#addressSelectModal">
                                     <i class="bi bi-list-ul"></i> 选择其他地址
                                 </a>
+                                </c:if>
                             </div>
                         </div>
                     </c:when>
@@ -276,39 +278,40 @@
                         </div>
                     </c:otherwise>
                 </c:choose>
+
+                <!-- 地址选择模态框 -->
+                <c:if test="${not empty allAddresses}">
+                <div class="modal fade" id="addressSelectModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header" style="background:#e74c3c;color:white;">
+                                <h5 class="modal-title"><i class="bi bi-geo-alt"></i> 选择收货地址</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <c:forEach items="${allAddresses}" var="addr">
+                                <div class="address-item-modal ${addr.isDefault() ? 'selected' : ''}" onclick="selectAddress(this, '${addr.receiverName}', '${addr.receiverPhone}', '${addr.province}${addr.city}${addr.district}${addr.detailAddress}')" data-id="${addr.id}" style="border:1px solid ${addr.isDefault() ? '#e74c3c' : '#e0e0e0'};border-radius:8px;padding:15px;margin-bottom:10px;cursor:pointer;background:${addr.isDefault() ? '#fff5f5' : 'white'};">
+                                    <div style="font-weight:600;margin-bottom:5px;">
+                                        ${addr.receiverName}
+                                        <span style="color:#666;font-weight:400;margin-left:10px;">${addr.receiverPhone}</span>
+                                        <c:if test="${addr.isDefault()}"><span style="background:#e74c3c;color:white;font-size:11px;padding:2px 8px;border-radius:10px;margin-left:8px;">默认</span></c:if>
+                                    </div>
+                                    <div style="color:#666;font-size:14px;">${addr.province}${addr.city}${addr.district}${addr.detailAddress}</div>
+                                </div>
+                                </c:forEach>
+                            </div>
+                            <div class="modal-footer">
+                                <a href="address" class="btn btn-danger btn-sm">管理地址</a>
+                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </c:if>
             </div>
 
-            <!-- 订单提交表单：若存在默认地址则使用隐藏域自动填充，否则要求用户手动输入 -->
             <form action="checkout" method="post" id="orderForm" class="section-card">
                 <input type="hidden" name="action" value="submit">
-
-                <c:if test="${empty defaultAddress}">
-                    <div class="section-title">收货信息</div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">收货人姓名 <span class="text-danger">*</span></label>
-                                <input type="text" name="receiverName" class="form-control"
-                                       placeholder="请输入收货人姓名" required
-                                       value="${sessionScope.username}">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">联系电话 <span class="text-danger">*</span></label>
-                                <input type="tel" name="receiverPhone" class="form-control"
-                                       placeholder="请输入11位手机号" required pattern="1[3-9]\d{9}"
-                                       value="${sessionScope.userPhone}">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">详细地址 <span class="text-danger">*</span></label>
-                        <textarea name="receiverAddress" class="form-control" rows="3"
-                                  placeholder="请输入省市区及详细街道门牌号" required></textarea>
-                    </div>
-                </c:if>
 
                 <c:if test="${not empty defaultAddress}">
                     <input type="hidden" name="receiverName" value="${defaultAddress.receiverName}">
@@ -326,13 +329,13 @@
                 <div class="section-title">支付方式</div>
                 <div style="display:flex;gap:16px;flex-wrap:wrap;">
                     <label style="border:1.5px solid #e74c3c;border-radius:8px;padding:12px 20px;cursor:pointer;display:flex;align-items:center;gap:8px;background:#fff5f5;" class="pay-method-label">
-                        <input type="radio" name="payMethod" value="支付宝" checked style="accent-color:#e74c3c;"> 支付宝
+                        <input type="radio" name="payMethod" value="alipay" checked style="accent-color:#e74c3c;"> 支付宝
                     </label>
                     <label style="border:1.5px solid #ddd;border-radius:8px;padding:12px 20px;cursor:pointer;display:flex;align-items:center;gap:8px;" class="pay-method-label">
-                        <input type="radio" name="payMethod" value="微信支付" style="accent-color:#e74c3c;"> 微信支付
+                        <input type="radio" name="payMethod" value="wechat" style="accent-color:#e74c3c;"> 微信支付
                     </label>
                     <label style="border:1.5px solid #ddd;border-radius:8px;padding:12px 20px;cursor:pointer;display:flex;align-items:center;gap:8px;" class="pay-method-label">
-                        <input type="radio" name="payMethod" value="银行卡" style="accent-color:#e74c3c;"> 银行卡
+                        <input type="radio" name="payMethod" value="bank" style="accent-color:#e74c3c;"> 银行卡
                     </label>
                 </div>
 
@@ -475,6 +478,25 @@
             finalTotal.textContent = '¥' + totalAmount.toFixed(2);
             msg.textContent = '';
         }
+    }
+
+    function selectAddress(el, name, phone, address) {
+        document.querySelectorAll('.address-item-modal').forEach(function(item) {
+            item.style.borderColor = '#e0e0e0';
+            item.style.background = 'white';
+        });
+        el.style.borderColor = '#e74c3c';
+        el.style.background = '#fff5f5';
+        document.getElementById('displayName').textContent = name;
+        document.getElementById('displayPhone').textContent = phone;
+        document.getElementById('displayAddress').textContent = address;
+        // 更新隐藏域
+        document.getElementsByName('receiverName')[0].value = name;
+        document.getElementsByName('receiverPhone')[0].value = phone;
+        document.getElementsByName('receiverAddress')[0].value = address;
+        // 关闭模态框
+        var modal = bootstrap.Modal.getInstance(document.getElementById('addressSelectModal'));
+        if (modal) modal.hide();
     }
 </script>
 </body>

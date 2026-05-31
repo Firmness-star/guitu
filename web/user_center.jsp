@@ -513,9 +513,10 @@
             <div class="nav-item">
                 <a href="orders?ref=uc" class="nav-link">
                     <i class="bi bi-receipt"></i>
+                    <c:set var="pendingCount" value="${orderStats['待付款'] + orderStats['已付款'] + orderStats['已发货']}"/>
                     我的订单
-                    <c:if test="${orderStats['全部'] > 0}">
-                        <span class="nav-badge">${orderStats['全部']}</span>
+                    <c:if test="${pendingCount > 0}">
+                        <span class="nav-badge">${pendingCount}</span>
                     </c:if>
                 </a>
             </div>
@@ -586,8 +587,8 @@
                 </a>
                 <a href="orders" class="stat-card completed">
                     <div class="stat-icon"><i class="bi bi-bag-check"></i></div>
-                    <div class="stat-num">${orderStats['已完成']}</div>
-                    <div class="stat-label">已完成</div>
+                    <div class="stat-num">${orderStats['已收货']}</div>
+                    <div class="stat-label">已收货</div>
                 </a>
             </div>
         </c:if>

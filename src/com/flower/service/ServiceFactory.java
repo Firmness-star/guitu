@@ -68,9 +68,5 @@ public class ServiceFactory {
     public static void main(String[] args) {
         ISpService s1 = ServiceFactory.getSpService();
         ISpService s2 = ServiceFactory.getSpService();
-
-        System.out.println("实例1：" + s1);
-        System.out.println("实例2：" + s2);
-        System.out.println("是否为同一实例：" + (s1 == s2));
     }
 }

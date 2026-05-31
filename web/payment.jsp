@@ -3,6 +3,9 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
+<!-- 确定选中的支付方式：优先 URL 参数，其次 request 属性 -->
+<c:set var="selectedPay" value="${not empty param.payMethod ? param.payMethod : payMethod}" />
+
 <!-- 校验订单是否存在，若不存在则重定向至订单列表页 -->
 <c:if test="${empty order}">
     <jsp:forward page="orders"/>
@@ -377,8 +380,8 @@
                 <input type="hidden" name="orderId" value="${order.orderId}">
                 <input type="hidden" name="action" value="pay">
                 
-                <label class="payment-option active">
-                    <input type="radio" name="payMethod" value="alipay" checked>
+                <label class="payment-option ${empty selectedPay || selectedPay == 'alipay' ? 'active' : ''}">
+                    <input type="radio" name="payMethod" value="alipay" ${empty selectedPay || selectedPay == 'alipay' ? 'checked' : ''}>
                     <i class="bi bi-qr-code payment-icon"></i>
                     <div class="payment-info">
                         <div class="payment-name">支付宝支付</div>
@@ -386,8 +389,8 @@
                     </div>
                 </label>
 
-                <label class="payment-option">
-                    <input type="radio" name="payMethod" value="wechat">
+                <label class="payment-option ${selectedPay == 'wechat' ? 'active' : ''}">
+                    <input type="radio" name="payMethod" value="wechat" ${selectedPay == 'wechat' ? 'checked' : ''}>
                     <i class="bi bi-chat-dots payment-icon"></i>
                     <div class="payment-info">
                         <div class="payment-name">微信支付</div>
@@ -395,8 +398,8 @@
                     </div>
                 </label>
 
-                <label class="payment-option">
-                    <input type="radio" name="payMethod" value="bank">
+                <label class="payment-option ${selectedPay == 'bank' ? 'active' : ''}">
+                    <input type="radio" name="payMethod" value="bank" ${selectedPay == 'bank' ? 'checked' : ''}>
                     <i class="bi bi-bank payment-icon"></i>
                     <div class="payment-info">
                         <div class="payment-name">银行卡支付</div>

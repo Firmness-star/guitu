@@ -49,7 +49,10 @@
 
         .stat-card:hover {
             transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
         }
+        .stat-card.clickable { cursor: pointer; }
+        .stat-card.clickable:hover .stat-number { color: var(--primary-color); }
 
         .stat-icon {
             font-size: 40px;
@@ -158,7 +161,6 @@
         <h4 class="mb-0"><i class="bi bi-shop me-2"></i>花店商城商家后台</h4>
         <div>
             <span class="me-3">商家：${sessionScope.username}</span>
-            <a href="${pageContext.request.contextPath}/index.jsp" class="btn btn-sm btn-light me-2">返回首页</a>
             <a href="${pageContext.request.contextPath}/logout" class="btn btn-sm btn-danger">退出登录</a>
         </div>
     </div>
@@ -170,6 +172,11 @@
         <li class="nav-item">
             <a class="nav-link ${empty param.tab ? 'active' : ''}" href="${pageContext.request.contextPath}/merchant/index?tab=index">
                 <i class="bi bi-speedometer2"></i> 首页概览
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link ${param.tab == 'info' ? 'active' : ''}" href="${pageContext.request.contextPath}/merchant/info?tab=info">
+                <i class="bi bi-person-circle"></i> 个人信息管理
             </a>
         </li>
         <li class="nav-item">
@@ -186,48 +193,51 @@
 
     <!-- 首页概览模块：展示经营统计数据、热销商品及最近订单 -->
     <c:if test="${empty param.tab || param.tab == 'index'}">
-        <div class="row">
-            <div class="col-md-2">
-                <div class="stat-card blue">
-                    <div class="stat-icon"><i class="bi bi-box-seam"></i></div>
-                    <div class="stat-number">${totalProducts}</div>
-                    <div class="stat-label">总商品数</div>
-                </div>
+        <div class="row g-3">
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="${pageContext.request.contextPath}/merchant/products?tab=products" style="text-decoration:none;">
+                    <div class="stat-card blue clickable">
+                        <div class="stat-icon"><i class="bi bi-box-seam"></i></div>
+                        <div class="stat-number">${totalProducts}</div>
+                        <div class="stat-label">总商品数</div>
+                    </div>
+                </a>
             </div>
-            <div class="col-md-2">
-                <div class="stat-card green">
-                    <div class="stat-icon"><i class="bi bi-bag-check"></i></div>
-                    <div class="stat-number">${totalOrders}</div>
-                    <div class="stat-label">总订单数</div>
-                </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="${pageContext.request.contextPath}/merchant/orders?tab=orders" style="text-decoration:none;">
+                    <div class="stat-card green clickable">
+                        <div class="stat-icon"><i class="bi bi-bag-check"></i></div>
+                        <div class="stat-number">${totalOrders}</div>
+                        <div class="stat-label">总订单数</div>
+                    </div>
+                </a>
             </div>
-            <div class="col-md-2">
-                <div class="stat-card orange">
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="${pageContext.request.contextPath}/merchant/orders?tab=orders" style="text-decoration:none;">
+                <div class="stat-card orange clickable">
                     <div class="stat-icon"><i class="bi bi-currency-yuan"></i></div>
                     <div class="stat-number">¥<fmt:formatNumber value="${totalSales}" pattern="#0.00"/></div>
                     <div class="stat-label">总销售额</div>
                 </div>
+                </a>
             </div>
-            <div class="col-md-2">
-                <div class="stat-card yellow">
-                    <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
-                    <div class="stat-number">${pendingOrders}</div>
-                    <div class="stat-label">待处理订单</div>
-                </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="${pageContext.request.contextPath}/merchant/orders?tab=orders&status=未完成" style="text-decoration:none;">
+                    <div class="stat-card yellow clickable">
+                        <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+                        <div class="stat-number">${pendingOrders}</div>
+                        <div class="stat-label">待处理订单</div>
+                    </div>
+                </a>
             </div>
-            <div class="col-md-2">
-                <div class="stat-card red">
-                    <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
-                    <div class="stat-number">${lowStockProducts}</div>
-                    <div class="stat-label">库存预警</div>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="stat-card purple">
-                    <div class="stat-icon"><i class="bi bi-graph-up"></i></div>
-                    <div class="stat-number">${totalOrders > 0 ? String.format("%.0f", totalSales / totalOrders) : 0}</div>
-                    <div class="stat-label">平均客单价</div>
-                </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="${pageContext.request.contextPath}/merchant/products?tab=products&lowStock=1" style="text-decoration:none;">
+                    <div class="stat-card red clickable">
+                        <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                        <div class="stat-number">${lowStockProducts}</div>
+                        <div class="stat-label">库存预警</div>
+                    </div>
+                </a>
             </div>
         </div>
 
@@ -312,6 +322,7 @@
                                 <span class="badge-status ${order.status == '待付款' ? 'badge-warning' :
                                     order.status == '已付款' ? 'badge-info' :
                                     order.status == '已发货' ? 'badge-primary' :
+                                    order.status == '已收货' ? 'badge-success' :
                                     order.status == '已完成' ? 'badge-active' : 'badge-disabled'}">
                                         ${order.status}
                                 </span>
@@ -325,8 +336,80 @@
         </div>
     </c:if>
 
-    <!-- 商品管理模块：支持搜索、筛选、上下架、删除及添加/编辑商品 -->
+    <!-- 个人信息管理模块 -->
+    <c:if test="${param.tab == 'info'}">
+        <c:if test="${not empty orderMessage}">
+            <div class="alert alert-${orderMessageType} alert-dismissible fade show" role="alert">
+                ${orderMessage}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </c:if>
+        <div class="row">
+            <div class="col-lg-6">
+        <div class="content-card">
+            <div class="card-header">
+                <h5 class="card-title"><i class="bi bi-person-circle me-2"></i>基本信息</h5>
+            </div>
+            <div class="card-body">
+                <form action="${pageContext.request.contextPath}/merchant/info" method="post">
+                    <input type="hidden" name="tab" value="info">
+                    <input type="hidden" name="action" value="updateInfo">
+                    <div class="mb-3">
+                        <label class="form-label">用户名</label>
+                        <input type="text" class="form-control" value="${merchantInfo.username}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">角色</label>
+                        <input type="text" class="form-control" value="${merchantInfo.role}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">手机号</label>
+                        <input type="text" class="form-control" name="tel" value="${merchantInfo.tel}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">邮箱</label>
+                        <input type="email" class="form-control" name="email" value="${merchantInfo.email}" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger">保存修改</button>
+                </form>
+            </div>
+        </div>
+            </div>
+            <div class="col-lg-6">
+        <div class="content-card">
+            <div class="card-header">
+                <h5 class="card-title"><i class="bi bi-shield-lock me-2"></i>修改密码</h5>
+            </div>
+            <div class="card-body">
+                <form action="${pageContext.request.contextPath}/merchant/info" method="post" id="merchantPwdForm">
+                    <input type="hidden" name="tab" value="info">
+                    <input type="hidden" name="action" value="changePwd">
+                    <div class="mb-3">
+                        <label class="form-label">原密码</label>
+                        <input type="password" class="form-control" name="oldPassword" required placeholder="请输入原密码">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">新密码</label>
+                        <input type="password" class="form-control" name="newPassword" id="merchantNewPwd" required minlength="6" placeholder="至少6位">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">确认新密码</label>
+                        <input type="password" class="form-control" id="merchantConfirmPwd" required minlength="6" placeholder="再次输入新密码">
+                    </div>
+                    <button type="button" class="btn btn-danger" onclick="submitMerchantPwd()">修改密码</button>
+                </form>
+            </div>
+        </div>
+            </div>
+        </div>
+    </c:if>
+
+    <!-- 商品管理模块 -->
     <c:if test="${param.tab == 'products'}">
+        <c:if test="${not empty orderMessage}">
+            <div class="alert alert-${orderMessageType} alert-dismissible fade show" role="alert">
+                ${orderMessage}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </c:if>
         <div class="content-card">
             <div class="card-header">
                 <h5 class="card-title"><i class="bi bi-box-seam me-2"></i>商品管理</h5>
@@ -346,6 +429,7 @@
                                 <option value="">全部状态</option>
                                 <option value="1" ${statusFilter == '1' ? 'selected' : ''}>上架</option>
                                 <option value="0" ${statusFilter == '0' ? 'selected' : ''}>下架</option>
+                                <option value="lowStock" ${statusFilter == 'lowStock' ? 'selected' : ''}>库存预警</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -410,7 +494,7 @@
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                             </div>
                                             <div class="modal-body">
-                                                <form action="${pageContext.request.contextPath}/merchant/products" method="post">
+                                                <form action="${pageContext.request.contextPath}/merchant/products" method="post" id="editForm${product.id}">
                                                     <input type="hidden" name="action" value="update">
                                                     <input type="hidden" name="id" value="${product.id}">
                                                     <div class="mb-3">
@@ -432,20 +516,42 @@
                                                         </div>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label">商品图片URL</label>
-                                                        <input type="text" class="form-control" name="pic" value="${product.pic}" required>
+                                                        <label class="form-label">商品图片</label>
+                                                        <div class="input-group">
+                                                            <input type="text" class="form-control" name="pic" id="editPic${product.id}" value="${product.pic}" required>
+                                                            <label class="input-group-text btn btn-outline-secondary" style="cursor:pointer;">
+                                                                <i class="bi bi-upload"></i> 上传
+                                                                <input type="file" accept="image/*" style="display:none;" onchange="uploadProductPic(this, 'editPic${product.id}')">
+                                                            </label>
+                                                        </div>
                                                     </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label">分类</label>
-                                                        <select class="form-select" name="categoryId" required>
-                                                            <c:forEach items="${categories}" var="cat">
-                                                                <c:if test="${cat.parentId > 0}">
-                                                                    <option value="${cat.id}" ${product.categoryId == cat.id ? 'selected' : ''}>
-                                                                            ${cat.name}
-                                                                    </option>
-                                                                </c:if>
-                                                            </c:forEach>
-                                                        </select>
+                                                    <!-- 计算当前商品所属的父分类 -->
+                                                    <c:set var="editParentId" value="0"/>
+                                                    <c:forEach items="${categories}" var="cat">
+                                                        <c:if test="${cat.id == product.categoryId}">
+                                                            <c:set var="editParentId" value="${cat.parentId}"/>
+                                                        </c:if>
+                                                    </c:forEach>
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-3">
+                                                            <label class="form-label">一级分类</label>
+                                                            <select class="form-select" id="editParentCat${product.id}" onchange="updateChildCats('editParentCat${product.id}', 'editChildCat${product.id}')" required>
+                                                                <option value="">请选择一级分类</option>
+                                                                <c:forEach items="${parentCategories}" var="pc">
+                                                                    <option value="${pc.id}" ${editParentId == pc.id ? 'selected' : ''}>${pc.name}</option>
+                                                                </c:forEach>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-6 mb-3">
+                                                            <label class="form-label">二级分类</label>
+                                                            <select class="form-select" name="categoryId" id="editChildCat${product.id}" required>
+                                                                <c:forEach items="${categories}" var="cat">
+                                                                    <c:if test="${cat.parentId > 0 and cat.parentId == editParentId}">
+                                                                        <option value="${cat.id}" ${product.categoryId == cat.id ? 'selected' : ''}>${cat.name}</option>
+                                                                    </c:if>
+                                                                </c:forEach>
+                                                            </select>
+                                                        </div>
                                                     </div>
                                                     <button type="submit" class="btn btn-primary">保存修改</button>
                                                 </form>
@@ -470,7 +576,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <form action="${pageContext.request.contextPath}/merchant/products" method="post">
+                        <form action="${pageContext.request.contextPath}/merchant/products" method="post" id="addProductForm">
                             <input type="hidden" name="action" value="add">
                             <div class="mb-3">
                                 <label class="form-label">商品名称</label>
@@ -491,19 +597,32 @@
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">商品图片URL</label>
-                                <input type="text" class="form-control" name="pic" placeholder="https://..." required>
+                                <label class="form-label">商品图片</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="pic" id="addProductPic" placeholder="上传图片或粘贴URL" required>
+                                    <label class="input-group-text btn btn-outline-secondary" style="cursor:pointer;">
+                                        <i class="bi bi-upload"></i> 上传
+                                        <input type="file" accept="image/*" style="display:none;" onchange="uploadProductPic(this, 'addProductPic')">
+                                    </label>
+                                </div>
+                                <div class="form-text">选择本地图片上传，或直接粘贴图片URL</div>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">分类</label>
-                                <select class="form-select" name="categoryId" required>
-                                    <option value="">请选择分类</option>
-                                    <c:forEach items="${categories}" var="cat">
-                                        <c:if test="${cat.parentId > 0}">
-                                            <option value="${cat.id}">${cat.name}</option>
-                                        </c:if>
-                                    </c:forEach>
-                                </select>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">一级分类</label>
+                                    <select class="form-select" id="addParentCat" onchange="updateChildCats('addParentCat', 'addChildCat')" required>
+                                        <option value="">请选择一级分类</option>
+                                        <c:forEach items="${parentCategories}" var="pc">
+                                            <option value="${pc.id}">${pc.name}</option>
+                                        </c:forEach>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">二级分类</label>
+                                    <select class="form-select" name="categoryId" id="addChildCat" required>
+                                        <option value="">请先选择一级分类</option>
+                                    </select>
+                                </div>
                             </div>
                             <button type="submit" class="btn btn-primary">添加商品</button>
                         </form>
@@ -513,8 +632,13 @@
         </div>
     </c:if>
 
-    <!-- 订单管理模块：支持按状态和关键词筛选，提供发货/完成操作 -->
+    <!-- 订单管理模块 -->
     <c:if test="${param.tab == 'orders'}">
+        <c:if test="${not empty orderMessage}">
+            <div class="alert alert-${orderMessageType} alert-dismissible fade show" role="alert">
+                ${orderMessage}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </c:if>
         <div class="content-card">
             <div class="card-header">
                 <h5 class="card-title"><i class="bi bi-receipt me-2"></i>订单管理</h5>
@@ -529,9 +653,11 @@
                         <div class="col-md-2">
                             <select class="form-select" name="status">
                                 <option value="">全部状态</option>
+                                <option value="未完成" ${statusFilter == '未完成' ? 'selected' : ''}>未完成</option>
                                 <option value="待付款" ${statusFilter == '待付款' ? 'selected' : ''}>待付款</option>
                                 <option value="已付款" ${statusFilter == '已付款' ? 'selected' : ''}>已付款</option>
                                 <option value="已发货" ${statusFilter == '已发货' ? 'selected' : ''}>已发货</option>
+                                <option value="已收货" ${statusFilter == '已收货' ? 'selected' : ''}>已收货</option>
                                 <option value="已完成" ${statusFilter == '已完成' ? 'selected' : ''}>已完成</option>
                                 <option value="已取消" ${statusFilter == '已取消' ? 'selected' : ''}>已取消</option>
                             </select>
@@ -569,6 +695,7 @@
                                 <span class="badge-status ${order.status == '待付款' ? 'badge-warning' :
                                     order.status == '已付款' ? 'badge-info' :
                                     order.status == '已发货' ? 'badge-primary' :
+                                    order.status == '已收货' ? 'badge-success' :
                                     order.status == '已完成' ? 'badge-active' : 'badge-disabled'}">
                                         ${order.status}
                                 </span>
@@ -580,9 +707,17 @@
                             <td>
                                 <c:if test="${order.status == '已付款'}">
                                     <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#shipModal${order.orderId}">发货</button>
+                                    <a href="${pageContext.request.contextPath}/merchant/orders?action=cancel&orderId=${order.orderId}" class="btn btn-sm btn-danger" onclick="return confirm('确认取消该订单？')">取消</a>
                                 </c:if>
                                 <c:if test="${order.status == '已发货'}">
-                                    <a href="${pageContext.request.contextPath}/merchant/orders?action=complete&orderId=${order.orderId}" class="btn btn-sm btn-success" onclick="return confirm('确认完成？')">完成</a>
+                                    <a href="${pageContext.request.contextPath}/merchant/orders?action=cancel&orderId=${order.orderId}" class="btn btn-sm btn-danger" onclick="return confirm('确认取消该订单？退款将原路返回')">取消</a>
+                                </c:if>
+                                <c:if test="${order.status == '已收货'}">
+                                    <a href="${pageContext.request.contextPath}/merchant/orders?action=complete&orderId=${order.orderId}" class="btn btn-sm btn-success" onclick="return confirm('确认完成该订单？')">完成</a>
+                                    <a href="${pageContext.request.contextPath}/merchant/orders?action=cancel&orderId=${order.orderId}" class="btn btn-sm btn-danger" onclick="return confirm('确认取消该订单？退款将原路返回')">取消</a>
+                                </c:if>
+                                <c:if test="${order.status == '待付款'}">
+                                    <a href="${pageContext.request.contextPath}/merchant/orders?action=cancel&orderId=${order.orderId}" class="btn btn-sm btn-danger" onclick="return confirm('确认取消该订单？')">取消</a>
                                 </c:if>
 
                                 <!-- 发货模态框 -->
@@ -651,5 +786,63 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // 分类数据：子分类ID -> 父分类ID 的映射
+    var catMap = {
+    <c:forEach items="${categories}" var="cat" varStatus="s">
+        <c:if test="${cat.parentId > 0}">
+        ${cat.id}: {name: '${cat.name}', parentId: ${cat.parentId}}<c:if test="${!s.last}">,</c:if>
+        </c:if>
+    </c:forEach>
+    };
+
+    // 更新二级分类下拉
+    function updateChildCats(parentSelectId, childSelectId) {
+        var parentId = parseInt(document.getElementById(parentSelectId).value);
+        var childSelect = document.getElementById(childSelectId);
+        childSelect.innerHTML = '<option value="">请选择二级分类</option>';
+        for (var id in catMap) {
+            if (catMap[id].parentId === parentId) {
+                childSelect.innerHTML += '<option value="' + id + '">' + catMap[id].name + '</option>';
+            }
+        }
+    }
+
+    // 上传商品图片
+    function uploadProductPic(input, targetId) {
+        var file = input.files[0];
+        if (!file) return;
+        var formData = new FormData();
+        formData.append('file', file);
+        var target = document.getElementById(targetId);
+        target.value = '上传中...';
+        fetch('${pageContext.request.contextPath}/merchant/productUpload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                target.value = data.url;
+            } else {
+                alert('上传失败：' + data.message);
+                target.value = '';
+            }
+        })
+        .catch(function() {
+            alert('网络错误，上传失败');
+            target.value = '';
+        });
+    }
+
+    function submitMerchantPwd() {
+        var newPwd = document.getElementById('merchantNewPwd').value;
+        var confirmPwd = document.getElementById('merchantConfirmPwd').value;
+        if (newPwd.length < 6) { alert('新密码长度不能少于6位'); return; }
+        if (newPwd !== confirmPwd) { alert('两次输入的密码不一致'); return; }
+        if (!confirm('确认修改密码？')) return;
+        document.getElementById('merchantPwdForm').submit();
+    }
+</script>
 </body>
 </html>

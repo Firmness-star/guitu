@@ -197,12 +197,40 @@ public class UserDao {
         return false;
     }
 
+    public boolean isTelUsedByOther(String tel, int excludeUserId) {
+        if (tel == null || tel.trim().isEmpty()) return false;
+        String sql = "SELECT COUNT(*) FROM user WHERE tel = ? AND id != ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, tel.trim());
+            pstmt.setInt(2, excludeUserId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return false;
+    }
+
     public boolean isEmailExists(String email) {
         if (email == null || email.trim().isEmpty()) return false;
         String sql = "SELECT COUNT(*) FROM user WHERE email = ?";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, email.trim());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return false;
+    }
+
+    public boolean isEmailUsedByOther(String email, int excludeUserId) {
+        if (email == null || email.trim().isEmpty()) return false;
+        String sql = "SELECT COUNT(*) FROM user WHERE email = ? AND id != ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, email.trim());
+            pstmt.setInt(2, excludeUserId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) return rs.getInt(1) > 0;
             }

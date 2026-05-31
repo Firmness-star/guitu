@@ -1,6 +1,8 @@
 package com.flower.controller;
 
+import com.flower.dao.CartDao;
 import com.flower.dao.UserDao;
+import com.flower.entity.CartItem;
 import com.flower.entity.User;
 import com.flower.util.MD5Util;
 
@@ -8,6 +10,7 @@ import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * 登录控制器
@@ -83,45 +86,29 @@ public class LoginController extends HttpServlet {
             }
         }
 
-        System.out.println("========== 登录调试信息 ==========");
-        System.out.println("用户名: " + username);
-        System.out.println("密码: " + password);
-        
+
         if (username == null || username.trim().isEmpty() ||
                 password == null || password.trim().isEmpty()) {
-            System.out.println("错误: 用户名或密码为空");
             req.setAttribute("error", "用户名和密码不能为空");
             req.getRequestDispatcher("login.jsp").forward(req, resp);
             return;
         }
 
-        // 测试 MD5 加密
         String encryptedPassword = MD5Util.encrypt(password);
-        System.out.println("MD5加密后的密码: " + encryptedPassword);
-        
-        // 先查找用户是否存在
+
         User userByName = userDao.findByUsername(username);
         if (userByName == null) {
-            System.out.println("错误: 用户不存在 - " + username);
             req.setAttribute("error", "用户名或密码错误");
             req.setAttribute("username", username);
             req.getRequestDispatcher("login.jsp").forward(req, resp);
             return;
         }
-        
-        System.out.println("找到用户: " + userByName.getUsername());
-        System.out.println("数据库中的密码: " + userByName.getPass());
-        System.out.println("用户角色: " + userByName.getRole());
-        System.out.println("用户状态: " + userByName.getState());
-        
-        // 使用用户名和密码查询
+
         User user = userDao.findByUsernameAndPassword(username, password);
 
         if (user != null) {
-            System.out.println("登录成功!");
-            
+
             if ("禁用".equals(user.getState())) {
-                System.out.println("错误: 账户已被禁用");
                 req.setAttribute("error", "账户已被禁用，请联系管理员");
                 req.getRequestDispatcher("login.jsp").forward(req, resp);
                 return;
@@ -129,58 +116,54 @@ public class LoginController extends HttpServlet {
 
             userDao.updateLastLoginTime(username);
 
-            // 记录登录日志
             String ip = getClientIp(req);
             String userAgent = req.getHeader("User-Agent");
             userDao.recordLoginLog(user.getId(), user.getUsername(), ip, userAgent);
 
             HttpSession session = req.getSession();
+
+            // 将游客购物车合并到数据库购物车
+            @SuppressWarnings("unchecked")
+            List<CartItem> guestCart = (List<CartItem>) session.getAttribute("cart");
+            CartDao cartDao = new CartDao();
+            if (guestCart != null && !guestCart.isEmpty()) {
+                List<CartItem> mergedCart = cartDao.mergeCart(user.getId(), guestCart);
+                session.setAttribute("cart", mergedCart);
+            }
+            session.setAttribute("cartLoadedFromDb", true);
+
             session.setAttribute("userId", user.getId());
             session.setAttribute("username", user.getUsername());
             session.setAttribute("userRole", user.getRole());
             session.setAttribute("loginTime", new java.util.Date());
             session.setAttribute("userEmail", user.getEmail());
             session.setAttribute("userPhone", user.getTel());
-            // 同步头像路径到 session
             if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
                 session.setAttribute("userAvatar", user.getAvatar());
             }
 
-            // 处理"记住我"功能
             if ("on".equals(remember)) {
                 createRememberMeCookie(resp, username);
             } else {
                 removeRememberMeCookie(resp);
             }
 
-            // 根据角色跳转到不同页面
             String redirect = req.getParameter("redirect");
             if (redirect != null && !redirect.isEmpty()) {
-                System.out.println("重定向到: " + redirect);
                 resp.sendRedirect(redirect);
             } else if ("管理员".equals(user.getRole())) {
-                System.out.println("重定向到管理员后台");
                 resp.sendRedirect(req.getContextPath() + "/admin/index");
             } else if ("商家".equals(user.getRole())) {
-                System.out.println("重定向到商家后台");
                 resp.sendRedirect(req.getContextPath() + "/merchant/index");
             } else {
-                System.out.println("重定向到首页");
                 resp.sendRedirect("index.jsp?welcome=1");
             }
 
         } else {
-            System.out.println("错误: 密码不匹配");
-            System.out.println("输入的密码MD5: " + encryptedPassword);
-            System.out.println("数据库密码: " + userByName.getPass());
-            System.out.println("是否相等: " + encryptedPassword.equals(userByName.getPass()));
-            
             req.setAttribute("error", "用户名或密码错误");
             req.setAttribute("username", username);
             req.getRequestDispatcher("login.jsp").forward(req, resp);
         }
-        
-        System.out.println("====================================");
     }
 
     /**

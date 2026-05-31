@@ -184,6 +184,7 @@ public class CheckoutController extends HttpServlet {
 
         // 查询用户的默认收货地址和积分
         Address defaultAddress = addressDao.findDefaultByUserId(userId);
+        List<Address> allAddresses = addressDao.findByUserId(userId);
         int userJf = userDao.getJf(userId);
 
         // 积分抵扣规则：每100积分抵1元，最多抵商品总价的50%
@@ -195,6 +196,7 @@ public class CheckoutController extends HttpServlet {
         req.setAttribute("totalCount", totalCount);
         req.setAttribute("username", username);
         req.setAttribute("defaultAddress", defaultAddress);
+        req.setAttribute("allAddresses", allAddresses);
         req.setAttribute("userJf", userJf);
         req.setAttribute("maxJfDeduct", maxJfDeduct);
 
@@ -251,7 +253,7 @@ public class CheckoutController extends HttpServlet {
 
         // 简单验证：必填项不能为空
         if (isEmpty(receiverName) || isEmpty(receiverPhone) || isEmpty(receiverAddress)) {
-            req.setAttribute("error", "请填写完整的收货信息");
+            req.setAttribute("error", "请先前往收货地址页面添加默认收货地址");
             req.setAttribute("selectedItems", selectedItems);
             req.setAttribute("totalAmount", totalAmount);
             req.setAttribute("totalCount", totalCount);
@@ -323,13 +325,12 @@ public class CheckoutController extends HttpServlet {
                 cart.removeIf(CartItem::isSelected);
             }
 
-            // 将当前订单存入session（仅供成功页面展示用，非持久化）
-            session.setAttribute("currentOrder", order);
+            String payMethod = req.getParameter("payMethod");
+            if (payMethod == null || payMethod.trim().isEmpty()) {
+                payMethod = "alipay";
+            }
 
-            System.out.println("订单提交成功：" + order.getOrderId() + "，用户：" + username);
-
-            // 重定向到成功页面（防止重复提交）
-            resp.sendRedirect("order_success.jsp");
+            resp.sendRedirect("payment?orderId=" + order.getOrderId() + "&payMethod=" + payMethod);
 
         } else {
             // Step 4b: 保存失败，返回错误信息

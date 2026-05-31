@@ -49,7 +49,7 @@ public class PaymentController extends HttpServlet {
         }
 
         Order order = orderDao.findByOrderId(orderId);
-        
+
         // 校验订单是否存在、是否属于当前用户以及是否处于待付款状态
         if (order == null || !order.getUserId().equals(userId)) {
             resp.sendRedirect("orders");
@@ -59,6 +59,11 @@ public class PaymentController extends HttpServlet {
         if (!"待付款".equals(order.getStatus())) {
             resp.sendRedirect("orders");
             return;
+        }
+
+        String payMethod = req.getParameter("payMethod");
+        if (payMethod != null) {
+            req.setAttribute("payMethod", payMethod);
         }
 
         req.setAttribute("order", order);

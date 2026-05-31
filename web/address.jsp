@@ -459,9 +459,6 @@
                 <i class="bi bi-inbox"></i>
               </div>
               <p class="empty-text">暂无收货地址，请添加</p>
-              <button class="btn-add" data-bs-toggle="modal" data-bs-target="#addAddressModal">
-                <i class="bi bi-plus-circle"></i> 新增地址
-              </button>
             </div>
           </c:when>
 

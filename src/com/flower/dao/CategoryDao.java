@@ -205,8 +205,6 @@ public class CategoryDao {
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             if (e.getMessage() != null && e.getMessage().contains("foreign key")) {
-                // 分类下有商品，不能删除
-                System.err.println("分类 ID=" + id + " 删除失败：存在关联商品");
             } else {
                 e.printStackTrace();
             }

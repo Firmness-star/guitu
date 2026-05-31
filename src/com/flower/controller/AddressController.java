@@ -110,9 +110,11 @@ public class AddressController extends HttpServlet {
             return;
         }
 
-        Address address = new Address(userId, receiverName, receiverPhone, 
+        Address address = new Address(userId, receiverName, receiverPhone,
                                        province, city, district, detailAddress);
-        address.setDefault("on".equals(isDefault));
+        // 第一个地址自动设为默认
+        List<Address> existing = addressDao.findByUserId(userId);
+        address.setDefault(existing.isEmpty() || "on".equals(isDefault));
 
         boolean success = addressDao.save(address);
         

@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
  */
 public class MD5Util {
 
-    private static final String SALT = "";
+    private static final String SALT = "FlowerShop@2026#Secure";
 
     /**
      * 使用默认盐值对输入字符串进行 MD5 加密

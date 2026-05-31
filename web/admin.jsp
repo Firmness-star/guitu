@@ -164,7 +164,6 @@
         <h4 class="mb-0"><i class="bi bi-shield-lock me-2"></i>花店商城管理后台</h4>
         <div>
             <span class="me-3">管理员：${sessionScope.username}</span>
-            <a href="${pageContext.request.contextPath}/index.jsp" class="btn btn-sm btn-light me-2">返回首页</a>
             <a href="${pageContext.request.contextPath}/logout" class="btn btn-sm btn-danger">退出登录</a>
         </div>
     </div>
@@ -184,23 +183,13 @@
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link ${param.tab == 'orders' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/orders?tab=orders">
-                <i class="bi bi-receipt"></i> 订单管理
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link ${param.tab == 'products' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/products?tab=products">
-                <i class="bi bi-box-seam"></i> 商品管理
+            <a class="nav-link ${param.tab == 'merchants' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/merchants?tab=merchants">
+                <i class="bi bi-shop"></i> 商家管理
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link ${param.tab == 'categories' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/categories?tab=categories">
-                <i class="bi bi-tags"></i> 分类管理
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link ${param.tab == 'banners' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/banners?tab=banners">
-                <i class="bi bi-images"></i> 海报管理
+                <i class="bi bi-tags"></i> 商品类型管理
             </a>
         </li>
         <li class="nav-item">
@@ -208,66 +197,53 @@
                 <i class="bi bi-chat-dots"></i> 留言管理
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link ${param.tab == 'banners' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/banners?tab=banners">
+                <i class="bi bi-images"></i> 海报管理
+            </a>
+        </li>
     </ul>
 
     <!-- 首页概览模块：展示统计数据及最近记录 -->
     <c:if test="${empty param.tab || param.tab == 'index'}">
         <div class="row g-3">
-            <div class="col-md-4 col-lg-3">
+            <div class="col-6 col-md-4 col-lg-2">
                 <a href="${pageContext.request.contextPath}/admin/users?tab=users" style="text-decoration:none;">
                     <div class="stat-card blue clickable">
                         <div class="stat-icon"><i class="bi bi-people"></i></div>
                         <div class="stat-number">${totalUsers}</div>
-                        <div class="stat-label">总用户数</div>
+                        <div class="stat-label">普通用户数</div>
                     </div>
                 </a>
             </div>
-            <div class="col-md-4 col-lg-3">
-                <a href="${pageContext.request.contextPath}/admin/orders?tab=orders" style="text-decoration:none;">
-                    <div class="stat-card green clickable">
-                        <div class="stat-icon"><i class="bi bi-bag-check"></i></div>
-                        <div class="stat-number">${totalOrders}</div>
-                        <div class="stat-label">总订单数</div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4 col-lg-3">
-                <a href="${pageContext.request.contextPath}/admin/stats" style="text-decoration:none;">
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="${pageContext.request.contextPath}/admin/merchants?tab=merchants" style="text-decoration:none;">
                     <div class="stat-card orange clickable">
+                        <div class="stat-icon"><i class="bi bi-shop"></i></div>
+                        <div class="stat-number">${totalMerchants}</div>
+                        <div class="stat-label">商家总数</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="${pageContext.request.contextPath}/admin/stats" style="text-decoration:none;">
+                    <div class="stat-card purple clickable">
                         <div class="stat-icon"><i class="bi bi-currency-yuan"></i></div>
                         <div class="stat-number">¥<fmt:formatNumber value="${totalSales}" pattern="#0.00"/></div>
                         <div class="stat-label">总销售额</div>
                     </div>
                 </a>
             </div>
-            <div class="col-md-4 col-lg-3">
-                <a href="${pageContext.request.contextPath}/admin/products?tab=products" style="text-decoration:none;">
-                    <div class="stat-card purple clickable">
-                        <div class="stat-icon"><i class="bi bi-box-seam"></i></div>
-                        <div class="stat-number">${totalProducts}</div>
-                        <div class="stat-label">总商品数</div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="${pageContext.request.contextPath}/admin/categories?tab=categories" style="text-decoration:none;">
+                    <div class="stat-card green clickable">
+                        <div class="stat-icon"><i class="bi bi-tags"></i></div>
+                        <div class="stat-number">${totalCategories}</div>
+                        <div class="stat-label">商品分类数</div>
                     </div>
                 </a>
             </div>
-            <div class="col-md-4 col-lg-3">
-                <a href="${pageContext.request.contextPath}/admin/orders?tab=orders&status=未完成" style="text-decoration:none;">
-                    <div class="stat-card yellow clickable">
-                        <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
-                        <div class="stat-number">${pendingOrders}</div>
-                        <div class="stat-label">待处理订单</div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4 col-lg-3">
-                <a href="${pageContext.request.contextPath}/admin/products?tab=products&lowStock=1" style="text-decoration:none;">
-                    <div class="stat-card red clickable">
-                        <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
-                        <div class="stat-number">${lowStockProducts}</div>
-                        <div class="stat-label">库存预警</div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4 col-lg-3">
+            <div class="col-6 col-md-4 col-lg-2">
                 <a href="${pageContext.request.contextPath}/admin/messages?tab=messages" style="text-decoration:none;">
                     <div class="stat-card teal clickable">
                         <div class="stat-icon"><i class="bi bi-chat-dots"></i></div>
@@ -276,39 +252,32 @@
                     </div>
                 </a>
             </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="${pageContext.request.contextPath}/admin/banners?tab=banners" style="text-decoration:none;">
+                    <div class="stat-card yellow clickable">
+                        <div class="stat-icon"><i class="bi bi-images"></i></div>
+                        <div class="stat-number">${totalBanners}</div>
+                        <div class="stat-label">海报数量</div>
+                    </div>
+                </a>
+            </div>
         </div>
 
+        <c:if test="${not empty recentOrders}">
         <div class="content-card">
             <div class="card-header">
                 <h5 class="card-title"><i class="bi bi-clock-history me-2"></i>最近订单</h5>
-                <a href="${pageContext.request.contextPath}/admin/orders?tab=orders" class="btn btn-sm btn-outline-primary">查看全部</a>
             </div>
             <div class="card-body">
                 <table class="table">
-                    <thead>
-                    <tr>
-                        <th>订单号</th>
-                        <th>用户</th>
-                        <th>金额</th>
-                        <th>状态</th>
-                        <th>时间</th>
-                    </tr>
-                    </thead>
+                    <thead><tr><th>订单号</th><th>用户</th><th>金额</th><th>状态</th><th>时间</th></tr></thead>
                     <tbody>
                     <c:forEach items="${recentOrders}" var="order">
                         <tr>
                             <td>${order.orderId}</td>
                             <td>${order.username}</td>
                             <td>¥<fmt:formatNumber value="${order.totalAmount}" pattern="#0.00"/></td>
-                            <td>
-                                <span class="badge-status ${order.status == '待付款' ? 'badge-warning' :
-                                    order.status == '已付款' ? 'badge-info' :
-                                    order.status == '已发货' ? 'badge-primary' :
-                                    order.status == '已收货' ? 'badge-success' :
-                                    order.status == '已完成' ? 'badge-active' : 'badge-disabled'}">
-                                        ${order.status}
-                                </span>
-                            </td>
+                            <td><span class="badge-status ${order.status == '待付款' ? 'badge-warning' : order.status == '已付款' ? 'badge-info' : order.status == '已发货' ? 'badge-primary' : order.status == '已收货' ? 'badge-success' : order.status == '已完成' ? 'badge-active' : 'badge-disabled'}">${order.status}</span></td>
                             <td><fmt:formatDate value="${order.createTime}" pattern="yyyy-MM-dd HH:mm"/></td>
                         </tr>
                     </c:forEach>
@@ -316,7 +285,9 @@
                 </table>
             </div>
         </div>
+        </c:if>
 
+        <c:if test="${not empty recentUsers}">
         <div class="content-card">
             <div class="card-header">
                 <h5 class="card-title"><i class="bi bi-person-plus me-2"></i>最近注册用户</h5>
@@ -353,6 +324,7 @@
                 </table>
             </div>
         </div>
+        </c:if>
     </c:if>
 
     <!-- 用户管理模块：支持搜索、筛选及角色/状态修改 -->
@@ -380,10 +352,8 @@
                         </div>
                         <div class="col-md-2">
                             <select class="form-select" name="role">
-                                <option value="">全部角色</option>
+                                <option value="">全部</option>
                                 <option value="用户" ${roleFilter == '用户' ? 'selected' : ''}>用户</option>
-                                <option value="商家" ${roleFilter == '商家' ? 'selected' : ''}>商家</option>
-                                <option value="管理员" ${roleFilter == '管理员' ? 'selected' : ''}>管理员</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -436,44 +406,11 @@
                                 <c:if test="${user.state == '禁用'}">
                                     <button class="btn btn-sm btn-success" onclick="toggleUserState(${user.id}, '可用')">启用</button>
                                 </c:if>
-                                <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#roleModal${user.id}">改角色</button>
+                                <button class="btn btn-sm btn-info" onclick="changeUserToMerchant(${user.id}, '${user.username}')">改商家</button>
                                 <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#pwdModal${user.id}">重置密码</button>
                                 <c:if test="${sessionScope.userId != user.id}">
                                     <a href="${pageContext.request.contextPath}/admin/users?tab=users&action=delete&userId=${user.id}" class="btn btn-sm btn-outline-danger" onclick="return confirm('确定删除用户「${user.username}」？此操作不可恢复！')">删除</a>
                                 </c:if>
-
-                                <!-- 隐藏表单用于禁用/启用操作 -->
-                                <form id="stateForm${user.id}" action="${pageContext.request.contextPath}/admin/users" method="post" style="display:none;">
-                                    <input type="hidden" name="userId" value="${user.id}">
-                                    <input type="hidden" name="action" id="stateAction${user.id}" value="">
-                                </form>
-
-                                <!-- 修改用户角色的模态框 -->
-                                <div class="modal fade" id="roleModal${user.id}" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">修改用户角色</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <form action="${pageContext.request.contextPath}/admin/users" method="post">
-                                                    <input type="hidden" name="action" value="changeRole">
-                                                    <input type="hidden" name="userId" value="${user.id}">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">选择角色</label>
-                                                        <select class="form-select" name="newRole">
-                                                            <option value="用户" ${user.role == '用户' ? 'selected' : ''}>用户</option>
-                                                            <option value="商家" ${user.role == '商家' ? 'selected' : ''}>商家</option>
-                                                            <option value="管理员" ${user.role == '管理员' ? 'selected' : ''}>管理员</option>
-                                                        </select>
-                                                    </div>
-                                                    <button type="submit" class="btn btn-primary">确认修改</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
 
                                 <!-- 重置用户密码的模态框 -->
                                 <div class="modal fade" id="pwdModal${user.id}" tabindex="-1">
@@ -514,6 +451,82 @@
                     </c:forEach>
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </c:if>
+
+    <!-- 商家管理模块 -->
+    <c:if test="${param.tab == 'merchants'}">
+        <c:if test="${not empty adminSuccess}">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle"></i> ${adminSuccess}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </c:if>
+        <c:if test="${not empty adminError}">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                ${adminError}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </c:if>
+        <div class="content-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title"><i class="bi bi-shop me-2"></i>商家管理</h5>
+                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#addMerchantModal">
+                    <i class="bi bi-plus-circle"></i> 添加商家
+                </button>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead><tr><th>ID</th><th>用户名</th><th>手机号</th><th>邮箱</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <c:forEach items="${merchants}" var="m">
+                            <tr>
+                                <td>${m.id}</td>
+                                <td>${m.username}</td>
+                                <td>${m.tel}</td>
+                                <td>${m.email}</td>
+                                <td><span class="badge-status ${m.state == '可用' ? 'badge-active' : 'badge-disabled'}">${m.state}</span></td>
+                                <td><fmt:formatDate value="${m.createTime}" pattern="yyyy-MM-dd"/></td>
+                                <td>
+                                    <c:if test="${m.id != sessionScope.userId}">
+                                        <button class="btn btn-sm btn-info" onclick="changeMerchantRole(${m.id}, '${m.username}')">改为用户</button>
+                                        <a href="${pageContext.request.contextPath}/admin/merchants?tab=merchants&action=delete&userId=${m.id}" class="btn btn-sm btn-outline-danger" onclick="return confirm('确定删除商家「${m.username}」？相关商品和订单将一并删除！')">删除</a>
+                                    </c:if>
+                                </td>
+                            </tr>
+                        </c:forEach>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 添加商家模态框 -->
+        <div class="modal fade" id="addMerchantModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">添加商家账号</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addMerchantForm" action="${pageContext.request.contextPath}/admin/merchants" method="post">
+                            <input type="hidden" name="tab" value="merchants">
+                            <input type="hidden" name="action" value="addMerchant">
+                            <div class="mb-3">
+                                <label class="form-label">商家用户名 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="merchantUsername" required placeholder="请设置商家登录用户名" minlength="3">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">登录密码 <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" name="merchantPassword" id="addMerchantPwd" required placeholder="请设置登录密码" minlength="6">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">确认密码 <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="addMerchantConfirmPwd" required placeholder="再次输入密码" minlength="6">
+                            </div>
+                            <button type="button" class="btn btn-danger" onclick="submitAddMerchant()">确认添加</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </c:if>
@@ -878,6 +891,31 @@
                 </table>
             </div>
         </div>
+
+        <!-- 微信二维码管理 -->
+        <div class="content-card mt-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title"><i class="bi bi-qr-code me-2"></i>首页微信二维码</h5>
+                <form action="${pageContext.request.contextPath}/admin/qrcodeUpload" method="post" enctype="multipart/form-data" class="d-flex gap-2">
+                    <input type="file" name="qrImg" accept="image/*" required class="form-control" style="width:250px;">
+                    <button type="submit" class="btn btn-danger btn-sm">上传替换</button>
+                </form>
+            </div>
+            <div class="card-body text-center">
+                <c:set var="qrPath" value="${applicationScope['wechatQrPath']}"/>
+                <c:choose>
+                    <c:when test="${not empty qrPath}">
+                        <img src="${pageContext.request.contextPath}/uploads/${qrPath}?t=<%=System.currentTimeMillis()%>" style="width:120px;height:120px;object-fit:contain;border:1px solid #eee;border-radius:8px;">
+                        <p class="text-muted mt-2" style="font-size:12px;">当前二维码：${qrPath}</p>
+                        <a href="${pageContext.request.contextPath}/admin/banners?tab=banners&action=deleteQr" class="btn btn-sm btn-outline-danger mt-1">恢复默认</a>
+                    </c:when>
+                    <c:otherwise>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=BEGIN:VCARD%0AVERSION:3.0%0AFN:归途%0ATEL:18023154203%0AEMAIL:guitu2025@qq.com%0ANOTE:归途花店%20-%20创始人%0AEND:VCARD" style="width:120px;height:120px;object-fit:contain;border:1px solid #eee;border-radius:8px;">
+                        <p class="text-muted mt-2" style="font-size:12px;">当前使用默认vCard二维码</p>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+        </div>
     </c:if>
 
     <!-- 分类管理 -->
@@ -1046,17 +1084,35 @@ ${msg.conversation}
      */
     function toggleUserState(userId, newState) {
         var action = newState === '禁用' ? 'disable' : 'enable';
-        var confirmMsg = newState === '禁用' 
-            ? '确认禁用该用户？禁用后该用户将无法登录。' 
+        var confirmMsg = newState === '禁用'
+            ? '确认禁用该用户？禁用后该用户将无法登录。'
             : '确认启用该用户？';
-        
+
         if (!confirm(confirmMsg)) {
             return;
         }
-        
-        // 设置表单的 action 值并提交
-        document.getElementById('stateAction' + userId).value = action;
-        document.getElementById('stateForm' + userId).submit();
+
+        var formData = new URLSearchParams();
+        formData.append('userId', userId);
+        formData.append('action', action);
+
+        fetch('${pageContext.request.contextPath}/admin/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('操作失败：' + data.message);
+            }
+        })
+        .catch(function(e) {
+            alert('网络错误，请重试');
+        });
     }
 
     /**
@@ -1071,15 +1127,42 @@ ${msg.conversation}
             alert('密码长度不能少于6位');
             return;
         }
-        
+
         if (newPwd !== confirmPwd) {
             alert('两次输入的密码不一致，请重新输入');
             return;
         }
-        
-        if (confirm('确认重置该用户的密码？重置后用户需使用新密码登录。')) {
-            document.getElementById('pwdForm' + userId).submit();
+
+        if (!confirm('确认重置该用户的密码？重置后用户需使用新密码登录。')) {
+            return;
         }
+
+        var formData = new URLSearchParams();
+        formData.append('userId', userId);
+        formData.append('action', 'resetPassword');
+        formData.append('newPassword', newPwd);
+
+        fetch('${pageContext.request.contextPath}/admin/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                alert(data.message);
+                var modalEl = document.getElementById('pwdModal' + userId);
+                if (modalEl) {
+                    var modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                }
+            } else {
+                alert('操作失败：' + data.message);
+            }
+        })
+        .catch(function(e) {
+            alert('网络错误，请重试');
+        });
     }
 
     // 回复后自动重开对话框
@@ -1090,6 +1173,68 @@ ${msg.conversation}
             if (modalEl) new bootstrap.Modal(modalEl).show();
         }
     })();
+
+    function changeMerchantRole(userId, username) {
+        if (!confirm('确定将该商家「' + username + '」的角色改为普通用户？')) return;
+
+        var formData = new URLSearchParams();
+        formData.append('userId', userId);
+        formData.append('action', 'changeRole');
+        formData.append('newRole', '用户');
+
+        fetch('${pageContext.request.contextPath}/admin/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('操作失败：' + data.message);
+            }
+        })
+        .catch(function(e) {
+            alert('网络错误，请重试');
+        });
+    }
+
+    function changeUserToMerchant(userId, username) {
+        if (!confirm('确定将该用户「' + username + '」的角色改为商家？')) return;
+
+        var formData = new URLSearchParams();
+        formData.append('userId', userId);
+        formData.append('action', 'changeRole');
+        formData.append('newRole', '商家');
+
+        fetch('${pageContext.request.contextPath}/admin/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('操作失败：' + data.message);
+            }
+        })
+        .catch(function(e) {
+            alert('网络错误，请重试');
+        });
+    }
+
+    function submitAddMerchant() {
+        var pwd = document.getElementById('addMerchantPwd').value;
+        var confirmPwd = document.getElementById('addMerchantConfirmPwd').value;
+        if (pwd.length < 6) { alert('密码长度不能少于6位'); return; }
+        if (pwd !== confirmPwd) { alert('两次输入的密码不一致'); return; }
+        document.getElementById('addMerchantForm').submit();
+    }
 </script>
 </body>
 </html>

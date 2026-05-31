@@ -209,12 +209,16 @@ public class UserCenterController extends HttpServlet {
         stats.put("待付款", 0);
         stats.put("已付款", 0);
         stats.put("已发货", 0);
-        stats.put("已完成", 0);
+        stats.put("已收货", 0);
         stats.put("全部", orders.size());
 
         for (Order order : orders) {
             String status = order.getStatus();
-            stats.put(status, stats.getOrDefault(status, 0) + 1);
+            if ("已完成".equals(status)) {
+                stats.put("已收货", stats.get("已收货") + 1);
+            } else {
+                stats.put(status, stats.getOrDefault(status, 0) + 1);
+            }
         }
 
         return stats;

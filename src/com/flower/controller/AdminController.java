@@ -1,10 +1,6 @@
 package com.flower.controller;
 
-import com.flower.dao.OrderDao;
-import com.flower.dao.SpDao;
-import com.flower.dao.UserDao;
-import com.flower.dao.MessageDao;
-import com.flower.dao.CategoryDao;
+import com.flower.dao.*;
 import com.flower.entity.Order;
 import com.flower.entity.Message;
 import com.flower.entity.Category;
@@ -68,14 +64,12 @@ public class AdminController extends HttpServlet {
             showDashboard(req, resp);
         } else if ("/users".equals(pathInfo)) {
             showUserManagement(req, resp);
-        } else if ("/orders".equals(pathInfo)) {
-            showOrderManagement(req, resp);
-        } else if ("/products".equals(pathInfo)) {
-            showProductManagement(req, resp);
-        } else if ("/messages".equals(pathInfo)) {
-            showMessages(req, resp);
+        } else if ("/merchants".equals(pathInfo)) {
+            showMerchantManagement(req, resp);
         } else if ("/categories".equals(pathInfo)) {
             showCategories(req, resp);
+        } else if ("/messages".equals(pathInfo)) {
+            showMessages(req, resp);
         } else if ("/banners".equals(pathInfo)) {
             showBanners(req, resp);
         } else if ("/stats".equals(pathInfo)) {
@@ -119,6 +113,8 @@ public class AdminController extends HttpServlet {
             handleProductAction(req, resp, action);
         } else if ("/categories".equals(pathInfo)) {
             handleCategoryAction(req, resp, action);
+        } else if ("/merchants".equals(pathInfo)) {
+            handleMerchantPost(req, resp, action);
         } else {
             doGet(req, resp);
         }
@@ -139,36 +135,27 @@ public class AdminController extends HttpServlet {
         List<Order> allOrders = orderDao.findAllOrders();
         List<Sp> allProducts = spDao.findAll();
 
-        int totalUsers = allUsers.size();
-        int totalOrders = allOrders.size();
-        int totalProducts = allProducts.size();
+        int totalUsers = (int) allUsers.stream().filter(u -> !"商家".equals(u.getRole()) && !"管理员".equals(u.getRole())).count();
+        int totalMerchants = (int) allUsers.stream().filter(u -> "商家".equals(u.getRole())).count();
 
         double totalSales = allOrders.stream()
                 .filter(o -> "已完成".equals(o.getStatus()) || "已收货".equals(o.getStatus()))
                 .mapToDouble(Order::getTotalAmount)
                 .sum();
 
-        long pendingOrders = allOrders.stream()
-                .filter(o -> "待付款".equals(o.getStatus()) || "已付款".equals(o.getStatus()) || "已发货".equals(o.getStatus()))
-                .count();
-
-        long lowStockProducts = allProducts.stream()
-                .filter(Sp::isLowStock)
-                .count();
-
-        Map<String, Object> todayStats = calculateTodayStats(allOrders);
-
         req.setAttribute("totalUsers", totalUsers);
-        req.setAttribute("totalOrders", totalOrders);
-        req.setAttribute("totalProducts", totalProducts);
+        req.setAttribute("totalMerchants", totalMerchants);
         req.setAttribute("totalSales", totalSales);
-        req.setAttribute("pendingOrders", pendingOrders);
-        req.setAttribute("lowStockProducts", lowStockProducts);
+        req.setAttribute("totalCategories", new CategoryDao().findAll().size());
+        req.setAttribute("totalBanners", new BannerDao().findAll().size());
         req.setAttribute("unreadMessages", new MessageDao().countUnreadForAdmin());
-        req.setAttribute("todayOrders", todayStats.get("todayOrders"));
-        req.setAttribute("todaySales", todayStats.get("todaySales"));
-        req.setAttribute("recentOrders", allOrders.subList(0, Math.min(10, allOrders.size())));
-        req.setAttribute("recentUsers", allUsers.subList(0, Math.min(10, allUsers.size())));
+        if (!allOrders.isEmpty())
+            req.setAttribute("recentOrders", allOrders.subList(0, Math.min(10, allOrders.size())));
+        List<User> regularUsers = allUsers.stream()
+                .filter(u -> !"商家".equals(u.getRole()) && !"管理员".equals(u.getRole()))
+                .collect(java.util.stream.Collectors.toList());
+        if (!regularUsers.isEmpty())
+            req.setAttribute("recentUsers", regularUsers.subList(0, Math.min(10, regularUsers.size())));
 
         req.getRequestDispatcher("/admin.jsp").forward(req, resp);
     }
@@ -249,11 +236,14 @@ public class AdminController extends HttpServlet {
         String stateFilter = req.getParameter("state");
         String keyword = req.getParameter("keyword");
 
+        // 默认只显示普通用户
+        final String effectiveRoleFilter = (roleFilter == null || roleFilter.isEmpty()) ? "用户" : roleFilter;
+
         List<User> users = userDao.findAllUsers();
 
-        if (roleFilter != null && !roleFilter.isEmpty()) {
+        if (effectiveRoleFilter != null && !effectiveRoleFilter.isEmpty()) {
             users = users.stream()
-                    .filter(u -> roleFilter.equals(u.getRole()))
+                    .filter(u -> effectiveRoleFilter.equals(u.getRole()))
                     .collect(Collectors.toList());
         }
 
@@ -273,9 +263,53 @@ public class AdminController extends HttpServlet {
         }
 
         req.setAttribute("users", users);
-        req.setAttribute("roleFilter", roleFilter);
+        req.setAttribute("roleFilter", effectiveRoleFilter);
         req.setAttribute("stateFilter", stateFilter);
         req.setAttribute("keyword", keyword);
+        req.getRequestDispatcher("/admin.jsp").forward(req, resp);
+    }
+
+    /**
+     * 展示订单管理页面，支持按状态、关键词及日期范围进行高级筛选
+     *
+     * @param req  HTTP 请求对象
+     * @param resp HTTP 响应对象
+     * @throws ServletException Servlet 异常
+     * @throws IOException      IO 异常
+     */
+    private void showMerchantManagement(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        String action = req.getParameter("action");
+        if ("delete".equals(action)) {
+            try {
+                int userId = Integer.parseInt(req.getParameter("userId"));
+                Integer sessionUserId = (Integer) req.getSession().getAttribute("userId");
+                if (sessionUserId != null && sessionUserId == userId) {
+                    req.getSession().setAttribute("adminError", "不能删除自己的账户");
+                } else {
+                    userDao.deleteById(userId);
+                    req.getSession().setAttribute("adminSuccess", "商家已删除");
+                }
+            } catch (Exception e) {
+                req.getSession().setAttribute("adminError", "删除失败");
+            }
+            resp.sendRedirect(req.getContextPath() + "/admin/merchants?tab=merchants");
+            return;
+        }
+
+        HttpSession session = req.getSession();
+        if (session.getAttribute("adminSuccess") != null) {
+            req.setAttribute("adminSuccess", session.getAttribute("adminSuccess"));
+            session.removeAttribute("adminSuccess");
+        }
+        if (session.getAttribute("adminError") != null) {
+            req.setAttribute("adminError", session.getAttribute("adminError"));
+            session.removeAttribute("adminError");
+        }
+
+        List<User> merchants = userDao.findUsersByRole("商家");
+        req.setAttribute("merchants", merchants);
         req.getRequestDispatcher("/admin.jsp").forward(req, resp);
     }
 
@@ -523,7 +557,7 @@ public class AdminController extends HttpServlet {
 
         Map<String, Object> stats = new HashMap<>();
 
-        stats.put("totalUsers", allUsers.size());
+        stats.put("totalUsers", allUsers.stream().filter(u -> !"商家".equals(u.getRole()) && !"管理员".equals(u.getRole())).count());
         stats.put("totalOrders", allOrders.size());
         stats.put("totalProducts", allProducts.size());
 
@@ -654,6 +688,38 @@ public class AdminController extends HttpServlet {
             result.put("message", "操作失败：" + e.getMessage());
             out.print(JsonUtil.toJson(result));
         }
+    }
+
+    private void handleMerchantPost(HttpServletRequest req, HttpServletResponse resp, String action)
+            throws ServletException, IOException {
+
+        HttpSession session = req.getSession();
+
+        if ("addMerchant".equals(action)) {
+            String username = req.getParameter("merchantUsername");
+            String password = req.getParameter("merchantPassword");
+
+            if (username == null || username.trim().isEmpty() || password == null || password.trim().isEmpty()) {
+                session.setAttribute("adminError", "用户名和密码不能为空");
+            } else if (userDao.isUsernameExists(username.trim())) {
+                session.setAttribute("adminError", "用户名已存在");
+            } else if (password.trim().length() < 6) {
+                session.setAttribute("adminError", "密码长度不能少于6位");
+            } else {
+                User merchant = new User(username.trim(), password.trim(), "", "");
+                merchant.setRole("商家");
+                merchant.setState("可用");
+                merchant.setGender("未知");
+                merchant.setJf(0);
+                if (userDao.save(merchant)) {
+                    session.setAttribute("adminSuccess", "商家账号「" + username.trim() + "」已创建");
+                } else {
+                    session.setAttribute("adminError", "创建失败，请重试");
+                }
+            }
+        }
+
+        resp.sendRedirect(req.getContextPath() + "/admin/merchants?tab=merchants");
     }
 
     /**
@@ -814,6 +880,7 @@ public class AdminController extends HttpServlet {
     private void handleCategoryAction(HttpServletRequest req, HttpServletResponse resp, String action)
             throws ServletException, IOException {
         CategoryDao categoryDao = new CategoryDao();
+        HttpSession session = req.getSession();
         if ("add".equals(action)) {
             String name = req.getParameter("name");
             int parentId = Integer.parseInt(req.getParameter("parentId"));
@@ -823,9 +890,11 @@ public class AdminController extends HttpServlet {
             cat.setParentId(parentId);
             cat.setDescription(desc != null ? desc : "");
             categoryDao.save(cat);
+            session.setAttribute("adminSuccess", "分类已添加");
         } else if ("delete".equals(action)) {
             int id = Integer.parseInt(req.getParameter("id"));
             categoryDao.deleteById(id);
+            session.setAttribute("adminSuccess", "分类已删除");
         }
         resp.sendRedirect(req.getContextPath() + "/admin/categories?tab=categories");
     }
@@ -845,6 +914,11 @@ public class AdminController extends HttpServlet {
             } catch (NumberFormatException e) {
                 e.printStackTrace();
             }
+        } else if ("deleteQr".equals(action)) {
+            getServletContext().removeAttribute("wechatQrPath");
+            session.setAttribute("adminSuccess", "二维码已恢复默认");
+            resp.sendRedirect(req.getContextPath() + "/admin/banners?tab=banners");
+            return;
         } else if ("setSpeed".equals(action)) {
             try {
                 int speed = Integer.parseInt(req.getParameter("speed"));
