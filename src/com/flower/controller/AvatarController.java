@@ -75,7 +75,7 @@ public class AvatarController extends HttpServlet {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("ERROR: " + e.getMessage());
             session.setAttribute("updateError", "头像上传失败：" + e.getMessage());
         }
 

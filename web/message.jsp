@@ -15,12 +15,8 @@
     <title>我的留言 - 花店商城</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/common.css">
     <style>
-        :root { --primary-red: #e74c3c; --dark-red: #c0392b; --bg-gray: #f5f5f5; }
-        body { font-family: "PingFang SC","Microsoft YaHei",sans-serif; background:var(--bg-gray); }
-        .top-navbar { background:white; border-bottom:1px solid #e0e0e0; padding:15px 0; position:sticky; top:0; z-index:100; }
-        .brand-logo { font-size:20px; font-weight:700; text-decoration:none; cursor:pointer;
-            background:linear-gradient(135deg,var(--primary-red) 0%,#ff6b6b 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
         .msg-container { max-width:800px; margin:30px auto; padding:0 15px; }
         .msg-card { background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); padding:24px; margin-bottom:20px; }
         .msg-item { padding:16px 0; border-bottom:1px solid #f0f0f0; }

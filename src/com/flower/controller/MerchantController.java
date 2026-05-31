@@ -446,7 +446,7 @@ public class MerchantController extends HttpServlet {
                         .filter(o -> !o.getCreateTime().before(start))
                         .collect(Collectors.toList());
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println("ERROR: " + e.getMessage());
             }
         }
 
@@ -464,7 +464,7 @@ public class MerchantController extends HttpServlet {
                         .filter(o -> o.getCreateTime().before(finalEnd))
                         .collect(Collectors.toList());
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println("ERROR: " + e.getMessage());
             }
         }
 
@@ -833,7 +833,7 @@ public class MerchantController extends HttpServlet {
         } catch (Exception e) {
             session.setAttribute("orderMessage", "操作失败：" + e.getMessage());
             session.setAttribute("orderMessageType", "danger");
-            e.printStackTrace();
+            System.err.println("ERROR: " + e.getMessage());
         }
 
         // 重定向回订单管理页面

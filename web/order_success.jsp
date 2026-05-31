@@ -17,11 +17,9 @@
     <title>订单提交成功 - 花店商城</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/common.css">
     <style>
-        :root { --primary-red: #e74c3c; --dark-red: #c0392b; --primary-green: #27ae60; }
-
-        body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #f8f9fa;
-            min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        body {
 
         .success-container { background: white; border-radius: 16px; padding: 60px 40px;
             text-align: center; max-width: 600px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }

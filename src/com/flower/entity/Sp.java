@@ -163,6 +163,19 @@ public class Sp implements Serializable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Sp sp = (Sp) o;
+        return id == sp.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(id);
+    }
+
+    @Override
     public String toString() {
         return "Sp{" +
                 "id=" + id +

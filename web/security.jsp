@@ -15,58 +15,8 @@
     <title>账号安全 - 花店商城</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/common.css">
     <style>
-        :root {
-            --primary-red: #e74c3c;
-            --dark-red: #c0392b;
-            --bg-gray: #f5f5f5;
-        }
-
-        body {
-            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-            background: var(--bg-gray);
-        }
-
-        .top-navbar {
-            background: white;
-            border-bottom: 1px solid #e0e0e0;
-            padding: 15px 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .brand-logo {
-            font-size: 20px;
-            font-weight: 700;
-            color: #333;
-            text-decoration: none;
-            cursor: pointer;
-            background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            transition: transform 0.2s;
-        }
-
-        .brand-logo:hover {
-            transform: scale(1.05);
-        }
-
-        /* 版权说明模态框 */
-        .copyright-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; }
-        .copyright-modal.show { display: flex; }
-        .copyright-content { background: white; padding: 50px; border-radius: 16px; text-align: center; max-width: 550px; width: 90%; animation: modalSlideIn 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
-        @keyframes modalSlideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        .copyright-icon { font-size: 64px; margin-bottom: 20px; }
-        .copyright-title { font-size: 28px; background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; font-weight: 700; }
-        .copyright-divider { width: 60px; height: 3px; background: linear-gradient(90deg, var(--primary-red) 0%, #ff6b6b 100%); margin: 0 auto 20px; border-radius: 2px; }
-        .copyright-message { color: #666; font-size: 16px; line-height: 1.8; margin-bottom: 15px; }
-        .copyright-warning { background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%); border-left: 4px solid var(--primary-red); padding: 15px 20px; border-radius: 8px; margin: 20px 0; text-align: left; }
-        .copyright-warning p { color: #666; font-size: 14px; margin: 0; line-height: 1.6; }
-        .copyright-warning strong { color: var(--primary-red); }
-        .copyright-btn { background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%); color: white; border: none; padding: 14px 50px; border-radius: 8px; font-size: 16px; cursor: pointer; transition: all 0.3s; margin-top: 20px; font-weight: 600; }
-        .copyright-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4); }
-
         .security-container {
             max-width: 900px;
             margin: 30px auto;

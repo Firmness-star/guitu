@@ -117,6 +117,19 @@ public class CartItem implements Serializable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CartItem item = (CartItem) o;
+        return productId == item.productId;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(productId);
+    }
+
+    @Override
     public String toString() {
         return "CartItem{" +
                 "productId=" + productId +

@@ -3,7 +3,18 @@
     "allow": [
       "Bash('D:/MySQL Server 9.0/bin/mysql.exe' -u root -p123456 --default-character-set=utf8mb4 flower_shop -e ' *)",
       "Bash(\"D:/MySQL Server 9.0/bin/mysql.exe\" -u root -p123456 --default-character-set=utf8mb4 flower_shop -e \"SELECT id, username, tel, email FROM user ORDER BY id;\")",
-      "Read(//c/Users/guitu/AppData/Local/JetBrains/IntelliJIdea2026.1/tomcat/094f24da-be8b-4fb7-8ba2-6944b9d3384b/**)"
+      "Read(//c/Users/guitu/AppData/Local/JetBrains/IntelliJIdea2026.1/tomcat/094f24da-be8b-4fb7-8ba2-6944b9d3384b/**)",
+      "Bash(mysql -u root -p123456 flower_shop)",
+      "Bash(where mysql *)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/xampp/mysql/bin/**)",
+      "Read(//c//**)",
+      "Bash(where javac *)",
+      "Bash(java -version)",
+      "Bash(javac -cp \"out/production/guitushop;out/artifacts/guitushop_war_exploded/WEB-INF/lib/*\" -encoding UTF-8 src/com/flower/util/ListUsers.java -d out/production/guitushop)",
+      "Bash(java -cp \"out/production/guitushop;out/artifacts/guitushop_war_exploded/WEB-INF/lib/*\" com.flower.util.ListUsers)",
+      "Bash(javac -cp \"out/production/guitushop;out/artifacts/guitushop_war_exploded/WEB-INF/lib/*\" -encoding UTF-8 src/com/flower/util/FixKjk.java -d out/production/guitushop)",
+      "Bash(java -cp \"out/production/guitushop;out/artifacts/guitushop_war_exploded/WEB-INF/lib/*\" com.flower.util.FixKjk)"
     ]
   }
 }

@@ -15,21 +15,11 @@
   <title>收货地址 - 花店商城</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/common.css">
   <style>
-    :root {
-      --primary-red: #e74c3c;
-      --dark-red: #c0392b;
-      --primary-green: #27ae60;
-      --bg-gray: #f5f5f5;
-      --sidebar-width: 240px;
-    }
-
-    body {
-      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: var(--bg-gray);
-    }
-
-    .top-navbar {
+    :root { --sidebar-width: 240px; }
+    body { background: var(--bg-gray); }
+    .sidebar { width: var(--sidebar-width); }
       background: white;
       border-bottom: 1px solid #e0e0e0;
       padding: 15px 0;

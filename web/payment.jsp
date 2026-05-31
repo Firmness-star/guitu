@@ -24,17 +24,9 @@
     <title>订单支付 - 花店商城</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/common.css">
     <style>
-        :root {
-            --primary-red: #e74c3c;
-            --dark-red: #c0392b;
-            --primary-green: #27ae60;
-            --bg-gray: #f8f9fa;
-        }
-
-        body {
-            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-            background: var(--bg-gray);
+        body { background: var(--bg-gray); }
         }
 
         .navbar-brand {

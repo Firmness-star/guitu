@@ -24,31 +24,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${product.name} - 商品详情</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/common.css">
   <style>
-    :root { --primary-red: #e74c3c; --dark-red: #c0392b; --primary-green: #27ae60; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #fff; }
+    body { background: #fff; }
+    a { text-decoration: none; }
 
     .navbar { border-bottom: 1px solid #e0e0e0; padding: 0; background: #fff; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
-    .brand { font-weight: 700; color: #333; text-decoration: none; font-size: 22px; letter-spacing: 2px; background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; transition: transform 0.2s; cursor: pointer; }
+    .nav-container { max-width: 1200px; margin: 0 auto; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+    .brand { font-weight: 700; color: #333; font-size: 22px; letter-spacing: 2px; background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; transition: transform 0.2s; cursor: pointer; }
     .brand:hover { transform: scale(1.05); }
 
-    /* 版权说明模态框 */
-    .copyright-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; }
-    .copyright-modal.show { display: flex; }
-    .copyright-content { background: white; padding: 50px; border-radius: 16px; text-align: center; max-width: 550px; width: 90%; animation: modalSlideIn 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
-    @keyframes modalSlideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-    .copyright-icon { font-size: 64px; margin-bottom: 20px; }
-    .copyright-title { font-size: 28px; background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; font-weight: 700; }
-    .copyright-divider { width: 60px; height: 3px; background: linear-gradient(90deg, var(--primary-red) 0%, #ff6b6b 100%); margin: 0 auto 20px; border-radius: 2px; }
-    .copyright-message { color: #666; font-size: 16px; line-height: 1.8; margin-bottom: 15px; }
-    .copyright-warning { background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%); border-left: 4px solid var(--primary-red); padding: 15px 20px; border-radius: 8px; margin: 20px 0; text-align: left; }
-    .copyright-warning p { color: #666; font-size: 14px; margin: 0; line-height: 1.6; }
-    .copyright-warning strong { color: var(--primary-red); }
-    .copyright-btn { background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%); color: white; border: none; padding: 14px 50px; border-radius: 8px; font-size: 16px; cursor: pointer; transition: all 0.3s; margin-top: 20px; font-weight: 600; }
-    .copyright-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4); }
     .nav-links { display: flex; gap: 24px; list-style: none; align-items: center; }
     .nav-links a { color: #666; text-decoration: none; font-size: 14px; transition: color 0.2s; }
     .nav-links a:hover { color: var(--primary-red); }
@@ -173,35 +161,45 @@
       margin-top: 10px;
     }
 
+    .action-buttons form { flex: 1; }
+
     .add-cart-btn {
-      flex: 1;
-      background: var(--primary-red);
-      color: white;
-      border: none;
-      padding: 15px 20px;
-      font-size: 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.2s;
-      font-weight: 500;
+      display: block !important;
+      width: 100% !important;
+      background: #e74c3c !important;
+      color: #fff !important;
+      -webkit-text-fill-color: #fff !important;
+      border: none !important;
+      padding: 14px 20px !important;
+      font-size: 16px !important;
+      border-radius: 6px !important;
+      cursor: pointer !important;
+      font-weight: 500 !important;
+      text-align: center !important;
+      min-height: 48px !important;
+      line-height: 1.4 !important;
     }
-    .add-cart-btn:hover { background: var(--dark-red); }
-    .add-cart-btn:disabled { background: #ccc; cursor: not-allowed; }
+    .add-cart-btn:hover { background: #c0392b !important; }
+    .add-cart-btn:disabled { background: #ccc !important; color: #999 !important; cursor: not-allowed !important; }
 
     .buy-now-btn {
-      flex: 1;
-      background: var(--primary-green);
-      color: white;
-      border: none;
-      padding: 15px 20px;
-      font-size: 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.2s;
-      font-weight: 500;
+      display: block !important;
+      width: 100% !important;
+      background: #27ae60 !important;
+      color: #fff !important;
+      -webkit-text-fill-color: #fff !important;
+      border: none !important;
+      padding: 14px 20px !important;
+      font-size: 16px !important;
+      border-radius: 6px !important;
+      cursor: pointer !important;
+      font-weight: 500 !important;
+      text-align: center !important;
+      min-height: 48px !important;
+      line-height: 1.4 !important;
     }
-    .buy-now-btn:hover { background: #219a52; }
-    .buy-now-btn:disabled { background: #ccc; cursor: not-allowed; }
+    .buy-now-btn:hover { background: #219a52 !important; }
+    .buy-now-btn:disabled { background: #ccc !important; color: #999 !important; cursor: not-allowed !important; }
 
     .related-products {
       margin-top: 50px;
@@ -306,7 +304,7 @@
 <body>
 
 <nav class="navbar">
-  <div class="container">
+  <div class="nav-container">
     <a class="brand" href="javascript:void(0)" onclick="showCopyright()"> 归途</a>
     <ul class="nav-links">
       <li><a href="${ctx}/index">首页</a></li>
@@ -445,23 +443,21 @@
 
       <!-- 操作按钮 -->
       <div class="action-buttons">
-        <form action="${ctx}/cart" method="post" id="addToCartForm" style="flex: 1;">
+        <form action="${ctx}/cart" method="post" id="addToCartForm">
           <input type="hidden" name="action" value="add">
           <input type="hidden" name="productId" value="${product.id}">
           <input type="hidden" name="quantity" id="cartQuantity" value="1">
-          <button type="submit" class="add-cart-btn" 
-                  ${product.stock <= 0 ? 'disabled' : ''}>
-            ${product.stock <= 0 ? '暂时缺货' : '加入购物车'}
+          <button type="submit" class="add-cart-btn" ${product.stock <= 0 ? 'disabled' : ''}>
+            <i class="bi bi-cart-plus"></i> ${product.stock <= 0 ? '暂时缺货' : '加入购物车'}
           </button>
         </form>
-        
-        <form action="${ctx}/checkout" method="post" id="buyNowForm" style="flex: 1;">
+
+        <form action="${ctx}/checkout" method="post" id="buyNowForm">
           <input type="hidden" name="productId" value="${product.id}">
           <input type="hidden" name="quantity" id="buyNowQuantity" value="1">
           <input type="hidden" name="action" value="directBuy">
-          <button type="submit" class="buy-now-btn" 
-                  ${product.stock <= 0 ? 'disabled' : ''}>
-            ${product.stock <= 0 ? '暂时缺货' : '立即购买'}
+          <button type="submit" class="buy-now-btn" ${product.stock <= 0 ? 'disabled' : ''}>
+            <i class="bi bi-lightning-charge"></i> ${product.stock <= 0 ? '暂时缺货' : '立即购买'}
           </button>
         </form>
       </div>
@@ -700,30 +696,7 @@
   });
 </script>
 
-<!-- 版权说明模态框 -->
-<div class="copyright-modal" id="copyrightModal">
-  <div class="copyright-content">
-    <div class="copyright-icon">🌸</div>
-    <h2 class="copyright-title">关于「归途」</h2>
-    <div class="copyright-divider"></div>
-    <p class="copyright-message">「归途花店」是一款基于 Java Web 技术开发的电商学习项目</p>
-    <div class="copyright-warning">
-      <p><strong>⚠️ 声明：</strong>本项目仅供个人学习与技术研究使用，所有代码、设计及内容版权归开发者本人所有。</p>
-      <p style="margin-top: 10px;"><strong>🚫 请勿抄袭：</strong>未经授权，任何人不得将本项目或其部分内容用于商业目的、课程作业提交或任何形式的抄袭行为。</p>
-      <p style="margin-top: 10px;">如有学习需求，欢迎交流探讨，但请尊重他人劳动成果。</p>
-    </div>
-    <p class="copyright-message" style="font-size: 14px; color: #999; margin-top: 25px;">© 2026 归途花店 · 保留所有权利</p>
-    <button class="copyright-btn" onclick="closeCopyright()">我知道了</button>
-  </div>
-</div>
-<script>
-  function showCopyright() { document.getElementById('copyrightModal').classList.add('show'); }
-  function closeCopyright() { document.getElementById('copyrightModal').classList.remove('show'); }
-  document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('copyrightModal');
-    if (modal) { modal.addEventListener('click', function(e) { if (e.target === modal) closeCopyright(); }); }
-  });
-</script>
+<jsp:include page="common/copyright.jsp"/>
 
 </body>
 </html>

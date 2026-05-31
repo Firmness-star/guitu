@@ -398,7 +398,7 @@ public class AdminController extends HttpServlet {
                         .filter(o -> !o.getCreateTime().before(start))
                         .collect(Collectors.toList());
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println("ERROR: " + e.getMessage());
             }
         }
 
@@ -416,7 +416,7 @@ public class AdminController extends HttpServlet {
                         .filter(o -> o.getCreateTime().before(finalEnd))
                         .collect(Collectors.toList());
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println("ERROR: " + e.getMessage());
             }
         }
 
@@ -472,7 +472,7 @@ public class AdminController extends HttpServlet {
                     }
                 } catch (Exception e) {
                     session.setAttribute("adminError", "操作失败：" + e.getMessage());
-                    e.printStackTrace();
+                    System.err.println("ERROR: " + e.getMessage());
                 }
                 resp.sendRedirect(req.getContextPath() + "/admin/products?tab=products");
                 return;
@@ -492,7 +492,7 @@ public class AdminController extends HttpServlet {
                     session.setAttribute("adminSuccess", "商品已新增");
                 } catch (Exception e) {
                     session.setAttribute("adminError", "新增失败：" + e.getMessage());
-                    e.printStackTrace();
+                    System.err.println("ERROR: " + e.getMessage());
                 }
                 resp.sendRedirect(req.getContextPath() + "/admin/products?tab=products");
                 return;
@@ -912,7 +912,7 @@ public class AdminController extends HttpServlet {
                 bannerDao.deleteById(id);
                 session.setAttribute("adminSuccess", "海报已删除");
             } catch (NumberFormatException e) {
-                e.printStackTrace();
+                System.err.println("ERROR: " + e.getMessage());
             }
         } else if ("deleteQr".equals(action)) {
             getServletContext().removeAttribute("wechatQrPath");

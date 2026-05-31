@@ -80,7 +80,7 @@ public class C3p0Utils {
         } catch (Exception e) {
             initialized = false;
             initError = e.getMessage();
-            e.printStackTrace();
+            System.err.println("ERROR: " + e.getMessage());
         } finally {
             if (is != null) {
                 try {

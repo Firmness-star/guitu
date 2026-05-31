@@ -315,7 +315,7 @@ public class CheckoutController extends HttpServlet {
                     userDao.addJf(userId, earnJf, txConn);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println("ERROR: " + e.getMessage());
             }
 
             // 从购物车中移除已购买的商品（只移除选中的）

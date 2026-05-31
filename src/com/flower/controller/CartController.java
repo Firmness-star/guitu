@@ -175,7 +175,7 @@ public class CartController extends HttpServlet {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("ERROR: " + e.getMessage());
         }
     }
 
@@ -194,7 +194,7 @@ public class CartController extends HttpServlet {
             Integer uid = (Integer) session.getAttribute("userId");
             if (uid != null) cartDao.removeItem(uid, pid);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("ERROR: " + e.getMessage());
         }
     }
 
@@ -237,7 +237,7 @@ public class CartController extends HttpServlet {
                 cart.add(item);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("ERROR: " + e.getMessage());
         }
     }
 
@@ -267,7 +267,7 @@ public class CartController extends HttpServlet {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("ERROR: " + e.getMessage());
         }
     }
 
@@ -293,7 +293,7 @@ public class CartController extends HttpServlet {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("ERROR: " + e.getMessage());
         }
     }
 

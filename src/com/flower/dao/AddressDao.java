@@ -7,109 +7,45 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 收货地址数据访问对象
- * 负责处理用户收货地址的增删改查及默认地址管理逻辑
- */
 public class AddressDao {
 
-    /**
-     * 根据用户 ID 查询该用户的所有收货地址列表
-     *
-     * @param userId 用户 ID
-     * @return 收货地址列表，按是否默认降序、创建时间降序排列
-     */
     public List<Address> findByUserId(int userId) {
-        if (userId <= 0) {
-            return new ArrayList<>();
-        }
-
+        if (userId <= 0) return new ArrayList<>();
         String sql = "SELECT * FROM address WHERE user_id = ? ORDER BY is_default DESC, create_time DESC";
         List<Address> addresses = new ArrayList<>();
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = DBUtil.getConnection();
-            pstmt = conn.prepareStatement(sql);
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, userId);
-            rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                addresses.add(mapResultSetToAddress(rs));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) addresses.add(mapResultSetToAddress(rs));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            DBUtil.close(conn, pstmt, rs);
-        }
+        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
         return addresses;
     }
 
-    /**
-     * 根据地址 ID 查询单个收货地址详情
-     *
-     * @param id 地址 ID
-     * @return 收货地址对象，若不存在则返回 null
-     */
     public Address findById(int id) {
-        if (id <= 0) {
-            return null;
-        }
-
+        if (id <= 0) return null;
         String sql = "SELECT * FROM address WHERE id = ?";
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = DBUtil.getConnection();
-            pstmt = conn.prepareStatement(sql);
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
-            rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                return mapResultSetToAddress(rs);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) return mapResultSetToAddress(rs);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            DBUtil.close(conn, pstmt, rs);
-        }
+        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
         return null;
     }
 
-    /**
-     * 查询用户的默认收货地址
-     *
-     * @param userId 用户 ID
-     * @return 默认收货地址对象，若未设置则返回 null
-     */
     public Address findDefaultByUserId(int userId) {
-        if (userId <= 0) {
-            return null;
-        }
-
+        if (userId <= 0) return null;
         String sql = "SELECT * FROM address WHERE user_id = ? AND is_default = 1 LIMIT 1";
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = DBUtil.getConnection();
-            pstmt = conn.prepareStatement(sql);
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, userId);
-            rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                return mapResultSetToAddress(rs);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) return mapResultSetToAddress(rs);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            DBUtil.close(conn, pstmt, rs);
-        }
+        } catch (SQLException e) { System.err.println("DAO ERROR: " + e.getMessage()); }
         return null;
     }
 
@@ -149,38 +85,21 @@ public class AddressDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("ERROR: " + e.getMessage());
         } finally {
             DBUtil.close(conn, pstmt);
         }
         return false;
     }
 
-    /**
-     * 更新收货地址信息。若更新为默认地址，则自动取消该用户原有的默认地址
-     *
-     * @param address 包含更新后信息的收货地址对象
-     * @return 更新成功返回 true，否则返回 false
-     */
     public boolean update(Address address) {
-        if (address == null || address.getId() <= 0) {
-            return false;
-        }
-
-        String sql = "UPDATE address SET receiver_name = ?, receiver_phone = ?, province = ?, " +
-                     "city = ?, district = ?, detail_address = ?, is_default = ? WHERE id = ?";
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-
+        if (address == null || address.getId() <= 0) return false;
+        String sql = "UPDATE address SET receiver_name=?,receiver_phone=?,province=?,city=?,district=?,detail_address=?,is_default=? WHERE id=?";
+        Connection conn = null; PreparedStatement pstmt = null;
         try {
             conn = DBUtil.getConnection();
-
-            // 检查是否需要取消旧的默认地址
-            Address oldAddress = findById(address.getId());
-            if (oldAddress != null && address.isDefault() && !oldAddress.isDefault()) {
-                cancelDefault(conn, oldAddress.getUserId());
-            }
-
+            Address old = findById(address.getId());
+            if (old != null && address.isDefault() && !old.isDefault()) cancelDefault(conn, old.getUserId());
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, address.getReceiverName());
             pstmt.setString(2, address.getReceiverPhone());
@@ -193,7 +112,7 @@ public class AddressDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("ERROR: " + e.getMessage());
         } finally {
             DBUtil.close(conn, pstmt);
         }
@@ -224,7 +143,7 @@ public class AddressDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("ERROR: " + e.getMessage());
         } finally {
             DBUtil.close(conn, pstmt);
         }
@@ -258,7 +177,7 @@ public class AddressDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("ERROR: " + e.getMessage());
         } finally {
             DBUtil.close(conn, pstmt);
         }

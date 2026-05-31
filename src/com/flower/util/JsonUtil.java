@@ -111,7 +111,7 @@ public class JsonUtil {
                 sb.append(toJson(value));
                 first = false;
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                System.err.println("ERROR: " + e.getMessage());
             }
         }
         

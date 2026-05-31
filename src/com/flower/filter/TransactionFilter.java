@@ -54,7 +54,7 @@ public class TransactionFilter implements Filter {
                     TransactionManager.rollback();
                 }
             } catch (Exception rollbackEx) {
-                rollbackEx.printStackTrace();
+                System.err.println("TRANSACTION ERROR: 事务回滚失败 - " + rollbackEx.getMessage());
             }
             
             if (e instanceof ServletException) {
@@ -69,7 +69,7 @@ public class TransactionFilter implements Filter {
                 try {
                     TransactionManager.closeConnection();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    System.err.println("ERROR: " + e.getMessage());
                 }
             }
         }
