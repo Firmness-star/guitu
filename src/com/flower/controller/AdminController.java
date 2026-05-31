@@ -355,7 +355,7 @@ public class AdminController extends HttpServlet {
                     ok = orderDao.updateStatus(orderId, "已完成");
                     msg = ok ? "订单已完成" : "操作失败";
                 } else if ("cancel".equals(action)) {
-                    ok = orderDao.updateStatus(orderId, "已取消");
+                    ok = orderDao.updateStatusAndRemarkByOrderNo(orderId, "已取消", "[管理员取消]");
                     msg = ok ? "订单已取消" : "操作失败";
                 }
                 if (ok) {

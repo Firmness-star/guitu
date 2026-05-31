@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <!-- 权限校验：非商家或未登录用户重定向至登录页 -->
 <c:if test="${empty sessionScope.userId || sessionScope.userRole != '商家'}">
@@ -325,7 +326,7 @@
                                     order.status == '已发货' ? 'badge-primary' :
                                     order.status == '已收货' ? 'badge-success' :
                                     order.status == '已完成' ? 'badge-active' : 'badge-disabled'}">
-                                        ${order.status}
+                                        ${order.status == '已取消' ? (fn:contains(order.remark, '[商家取消]') ? '商家取消' : (fn:contains(order.remark, '[管理员取消]') ? '管理员取消' : '客户取消')) : order.status}
                                 </span>
                             </td>
                             <td><fmt:formatDate value="${order.createTime}" pattern="yyyy-MM-dd HH:mm"/></td>
@@ -698,7 +699,7 @@
                                     order.status == '已发货' ? 'badge-primary' :
                                     order.status == '已收货' ? 'badge-success' :
                                     order.status == '已完成' ? 'badge-active' : 'badge-disabled'}">
-                                        ${order.status}
+                                        ${order.status == '已取消' ? (fn:contains(order.remark, '[商家取消]') ? '商家取消' : (fn:contains(order.remark, '[管理员取消]') ? '管理员取消' : '客户取消')) : order.status}
                                 </span>
                             </td>
                             <td>${order.receiverName}</td>

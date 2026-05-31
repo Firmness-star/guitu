@@ -278,7 +278,7 @@
                             <td>${order.orderId}</td>
                             <td>${order.username}</td>
                             <td>¥<fmt:formatNumber value="${order.totalAmount}" pattern="#0.00"/></td>
-                            <td><span class="badge-status ${order.status == '待付款' ? 'badge-warning' : order.status == '已付款' ? 'badge-info' : order.status == '已发货' ? 'badge-primary' : order.status == '已收货' ? 'badge-success' : order.status == '已完成' ? 'badge-active' : 'badge-disabled'}">${order.status}</span></td>
+                            <td><span class="badge-status ${order.status == '待付款' ? 'badge-warning' : order.status == '已付款' ? 'badge-info' : order.status == '已发货' ? 'badge-primary' : order.status == '已收货' ? 'badge-success' : order.status == '已完成' ? 'badge-active' : 'badge-disabled'}">${order.status == '已取消' ? (fn:contains(order.remark, '[管理员取消]') ? '管理员取消' : (fn:contains(order.remark, '[商家取消]') ? '商家取消' : '客户取消')) : order.status}</span></td>
                             <td><fmt:formatDate value="${order.createTime}" pattern="yyyy-MM-dd HH:mm"/></td>
                         </tr>
                     </c:forEach>
@@ -601,7 +601,7 @@
                                     order.status == '已发货' ? 'badge-primary' :
                                     order.status == '已收货' ? 'badge-success' :
                                     order.status == '已完成' ? 'badge-active' : 'badge-disabled'}">
-                                        ${order.status}
+                                        ${order.status == '已取消' ? (fn:contains(order.remark, '[管理员取消]') ? '管理员取消' : (fn:contains(order.remark, '[商家取消]') ? '商家取消' : '客户取消')) : order.status}
                                 </span>
                             </td>
                             <td>${order.receiverName}</td>

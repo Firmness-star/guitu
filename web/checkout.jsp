@@ -186,23 +186,15 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top mb-4">
-    <div class="container">
-        <a class="navbar-brand" href="javascript:void(0)" onclick="showCopyright()"> 归途</a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="cart"><i class="bi bi-cart3"></i> 返回购物车</a>
-                </li>
-                <c:if test="${sessionScope.userRole == '管理员'}">
-                <li class="nav-item">
-                    <a class="nav-link" href="admin/index" style="color:var(--primary-red);font-weight:600;">
-                        <i class="bi bi-gear"></i> 管理中心
-                    </a>
-                </li>
-                </c:if>
-            </ul>
-        </div>
+<nav style="background:#fff;padding:0;position:sticky;top:0;z-index:1000;box-shadow:0 2px 12px rgba(0,0,0,0.08);margin-bottom:1.5rem;">
+    <div style="max-width:1200px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:70px;">
+        <a href="javascript:void(0)" onclick="showCopyright()" style="font-weight:700;font-size:22px;letter-spacing:2px;background:linear-gradient(135deg,#e74c3c,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;cursor:pointer;text-decoration:none;">归途</a>
+        <ul style="display:flex;gap:20px;list-style:none;align-items:center;margin:0;padding:0;">
+            <li><a href="cart" style="color:#555;text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.color='#e74c3c';this.style.background='#fff5f5'" onmouseout="this.style.color='#555';this.style.background='transparent'">返回购物车</a></li>
+            <c:if test="${sessionScope.userRole == '管理员'}">
+            <li><a href="admin/index" style="color:#e74c3c;text-decoration:none;font-size:14px;font-weight:600;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.background='#fff5f5'" onmouseout="this.style.background='transparent'">管理中心</a></li>
+            </c:if>
+        </ul>
     </div>
 </nav>
 

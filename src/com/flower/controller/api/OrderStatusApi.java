@@ -27,7 +27,7 @@ public class OrderStatusApi extends ApiBaseServlet {
 
         if ("cancel".equals(action)) {
             if ("待付款".equals(order.getStatus()) || "已付款".equals(order.getStatus())) {
-                orderDao.updateStatus(orderId, "已取消");
+                orderDao.updateStatusAndRemarkByOrderNo(orderId, "已取消", "[客户取消]");
                 ok(resp, "订单已取消", null);
             } else { fail(resp, 400, "该订单无法取消"); }
         } else if ("confirm".equals(action)) {

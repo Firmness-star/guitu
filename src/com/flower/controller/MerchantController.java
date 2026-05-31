@@ -388,7 +388,7 @@ public class MerchantController extends HttpServlet {
                         session.setAttribute("orderMessageType", ok ? "success" : "danger");
                     }
                 } else if ("cancel".equals(action)) {
-                    boolean ok = orderDao.updateStatus(orderNo, "已取消");
+                    boolean ok = orderDao.updateStatusAndRemarkByOrderNo(orderNo, "已取消", "[商家取消]");
                     session.setAttribute("orderMessage", ok ? "订单已取消" : "操作失败");
                     session.setAttribute("orderMessageType", ok ? "success" : "danger");
                 }
@@ -750,6 +750,7 @@ public class MerchantController extends HttpServlet {
                 boolean success = orderDao.updateStatusById(orderId, "已取消");
                 result.put("success", success);
                 result.put("message", success ? "取消成功" : "取消失败");
+                // 异步 AJAX 取消暂不记录来源备注（orderId 为整数 ID，不支持 append remark）
             }
 
             out.print(JsonUtil.toJson(result));
@@ -822,7 +823,7 @@ public class MerchantController extends HttpServlet {
                 resp.sendRedirect(req.getContextPath() + "/merchant/orders?tab=orders");
                 return;
             } else if ("cancel".equals(action)) {
-                success = orderDao.updateStatus(orderNo, "已取消");
+                success = orderDao.updateStatusAndRemarkByOrderNo(orderNo, "已取消", "[商家取消]");
                 message = success ? "订单已取消" : "操作失败";
             }
 

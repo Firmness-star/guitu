@@ -82,9 +82,14 @@ public class OrderStatusController extends HttpServlet {
                 break;
                 
             case "cancel":
-                // 待付款 -> 已取消
-                if ("待付款".equals(order.getStatus())) {
-                    success = orderDao.updateStatus(orderId, "已取消");
+                // 待付款 或 已付款 -> 已取消，记录取消来源
+                if ("待付款".equals(order.getStatus()) || "已付款".equals(order.getStatus())) {
+                    String cancelSource = req.getParameter("cancelSource");
+                    String cancelRemark = "[客户取消]";
+                    if ("merchant".equals(cancelSource) || "admin".equals(cancelSource)) {
+                        cancelRemark = "[商家取消]";
+                    }
+                    success = orderDao.updateStatusAndRemarkByOrderNo(orderId, "已取消", cancelRemark);
                 }
                 break;
         }

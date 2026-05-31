@@ -421,49 +421,17 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg">
-    <div class="container">
-        <a class="navbar-brand" href="javascript:void(0)" onclick="showCopyright()">
-            🌸 归途
-        </a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav ms-auto align-items-center">
-                <li class="nav-item">
-                    <span class="nav-link">欢迎，${sessionScope.username}</span>
-                </li>
-                <c:if test="${param.ref == 'uc'}">
-                <li class="nav-item">
-                    <a class="nav-link" href="index.jsp">
-                        <i class="bi bi-shop"></i> 继续购物
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="usercenter">
-                        <i class="bi bi-person-circle"></i> 个人中心
-                    </a>
-                </li>
-                </c:if>
-                <c:if test="${param.ref != 'uc'}">
-                <li class="nav-item">
-                    <a class="nav-link" href="usercenter">
-                        <i class="bi bi-person-circle"></i> 个人中心
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="index.jsp">
-                        <i class="bi bi-shop"></i> 继续购物
-                    </a>
-                </li>
-                </c:if>
-                <c:if test="${sessionScope.userRole == '管理员'}">
-                <li class="nav-item">
-                    <a class="nav-link" href="admin/index" style="color:var(--primary-red);font-weight:600;">
-                        <i class="bi bi-gear"></i> 管理中心
-                    </a>
-                </li>
-                </c:if>
-            </ul>
-        </div>
+<nav style="background:#fff;padding:0;position:sticky;top:0;z-index:1000;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+    <div style="max-width:1200px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:70px;">
+        <a href="javascript:void(0)" onclick="showCopyright()" style="font-weight:700;font-size:22px;letter-spacing:2px;background:linear-gradient(135deg,#e74c3c,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;cursor:pointer;text-decoration:none;">归途</a>
+        <ul style="display:flex;gap:20px;list-style:none;align-items:center;margin:0;padding:0;">
+            <li><span style="color:#555;font-size:14px;">欢迎，${sessionScope.username}</span></li>
+            <li><a href="usercenter" style="color:#555;text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.color='#e74c3c';this.style.background='#fff5f5'" onmouseout="this.style.color='#555';this.style.background='transparent'">个人中心</a></li>
+            <li><a href="index.jsp" style="color:#555;text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.color='#e74c3c';this.style.background='#fff5f5'" onmouseout="this.style.color='#555';this.style.background='transparent'">继续购物</a></li>
+            <c:if test="${sessionScope.userRole == '管理员'}">
+            <li><a href="admin/index" style="color:#e74c3c;text-decoration:none;font-size:14px;font-weight:600;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.background='#fff5f5'" onmouseout="this.style.background='transparent'">管理中心</a></li>
+            </c:if>
+        </ul>
     </div>
 </nav>
 
@@ -544,6 +512,7 @@
                                     <form action="orderstatus" method="post" style="display: inline;">
                                         <input type="hidden" name="orderId" value="${order.orderId}">
                                         <input type="hidden" name="action" value="cancel">
+                                        <input type="hidden" name="cancelSource" value="customer">
                                         <button type="submit" class="btn-action btn-cancel" onclick="return confirm('确定要取消订单吗？')">取消订单</button>
                                     </form>
                                 </c:when>
@@ -551,6 +520,12 @@
                                     <span class="status-badge status-paid">
                                         <i class="bi bi-check-circle"></i> ${order.status}
                                     </span>
+                                    <form action="orderstatus" method="post" style="display: inline;">
+                                        <input type="hidden" name="orderId" value="${order.orderId}">
+                                        <input type="hidden" name="action" value="cancel">
+                                        <input type="hidden" name="cancelSource" value="customer">
+                                        <button type="submit" class="btn-action btn-cancel" onclick="return confirm('确定要取消订单吗？')">取消订单</button>
+                                    </form>
                                 </c:when>
                                 <c:when test="${order.status == '已发货'}">
                                     <span class="status-badge status-shipped">
@@ -576,9 +551,18 @@
                                     </span>
                                 </c:when>
                                 <c:when test="${order.status == '已取消'}">
-                                    <span class="status-badge status-cancelled">
-                                        <i class="bi bi-x-circle"></i> ${order.status}
-                                    </span>
+                                    <c:choose>
+                                        <c:when test="${fn:contains(order.remark, '[商家取消]') or fn:contains(order.remark, '[管理员取消]')}">
+                                            <span class="status-badge status-cancelled">
+                                                <i class="bi bi-x-circle"></i> 商家取消
+                                            </span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="status-badge status-cancelled">
+                                                <i class="bi bi-x-circle"></i> 客户取消
+                                            </span>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </c:when>
                                 <c:otherwise>
                                     <span class="status-badge bg-secondary text-white">${order.status}</span>

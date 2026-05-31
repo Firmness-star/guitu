@@ -20,6 +20,7 @@
     :root { --sidebar-width: 240px; }
     body { background: var(--bg-gray); }
     .sidebar { width: var(--sidebar-width); }
+    .top-navbar {
       background: white;
       border-bottom: 1px solid #e0e0e0;
       padding: 15px 0;
