@@ -2,6 +2,7 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.util.HashSet,java.util.Set,com.flower.entity.FavoriteItem" %>
 
 <!-- 若商品列表为空且无搜索/筛选条件，则转发至首页控制器加载初始数据 -->
 <c:if test="${productList == null && empty searchKeyword && empty selectedCategoryId}">
@@ -15,6 +16,17 @@
     <c:set var="cartItemCount" value="${cartItemCount + item.quantity}"/>
   </c:forEach>
 </c:if>
+
+<%-- 构建收藏商品 ID 集合用于心形图标状态判断 --%>
+<%
+Set<Integer> favSet = new HashSet<>();
+if (session.getAttribute("favorites") != null) {
+  for (FavoriteItem item : (java.util.List<FavoriteItem>) session.getAttribute("favorites")) {
+    favSet.add(item.getProductId());
+  }
+}
+pageContext.setAttribute("favSet", favSet);
+%>
 
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -295,6 +307,22 @@
     .product-label-hot {
       background: linear-gradient(135deg, #f39c12, #e67e22);
     }
+
+    /* 收藏心形按钮（图片右上角覆盖） */
+    .fav-btn {
+      position: absolute; top: 8px; left: 8px;
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(255,255,255,.92); border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 18px; transition: all .2s;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1); z-index: 2;
+      padding: 0; line-height: 1;
+    }
+    .fav-btn:hover { transform: scale(1.12); background: #fff; }
+    .fav-btn i { transition: transform .2s; }
+    .fav-btn:hover i { transform: scale(1.1); }
+    .fav-btn .bi-heart-fill { color: #e74c3c; }
+    .fav-btn .bi-heart { color: #ccc; }
 
     .product-content { padding: 15px; text-align: center; }
     .product-name { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 8px; }
@@ -590,6 +618,9 @@
         </a>
       </li>
       <c:if test="${not empty sessionScope.username}">
+        <li class="nav-item"><a href="favorite"><i class="bi bi-heart"></i> 收藏</a></li>
+      </c:if>
+      <c:if test="${not empty sessionScope.username}">
         <li class="nav-item">
           <a href="orders">
             <i class="bi bi-receipt"></i> 我的订单
@@ -764,8 +795,8 @@
     <div class="products">
       <c:forEach items="${productList}" var="product" varStatus="status">
         <div class="product-card animate-fade-in" style="animation-delay: ${(status.index % 6) * 0.1}s;">
-          <a href="product/detail?id=${product.id}" style="text-decoration: none; color: inherit;">
             <div class="product-image-wrapper">
+              <a href="product/detail?id=${product.id}" style="display:block;text-decoration:none;color:inherit;">
               <c:set var="isHot" value="false"/>
               <c:forEach items="${hotProducts}" var="hp">
                 <c:if test="${hp.id == product.id}"><c:set var="isHot" value="true"/></c:if>
@@ -775,8 +806,11 @@
               </c:if>
               <img src="${product.pic}" alt="${product.name}" class="product-image"
                    onerror="this.src='https://via.placeholder.com/400x300?text=暂无图片'">
+              </a>
+              <button class="fav-btn" onclick="toggleFav(${product.id}, this)" title="收藏">
+                <i class="bi ${favSet.contains(product.id) ? 'bi-heart-fill' : 'bi-heart'}"></i>
+              </button>
             </div>
-          </a>
           <div class="product-content">
             <h3 class="product-name"><a href="product/detail?id=${product.id}" style="text-decoration: none; color: inherit;">${product.name}</a></h3>
             <p class="product-desc">${product.intro}</p>
@@ -919,6 +953,20 @@
       }
     });
   });
+
+// 收藏切换 AJAX
+async function toggleFav(productId, el) {
+  try {
+    var res = await fetch('favorite?action=add&productId=' + productId + '&ajax=1');
+    var json = await res.json();
+    if (json.code === 200) {
+      var icon = el.querySelector('i');
+      if (icon) {
+        icon.className = json.data.favorited ? 'bi bi-heart-fill' : 'bi bi-heart';
+      }
+    }
+  } catch (e) { console.error(e); }
+}
 </script>
 
 </body>

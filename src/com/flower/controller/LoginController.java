@@ -1,9 +1,11 @@
 package com.flower.controller;
 
 import com.flower.dao.CartDao;
+import com.flower.dao.FavoriteDao;
 import com.flower.dao.JfDao;
 import com.flower.dao.UserDao;
 import com.flower.entity.CartItem;
+import com.flower.entity.FavoriteItem;
 import com.flower.entity.User;
 import com.flower.util.MD5Util;
 
@@ -133,6 +135,19 @@ public class LoginController extends HttpServlet {
                 session.setAttribute("cart", mergedCart);
             }
             session.setAttribute("cartLoadedFromDb", true);
+
+            // 将游客收藏夹合并到数据库收藏夹
+            @SuppressWarnings("unchecked")
+            List<FavoriteItem> guestFav = (List<FavoriteItem>) session.getAttribute("favorites");
+            FavoriteDao favDao = new FavoriteDao();
+            if (guestFav != null && !guestFav.isEmpty()) {
+                for (FavoriteItem item : guestFav) {
+                    favDao.addFavorite(user.getId(), item.getProductId());
+                }
+                List<FavoriteItem> mergedFav = favDao.findByUserId(user.getId());
+                session.setAttribute("favorites", mergedFav);
+            }
+            session.setAttribute("favoritesLoadedFromDb", true);
 
             session.setAttribute("userId", user.getId());
             session.setAttribute("username", user.getUsername());

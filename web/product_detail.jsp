@@ -2,11 +2,25 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.util.HashSet,java.util.Set,com.flower.entity.FavoriteItem" %>
 
 <!-- 若商品信息为空，则转发至首页 -->
 <c:if test="${empty product}">
   <jsp:forward page="/index"/>
 </c:if>
+
+<%-- 构建收藏商品 ID 集合 --%>
+<%
+Set<Integer> favSet = new HashSet<>();
+if (session.getAttribute("favorites") != null) {
+  for (FavoriteItem item : (java.util.List<FavoriteItem>) session.getAttribute("favorites")) {
+    favSet.add(item.getProductId());
+  }
+}
+pageContext.setAttribute("favSet", favSet);
+boolean isFav = favSet.contains(request.getAttribute("product") != null ? ((com.flower.entity.Sp)request.getAttribute("product")).getId() : 0);
+pageContext.setAttribute("isFavorited", isFav);
+%>
 
 <!-- 获取项目上下文路径 -->
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
@@ -202,6 +216,17 @@
     .buy-now-btn:hover { background: #219a52 !important; }
     .buy-now-btn:disabled { background: #ccc !important; color: #999 !important; cursor: not-allowed !important; }
 
+    /* 收藏按钮 */
+    .detail-fav-btn {
+      flex: 0 0 auto; width: 48px; height: 48px;
+      background: #fff; border: 1px solid #ddd; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 22px; transition: all .2s;
+    }
+    .detail-fav-btn:hover { border-color: #e74c3c; background: #fff5f5; }
+    .detail-fav-btn .bi-heart-fill { color: #e74c3c; }
+    .detail-fav-btn .bi-heart { color: #ccc; }
+
     .related-products {
       margin-top: 50px;
       padding: 30px;
@@ -336,6 +361,9 @@
           我的购物车<span class="cart-badge">${cartItemCount > 0 ? cartItemCount : '0'}</span>
         </a>
       </li>
+      <c:if test="${not empty sessionScope.username}">
+        <li class="nav-item"><a href="${ctx}/favorite"><i class="bi bi-heart"></i> 收藏</a></li>
+      </c:if>
       <c:if test="${not empty sessionScope.username}">
         <li class="nav-item">
           <a href="${ctx}/orders">
@@ -554,6 +582,10 @@
             <i class="bi bi-lightning-charge"></i> ${product.stock <= 0 ? '暂时缺货' : '立即购买'}
           </button>
         </form>
+
+        <button class="detail-fav-btn" onclick="toggleDetailFav(${product.id})" title="收藏">
+          <i class="bi ${isFavorited ? 'bi-heart-fill' : 'bi-heart'}"></i>
+        </button>
       </div>
     </div>
   </div>
@@ -788,6 +820,20 @@
       return false;
     }
   });
+
+// 收藏切换
+async function toggleDetailFav(productId) {
+  try {
+    var res = await fetch('${ctx}/favorite?action=add&productId=' + productId + '&ajax=1');
+    var json = await res.json();
+    if (json.code === 200) {
+      var icon = document.querySelector('.detail-fav-btn i');
+      if (icon) {
+        icon.className = json.data.favorited ? 'bi bi-heart-fill' : 'bi bi-heart';
+      }
+    }
+  } catch (e) { console.error(e); }
+}
 </script>
 
 <jsp:include page="common/copyright.jsp"/>

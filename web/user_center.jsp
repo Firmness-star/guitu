@@ -537,6 +537,12 @@
                 </a>
             </div>
             <div class="nav-item">
+                <a href="favorite" class="nav-link">
+                    <i class="bi bi-heart"></i>
+                    我的收藏
+                </a>
+            </div>
+            <div class="nav-item">
                 <a href="address" class="nav-link">
                     <i class="bi bi-geo-alt"></i>
                     收货地址

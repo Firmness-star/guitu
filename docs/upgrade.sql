@@ -124,3 +124,18 @@ CREATE TABLE `user_coupon` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户优惠券关联表';
 -- 12. 购物车添加选中状态字段
 ALTER TABLE `cart` ADD COLUMN `selected` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否选中：1选中 0未选中' AFTER `quantity`;
+
+-- 13. 商品收藏表
+DROP TABLE IF EXISTS `favorite`;
+CREATE TABLE `favorite` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `product_id` int NOT NULL,
+  `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_product` (`user_id`,`product_id`),
+  KEY `idx_user` (`user_id`),
+  KEY `idx_product` (`product_id`),
+  CONSTRAINT `fk_fav_product` FOREIGN KEY (`product_id`) REFERENCES `product` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_fav_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='商品收藏表';
