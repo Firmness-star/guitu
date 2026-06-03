@@ -12,12 +12,19 @@ const routes = [
   { path: '/login', name: 'Login', component: () => import('../views/Login.vue'), meta: { title: '登录' } },
   { path: '/register', name: 'Register', component: () => import('../views/Register.vue'), meta: { title: '注册' } },
   { path: '/profile', name: 'Profile', component: () => import('../views/Profile.vue'), meta: { title: '个人中心' } },
-  { path: '/address', name: 'Address', component: () => import('../views/Address.vue'), meta: { title: '收货地址' } }
+  { path: '/address', name: 'Address', component: () => import('../views/Address.vue'), meta: { title: '收货地址' } },
+  { path: '/order-success', name: 'OrderSuccess', component: () => import('../views/OrderSuccess.vue'), meta: { title: '下单成功' } },
+  { path: '/payment-success', name: 'PaymentSuccess', component: () => import('../views/PaymentSuccess.vue'), meta: { title: '支付成功' } },
+  { path: '/security', name: 'Security', component: () => import('../views/Security.vue'), meta: { title: '安全中心' } },
+  { path: '/message', name: 'Message', component: () => import('../views/Message.vue'), meta: { title: '留言板' } }
 ]
 
 const router = createRouter({
   history: createWebHashHistory(),
-  routes
+  routes,
+  scrollBehavior() {
+    return { top: 0, behavior: 'smooth' }
+  }
 })
 
 export default router

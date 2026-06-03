@@ -1,6 +1,7 @@
 package com.flower.controller;
 
 import com.flower.dao.CartDao;
+import com.flower.dao.JfDao;
 import com.flower.dao.UserDao;
 import com.flower.entity.CartItem;
 import com.flower.entity.User;
@@ -20,6 +21,7 @@ import java.util.List;
 public class LoginController extends HttpServlet {
 
     private UserDao userDao = new UserDao();
+    private JfDao jfDao = new JfDao();
 
     /**
      * 处理 GET 请求，展示登录页面并自动填充“记住我”的用户名
@@ -138,6 +140,12 @@ public class LoginController extends HttpServlet {
             session.setAttribute("loginTime", new java.util.Date());
             session.setAttribute("userEmail", user.getEmail());
             session.setAttribute("userPhone", user.getTel());
+
+            // 每日首次登录赠送 5 积分
+            if (!jfDao.hasTodaySource(user.getId(), "login")) {
+                userDao.addJf(user.getId(), 5);
+                jfDao.addLog(user.getId(), 5, "login", "每日首次登录赠送5积分");
+            }
             if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
                 session.setAttribute("userAvatar", user.getAvatar());
             }

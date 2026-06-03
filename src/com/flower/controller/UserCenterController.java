@@ -1,5 +1,6 @@
 package com.flower.controller;
 
+import com.flower.dao.JfDao;
 import com.flower.dao.OrderDao;
 import com.flower.dao.UserDao;
 import com.flower.dao.MessageDao;
@@ -93,6 +94,10 @@ public class UserCenterController extends HttpServlet {
         req.setAttribute("totalOrders", allOrders.size());
         req.setAttribute("unreadMsgCount", new MessageDao().countUnreadByUserId(userId));
 
+        // 加载积分流水和规则
+        List<Map<String, Object>> jfLogs = new JfDao().findByUserId(userId, 50);
+        req.setAttribute("jfLogs", jfLogs);
+
         String tab = req.getParameter("tab");
         if ("orders".equals(tab)) {
             req.setAttribute("viewMode", "allOrders");
@@ -184,9 +189,16 @@ public class UserCenterController extends HttpServlet {
             userDao.updateGender(userId, gender);
         }
 
-        // 完善个人资料奖励积分：+10
+        // 完善个人资料奖励积分
         if (success) {
-            userDao.addJf(userId, 10);
+            User current = userDao.findById(userId);
+            boolean firstTime = current != null &&
+                    (current.getTel() == null || current.getTel().isEmpty() ||
+                     current.getEmail() == null || current.getEmail().isEmpty());
+            int jfAmount = firstTime ? 50 : 10;
+            userDao.addJf(userId, jfAmount);
+            new JfDao().addLog(userId, jfAmount, "completeProfile",
+                    firstTime ? "首次完善个人信息获得50积分奖励" : "更新个人信息获得10积分");
         }
 
         if (success) {

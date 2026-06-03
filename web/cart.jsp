@@ -14,284 +14,286 @@
     <style>
         body { background: #f8f9fa; }
 
-        .cart-item {
+        .cart-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        .cart-header {
             background: white;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 18px 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
             display: flex;
             align-items: center;
+            justify-content: space-between;
         }
-
-        .cart-item img {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 5px;
+        .cart-header-left { display: flex; align-items: center; gap: 14px; }
+        .cart-header-left .form-check-input { width: 20px; height: 20px; accent-color: var(--primary-red); cursor: pointer; }
+        .cart-header-left label { font-size: 14px; font-weight: 500; color: #333; cursor: pointer; user-select: none; }
+        .cart-header-right { display: flex; align-items: center; gap: 16px; }
+        .cart-header-right .op-link {
+            font-size: 13px; color: #999; cursor: pointer; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 4px; transition: color .2s; user-select: none;
         }
+        .cart-header-right .op-link:hover { color: var(--primary-red); }
+        .cart-header-right .op-link.danger:hover { color: #e74c3c; }
 
-        .item-check {
-            width: 20px;
-            height: 20px;
-            margin-right: 15px;
-            accent-color: var(--primary-red);
-            cursor: pointer;
+        .cart-item {
+            background: #fff; border-radius: 12px; padding: 18px 24px; margin-bottom: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            display: flex; align-items: center; gap: 16px; transition: all .3s;
         }
+        .cart-item.deleting { opacity: .3; transform: translateX(-24px); }
 
-        .price {
-            color: var(--primary-red);
-            font-weight: bold;
-            font-size: 1.2rem;
+        .item-check { width: 20px; height: 20px; accent-color: var(--primary-red); cursor: pointer; flex-shrink: 0; }
+        .item-img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; flex-shrink: 0; }
+        .item-body { flex: 1; min-width: 0; }
+        .item-body .name { font-size: 15px; font-weight: 600; color: #333; margin-bottom: 4px; }
+        .item-body .price { font-size: 15px; color: var(--primary-red); font-weight: 600; }
+        .item-right { text-align: right; flex-shrink: 0; min-width: 120px; }
+        .item-right .subtotal { font-size: 17px; color: var(--primary-red); font-weight: 700; transition: all .3s; }
+        .item-right .subtotal.price-updated { animation: flash 0.45s ease; }
+        @keyframes flash { 0% { transform: scale(1.18); color: #ff6b6b; } 100% { transform: scale(1); } }
+        .item-right .remove { font-size: 12px; color: #999; cursor: pointer; text-decoration: none; }
+        .item-right .remove:hover { color: var(--primary-red); }
+
+        .qty-group { display: inline-flex; align-items: center; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; margin-top: 8px; }
+        .qty-btn {
+            width: 34px; height: 34px; border: none; background: #f8f9fa;
+            font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all .15s; user-select: none;
+        }
+        .qty-btn:hover { background: var(--primary-red); color: #fff; }
+        .qty-btn:disabled { opacity: .4; cursor: not-allowed; }
+        .qty-input {
+            width: 48px; height: 34px; border: none; text-align: center; font-size: 14px;
+            outline: none; border-left: 1px solid #ddd; border-right: 1px solid #ddd;
         }
 
         .summary-box {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: #fff; border-radius: 12px; padding: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06); position: sticky; top: 90px;
         }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; color: #666; font-size: 14px; }
+        .summary-row.total { font-size: 17px; font-weight: 700; color: #333; margin-top: 16px; padding-top: 14px; border-top: 1.5px solid #eee; }
+        .summary-row .val { color: var(--primary-red); font-weight: 600; }
 
-        .btn-red {
-            background: var(--primary-red);
-            color: white;
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-            text-decoration: none;
-            display: block;
-            text-align: center;
+        .btn-checkout {
+            background: var(--primary-red); color: #fff; width: 100%; padding: 14px;
+            border: none; border-radius: 8px; font-size: 16px; font-weight: 600;
+            display: block; text-align: center; text-decoration: none; transition: all .2s;
         }
+        .btn-checkout:hover { background: var(--dark-red); color: #fff; transform: translateY(-1px); }
+        .btn-checkout.disabled { background: #ccc; color: #999; cursor: not-allowed; transform: none; pointer-events: none; }
 
-        .btn-red:hover {
-            background: var(--dark-red);
-            color: white;
-        }
+        .empty-state { text-align: center; padding: 100px 20px; }
+        .empty-state i { font-size: 64px; color: #ddd; }
+        .empty-state p { margin-top: 16px; color: #999; font-size: 15px; }
 
-        .btn-gray {
-            background: #ccc;
-            color: white;
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-
-        .qty-input {
-            width: 50px;
-            text-align: center;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-        }
-
-        .select-all-bar {
-            background: white;
-            border-radius: 10px;
-            padding: 15px 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .select-all-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .select-all-checkbox {
-            width: 20px;
-            height: 20px;
-            accent-color: var(--primary-red);
-            cursor: pointer;
-        }
-
-        .select-all-label {
-            font-weight: 500;
-            color: #333;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .select-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-sm-action {
-            padding: 6px 16px;
-            border: 1px solid #ddd;
-            background: #f8f9fa;
-            color: #666;
-            border-radius: 4px;
-            font-size: 13px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-
-        .btn-sm-action:hover {
-            background: var(--primary-red);
-            color: white;
-            border-color: var(--primary-red);
-        }
+        .count-badge { background: var(--primary-red); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
     </style>
 </head>
 <body>
 
-<nav style="background:#fff;padding:0;position:sticky;top:0;z-index:1000;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-    <div style="max-width:1200px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:70px;">
-        <a href="index.jsp" style="font-weight:700;font-size:22px;letter-spacing:2px;background:linear-gradient(135deg,#e74c3c,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;cursor:pointer;text-decoration:none;">归途</a>
-        <ul style="display:flex;gap:20px;list-style:none;align-items:center;margin:0;padding:0;">
-            <li><a href="index.jsp" style="color:#555;text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.color='#e74c3c';this.style.background='#fff5f5'" onmouseout="this.style.color='#555';this.style.background='transparent'">首页</a></li>
-            <c:choose>
-                <c:when test="${not empty sessionScope.username}">
-                    <li><a href="logout" style="color:#555;text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.color='#e74c3c';this.style.background='#fff5f5'" onmouseout="this.style.color='#555';this.style.background='transparent'">退出(${sessionScope.username})</a></li>
-                </c:when>
-                <c:otherwise>
-                    <li><a href="login.jsp" style="color:#555;text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.color='#e74c3c';this.style.background='#fff5f5'" onmouseout="this.style.color='#555';this.style.background='transparent'">登录</a></li>
-                    <li><a href="reg.jsp" style="color:#555;text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.color='#e74c3c';this.style.background='#fff5f5'" onmouseout="this.style.color='#555';this.style.background='transparent'">注册</a></li>
-                </c:otherwise>
-            </c:choose>
-            <c:if test="${not empty sessionScope.username}">
-                <li><a href="orders" style="color:#555;text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.color='#e74c3c';this.style.background='#fff5f5'" onmouseout="this.style.color='#555';this.style.background='transparent'">我的订单</a></li>
-                <li><a href="usercenter" style="color:#555;text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.color='#e74c3c';this.style.background='#fff5f5'" onmouseout="this.style.color='#555';this.style.background='transparent'">个人中心</a></li>
-            </c:if>
-            <c:if test="${sessionScope.userRole == '管理员'}">
-                <li><a href="admin/index" style="color:#e74c3c;text-decoration:none;font-size:14px;font-weight:600;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.background='#fff5f5'" onmouseout="this.style.background='transparent'">管理中心</a></li>
-            </c:if>
-        </ul>
-    </div>
+<nav style="background:#fff;position:sticky;top:0;z-index:1000;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:0 20px;height:64px;display:flex;align-items:center;justify-content:space-between;">
+  <a href="index.jsp" style="font-weight:700;font-size:20px;background:linear-gradient(135deg,#e74c3c,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none;">归途</a>
+  <div style="display:flex;gap:16px;align-items:center;font-size:14px;">
+    <c:choose>
+      <c:when test="${not empty sessionScope.username}"><span style="color:#666;">${sessionScope.username}</span><a href="logout" style="color:#555;text-decoration:none;">退出</a></c:when>
+      <c:otherwise><a href="login.jsp" style="color:#555;text-decoration:none;">登录</a><a href="reg.jsp" style="color:#555;text-decoration:none;">注册</a></c:otherwise>
+    </c:choose>
+    <a href="orders" style="color:#555;text-decoration:none;">订单</a>
+    <a href="usercenter" style="color:#555;text-decoration:none;">个人中心</a>
+    <c:if test="${sessionScope.userRole == '管理员'}"><a href="admin/index" style="color:#e74c3c;text-decoration:none;font-weight:600;">管理</a></c:if>
+  </div>
 </nav>
 
-<div class="container mt-4">
-    <h3 class="mb-4"><i class="bi bi-cart3"></i> 我的购物车</h3>
+<div class="cart-container">
+  <h4 style="margin-bottom:18px;"><i class="bi bi-cart3" style="color:var(--primary-red);"></i> 我的购物车 <span class="count-badge" id="headerCount">${totalNum}</span></h4>
 
-    <!-- 根据购物车是否为空展示不同内容 -->
-    <c:choose>
-        <c:when test="${empty sessionScope.cart}">
-            <div class="text-center py-5">
-                <i class="bi bi-cart-x" style="font-size: 60px; color: #ddd;"></i>
-                <p class="mt-3">购物车是空的</p>
-                <a href="products" class="btn btn-danger">去购物</a>
+  <c:choose>
+    <c:when test="${empty sessionScope.cart || fn:length(sessionScope.cart) == 0}">
+      <div class="empty-state"><i class="bi bi-cart-x"></i><p>购物车是空的</p><a href="index.jsp" class="btn btn-danger mt-2">去购物</a></div>
+    </c:when>
+
+    <c:otherwise>
+      <div class="row">
+        <div class="col-lg-8">
+          <!-- 全选操作栏 -->
+          <div class="cart-header">
+            <div class="cart-header-left">
+              <c:set var="allSelected" value="true"/>
+              <c:forEach items="${sessionScope.cart}" var="item"><c:if test="${!item.selected}"><c:set var="allSelected" value="false"/></c:if></c:forEach>
+              <input type="checkbox" class="form-check-input" id="selectAllCheck"
+                ${allSelected && fn:length(sessionScope.cart) > 0 ? 'checked' : ''} onchange="toggleSelectAll(this.checked)">
+              <label onclick="document.getElementById('selectAllCheck').click()">
+                <span id="selectAllText">${allSelected ? '取消全选' : '全选'}</span>
+                <span id="selectedInfo">（<strong id="selectedNumDisplay">${selectedNum}</strong>/<strong id="totalNumDisplay">${totalNum}</strong>）</span>
+              </label>
             </div>
-        </c:when>
-
-        <c:otherwise>
-            <div class="row">
-                <div class="col-md-8">
-
-                    <!-- 全选/全不选控制栏：根据当前选中状态动态切换点击行为 -->
-                    <div class="select-all-bar">
-                        <div class="select-all-left">
-                            <c:set var="allSelected" value="true"/>
-                            <c:forEach items="${sessionScope.cart}" var="item">
-                                <c:if test="${!item.selected}">
-                                    <c:set var="allSelected" value="false"/>
-                                </c:if>
-                            </c:forEach>
-
-                            <c:choose>
-                                <c:when test="${allSelected && fn:length(sessionScope.cart) > 0}">
-                                    <input type="checkbox" class="select-all-checkbox"
-                                           checked onclick="location.href='cart?action=unselectAll'">
-                                    <label class="select-all-label" onclick="location.href='cart?action=unselectAll'">
-                                        全选（已选${selectedNum}件 / 共${totalNum}件）
-                                    </label>
-                                </c:when>
-                                <c:otherwise>
-                                    <input type="checkbox" class="select-all-checkbox"
-                                           onclick="location.href='cart?action=selectAll'">
-                                    <label class="select-all-label" onclick="location.href='cart?action=selectAll'">
-                                        全选（已选${selectedNum}件 / 共${totalNum}件）
-                                    </label>
-                                </c:otherwise>
-                            </c:choose>
-                        </div>
-                    </div>
-
-                    <c:forEach items="${sessionScope.cart}" var="item">
-                        <div class="cart-item">
-                            <!-- 商品选中状态切换表单 -->
-                            <form action="cart" method="post" style="margin: 0;">
-                                <input type="hidden" name="action" value="select">
-                                <input type="hidden" name="productId" value="${item.productId}">
-                                <input type="checkbox" class="item-check" name="checked" value="on"
-                                    ${item.selected ? 'checked' : ''}
-                                       onchange="this.form.submit()">
-                            </form>
-
-                            <img src="${item.productPic}" class="me-3" onerror="this.src='https://via.placeholder.com/80'">
-
-                            <div style="flex: 1;">
-                                <h5>${item.productName}</h5>
-                                <div class="price">¥${item.productPrice}</div>
-
-                                <!-- 商品数量增减表单：通过 JS 简单处理后提交 -->
-                                <form action="cart" method="post" class="mt-2" style="display: inline;">
-                                    <input type="hidden" name="action" value="update">
-                                    <input type="hidden" name="productId" value="${item.productId}">
-                                    <button type="button" onclick="var n=this.nextElementSibling; n.value=parseInt(n.value)-1; if(n.value<1)n.value=1; this.parentNode.submit()">-</button>
-                                    <input type="text" name="quantity" value="${item.quantity}" class="qty-input" readonly>
-                                    <button type="button" onclick="var n=this.previousElementSibling; n.value=parseInt(n.value)+1; this.parentNode.submit()">+</button>
-                                </form>
-                            </div>
-
-                            <div class="text-end">
-                                <div class="price">¥<fmt:formatNumber value="${item.productPrice * item.quantity}" pattern="#0.00"/></div>
-                                <a href="cart?action=remove&productId=${item.productId}" class="text-muted small" onclick="return confirm('确定删除该商品？')">删除</a>
-                            </div>
-                        </div>
-                    </c:forEach>
-
-                    <div class="text-end">
-                        <a href="cart?action=clear" class="text-danger small" onclick="return confirm('确定清空购物车？')">清空购物车</a>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="summary-box">
-                        <h5 class="mb-3">订单摘要</h5>
-
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>商品总数：</span>
-                            <span>${totalNum} 件</span>
-                        </div>
-
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>选中数量：</span>
-                            <span class="text-danger fw-bold">${selectedNum} 件</span>
-                        </div>
-
-                        <hr>
-
-                        <div class="d-flex justify-content-between mb-3">
-                            <span class="h5">总计：</span>
-                            <span class="price h4">¥<fmt:formatNumber value="${totalMoney}" pattern="#0.00"/></span>
-                        </div>
-
-                        <!-- 结算按钮：仅在有选中商品时可用 -->
-                        <c:choose>
-                            <c:when test="${totalMoney > 0}">
-                                <a href="checkout" class="btn-red">去结算（${selectedNum}件）</a>
-                            </c:when>
-                            <c:otherwise>
-                                <button class="btn-gray" disabled>请选择至少一件商品</button>
-                            </c:otherwise>
-                        </c:choose>
-
-                        <a href="index.jsp" class="btn btn-outline-secondary w-100 mt-2">继续购物</a>
-                    </div>
-                </div>
+            <div class="cart-header-right">
+              <a class="op-link danger" onclick="batchDelete()"><i class="bi bi-trash"></i> 批量删除</a>
+              <span style="color:#ddd;font-size:12px;">|</span>
+              <a href="cart?action=clear" class="op-link" onclick="return confirm('确定清空购物车？')"><i class="bi bi-x-circle"></i> 清空</a>
             </div>
-        </c:otherwise>
-    </c:choose>
+          </div>
+
+          <!-- 商品列表 -->
+          <div id="cartList">
+            <c:forEach items="${sessionScope.cart}" var="item">
+              <div class="cart-item" data-product-id="${item.productId}" id="item_${item.productId}">
+                <input type="checkbox" class="item-check" ${item.selected ? 'checked' : ''} onchange="toggleSelect(${item.productId}, this.checked)">
+                <img src="${item.productPic}" class="item-img" onerror="this.src='https://via.placeholder.com/80'">
+                <div class="item-body">
+                  <div class="name">${item.productName}
+                    <c:if test="${item.stock <= 0}"><span class="badge bg-warning text-dark ms-1" style="font-size:11px;vertical-align:middle;">缺货</span></c:if>
+                    <c:if test="${item.status != 1}"><span class="badge bg-secondary ms-1" style="font-size:11px;vertical-align:middle;">已下架</span></c:if>
+                  </div>
+                  <div class="price">¥${item.productPrice}</div>
+                  <div class="qty-group">
+                    <button class="qty-btn" onclick="updateQty(${item.productId}, -1)" ${item.stock <= 0 ? 'disabled' : ''}>−</button>
+                    <input type="text" class="qty-input" id="qty_${item.productId}" value="${item.quantity}" readonly data-stock="${item.stock > 0 ? item.stock : 0}">
+                    <button class="qty-btn" onclick="updateQty(${item.productId}, 1)" ${item.stock <= 0 || item.quantity >= item.stock ? 'disabled' : ''}>+</button>
+                  </div>
+                </div>
+                <div class="item-right">
+                  <div class="subtotal" id="subtotal_${item.productId}">¥<fmt:formatNumber value="${item.productPrice * item.quantity}" pattern="#0.00"/></div>
+                  <a class="remove" onclick="removeItem(${item.productId})"><i class="bi bi-trash"></i> 删除</a>
+                </div>
+              </div>
+            </c:forEach>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="summary-box">
+            <h6 style="font-weight:600;margin-bottom:16px;">订单摘要</h6>
+            <div class="summary-row"><span>商品总数</span><span id="totalNumSummary">${totalNum} 件</span></div>
+            <div class="summary-row"><span>选中数量</span><span class="val" id="selectedNumSummary">${selectedNum} 件</span></div>
+            <div class="summary-row total"><span>合计</span><span class="val" id="totalMoneySummary">¥<fmt:formatNumber value="${totalMoney}" pattern="#0.00"/></span></div>
+            <a href="${totalMoney > 0 ? 'checkout' : '#'}" class="btn-checkout mt-3 ${totalMoney > 0 ? '' : 'disabled'}" id="checkoutBtn">
+              <c:choose>
+                <c:when test="${totalMoney > 0}">去结算（<span id="checkoutCount">${selectedNum}</span>件）</c:when>
+                <c:otherwise>请选择至少一件商品</c:otherwise>
+              </c:choose>
+            </a>
+            <a href="index.jsp" class="btn btn-outline-secondary w-100 mt-2">继续购物</a>
+          </div>
+        </div>
+      </div>
+    </c:otherwise>
+  </c:choose>
 </div>
 
+<script>
+async function cartAjax(action, params) {
+    params = params || {}; params.action = action; params.ajax = 1;
+    const query = new URLSearchParams(params).toString();
+    try {
+        const res = await fetch('cart?' + query, { method: 'POST' });
+        const json = await res.json();
+        if (json.code === 200) updateTotals(json.data);
+        return json;
+    } catch (e) { console.error(e); }
+}
+
+function updateTotals(data) {
+    document.getElementById('totalNumSummary').textContent = data.totalNum + ' 件';
+    document.getElementById('selectedNumSummary').textContent = data.selectedNum + ' 件';
+    document.getElementById('totalMoneySummary').innerHTML = '¥' + data.totalMoney.toFixed(2);
+
+    // 更新头部角标和选中数量（可能在按钮内或外，安全获取）
+    var hc = document.getElementById('headerCount');
+    if (hc) hc.textContent = data.totalNum;
+    var sd = document.getElementById('selectedNumDisplay');
+    if (sd) sd.textContent = data.selectedNum;
+    var td = document.getElementById('totalNumDisplay');
+    if (td) td.textContent = data.totalNum;
+
+    // ★ 先更新按钮 HTML（确保 checkoutCount 一定存在）,再设内容
+    var btn = document.getElementById('checkoutBtn');
+    if (data.totalMoney > 0) {
+        btn.innerHTML = '去结算（<span id="checkoutCount">' + data.selectedNum + '</span>件）';
+        btn.href = 'checkout';
+        btn.classList.remove('disabled');
+    } else {
+        btn.innerHTML = '请选择至少一件商品';
+        btn.removeAttribute('href');
+        btn.classList.add('disabled');
+    }
+
+    // 全选状态同步
+    var allChecked = document.querySelectorAll('.item-check:checked').length;
+    var total = document.querySelectorAll('.item-check').length;
+    var selectAll = document.getElementById('selectAllCheck');
+    var selectAllText = document.getElementById('selectAllText');
+    if (selectAll) {
+        selectAll.checked = (allChecked === total && total > 0);
+        selectAllText.textContent = selectAll.checked ? '取消全选' : '全选';
+    }
+    // 金额动画
+    var el = document.getElementById('totalMoneySummary');
+    el.classList.remove('price-updated'); void el.offsetWidth; el.classList.add('price-updated');
+}
+
+async function updateQty(productId, delta) {
+    var input = document.getElementById('qty_' + productId);
+    var current = parseInt(input.value) || 1;
+    var maxStock = parseInt(input.dataset.stock) || 999;
+    var newQty = current + delta;
+    if (newQty < 1 || newQty > maxStock) return;
+    input.value = newQty;
+    // 更新 +/- 按钮状态
+    var item = document.getElementById('item_' + productId);
+    var decBtn = item.querySelector('.qty-btn:first-of-type');
+    var incBtn = item.querySelector('.qty-btn:last-of-type');
+    if (decBtn) decBtn.disabled = newQty <= 1;
+    if (incBtn) incBtn.disabled = newQty >= maxStock;
+    var json = await cartAjax('update', { productId: productId, quantity: newQty });
+    if (json && json.code === 200) {
+        var price = parseFloat(document.querySelector('#item_' + productId + ' .price').textContent.replace('¥', ''));
+        var sub = document.getElementById('subtotal_' + productId);
+        sub.innerHTML = '¥' + (price * newQty).toFixed(2);
+        sub.classList.remove('price-updated'); void sub.offsetWidth; sub.classList.add('price-updated');
+    }
+}
+
+async function toggleSelect(productId, checked) {
+    var json = await cartAjax('select', { productId: productId, checked: checked ? 'on' : 'off' });
+}
+
+async function toggleSelectAll(checked) {
+    var json = await cartAjax(checked ? 'selectAll' : 'unselectAll', {});
+    if (json && json.code === 200) {
+        document.querySelectorAll('.item-check').forEach(function(cb) { cb.checked = checked; });
+        var selectAll = document.getElementById('selectAllCheck');
+        if (selectAll) selectAll.checked = checked;
+        document.getElementById('selectAllText').textContent = checked ? '取消全选' : '全选';
+    }
+}
+
+async function removeItem(productId) {
+    var el = document.getElementById('item_' + productId);
+    el.classList.add('deleting');
+    var json = await cartAjax('remove', { productId: productId });
+    if (json && json.code === 200) { el.remove(); if (!document.querySelectorAll('.cart-item').length) location.reload(); }
+    else { el.classList.remove('deleting'); }
+}
+
+async function batchDelete() {
+    var checked = document.querySelectorAll('.item-check:checked');
+    if (!checked.length) { alert('请先勾选要删除的商品'); return; }
+    if (!confirm('确定删除选中的 ' + checked.length + ' 件商品？')) return;
+    var ids = [];
+    checked.forEach(function(cb) {
+        var pid = cb.closest('.cart-item').dataset.productId;
+        ids.push(pid); cb.closest('.cart-item').classList.add('deleting');
+    });
+    var json = await cartAjax('batchRemove', { productIds: ids.join(',') });
+    if (json && json.code === 200) {
+        ids.forEach(function(pid) { var e = document.getElementById('item_' + pid); if (e) e.remove(); });
+        if (!document.querySelectorAll('.cart-item').length) location.reload();
+    }
+}
+</script>
 </body>
 </html>

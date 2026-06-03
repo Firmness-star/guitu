@@ -171,10 +171,10 @@
 </nav>
 
 <div class="admin-container">
-    <!-- Tab 导航栏：根据当前 tab 参数高亮显示 -->
+    <!-- Tab 导航栏 -->
     <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
-            <a class="nav-link ${empty param.tab ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/index?tab=index">
+            <a class="nav-link ${empty param.tab || param.tab == 'index' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/index?tab=index">
                 <i class="bi bi-speedometer2"></i> 首页概览
             </a>
         </li>
@@ -190,7 +190,7 @@
         </li>
         <li class="nav-item">
             <a class="nav-link ${param.tab == 'categories' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/categories?tab=categories">
-                <i class="bi bi-tags"></i> 商品类型管理
+                <i class="bi bi-tags"></i> 商品分类
             </a>
         </li>
         <li class="nav-item">
@@ -201,6 +201,16 @@
         <li class="nav-item">
             <a class="nav-link ${param.tab == 'banners' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/banners?tab=banners">
                 <i class="bi bi-images"></i> 海报管理
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link ${param.tab == 'stats' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/stats" target="_blank">
+                <i class="bi bi-graph-up"></i> 数据统计
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link ${param.tab == 'coupons' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/coupons?tab=coupons">
+                <i class="bi bi-ticket-perforated"></i> 优惠券管理
             </a>
         </li>
     </ul>
@@ -638,7 +648,7 @@
         </div>
     </c:if>
 
-    <!-- 商品管理模块：支持上下架、删除及信息编辑 -->
+    <!-- 商品管理模块：支持批量操作、分页展示及图片上传 -->
     <c:if test="${param.tab == 'products'}">
         <c:if test="${not empty adminSuccess}">
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -652,7 +662,7 @@
         </c:if>
         <div class="content-card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title"><i class="bi bi-box-seam me-2"></i>商品管理</h5>
+                <h5 class="card-title"><i class="bi bi-box-seam me-2"></i>商品管理 <span class="text-muted" style="font-size:13px;font-weight:400;">共 ${totalProducts} 件商品</span></h5>
                 <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
                     <i class="bi bi-plus-circle"></i> 新增商品
                 </button>
@@ -681,9 +691,21 @@
                     </form>
                 </div>
 
+                <!-- 批量操作栏 -->
+                <div style="background:#f0f9f0;padding:10px 14px;border-radius:8px;margin-bottom:15px;display:flex;align-items:center;gap:12px;">
+                    <div class="form-check" style="margin:0;">
+                        <input class="form-check-input" type="checkbox" id="selectAllProducts" onchange="toggleSelectAllProducts(this.checked)" style="accent-color:#e74c3c;">
+                        <label class="form-check-label" for="selectAllProducts" style="font-size:13px;">全选</label>
+                    </div>
+                    <span class="text-muted" style="font-size:12px;" id="selectedCount">已选 0 件</span>
+                    <button class="btn btn-sm btn-success" onclick="batchStatus(1)"><i class="bi bi-arrow-up-circle"></i> 批量上架</button>
+                    <button class="btn btn-sm btn-warning" onclick="batchStatus(0)"><i class="bi bi-arrow-down-circle"></i> 批量下架</button>
+                </div>
+
                 <table class="table">
                     <thead>
                     <tr>
+                        <th style="width:30px;"></th>
                         <th>ID</th>
                         <th>商品图片</th>
                         <th>商品名称</th>
@@ -696,9 +718,10 @@
                     </thead>
                     <tbody>
                     <c:forEach items="${products}" var="product">
-                        <tr>
+                        <tr id="prodRow_${product.id}">
+                            <td><input type="checkbox" class="product-check" value="${product.id}" onchange="updateSelectedCount()" style="accent-color:#e74c3c;"></td>
                             <td>${product.id}</td>
-                            <td><img src="${product.pic}" alt="${product.name}" class="product-img"></td>
+                            <td><img src="${product.pic}" alt="${product.name}" class="product-img" onerror="this.src='https://via.placeholder.com/60?text=暂无图'"></td>
                             <td>${product.name}</td>
                             <td>¥<fmt:formatNumber value="${product.price}" pattern="#0.00"/></td>
                             <td>
@@ -756,12 +779,21 @@
                                                         </div>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label">商品图片URL</label>
-                                                        <input type="text" class="form-control" name="pic" value="${product.pic}" required>
+                                                        <label class="form-label">商品图片</label>
+                                                        <div class="input-group">
+                                                            <input type="text" class="form-control" name="pic" value="${product.pic}" id="pic_${product.id}" placeholder="图片URL">
+                                                            <button type="button" class="btn btn-outline-secondary" onclick="uploadImg('pic_${product.id}')"><i class="bi bi-upload"></i> 上传</button>
+                                                        </div>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label">分类ID</label>
-                                                        <input type="number" class="form-control" name="categoryId" value="${product.categoryId}" required>
+                                                        <label class="form-label">分类</label>
+                                                        <select class="form-select" name="categoryId">
+                                                            <c:forEach items="${allCategories}" var="cat">
+                                                                <option value="${cat.id}" ${cat.id == product.categoryId ? 'selected' : ''}>
+                                                                    ${cat.parentId == 0 ? cat.name : '└ '.concat(cat.name)}
+                                                                </option>
+                                                            </c:forEach>
+                                                        </select>
                                                     </div>
                                                     <button type="submit" class="btn btn-primary">保存修改</button>
                                                 </form>
@@ -774,8 +806,84 @@
                     </c:forEach>
                     </tbody>
                 </table>
+
+                <!-- 分页 -->
+                <c:if test="${totalPages > 1}">
+                    <nav>
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item ${page <= 1 ? 'disabled' : ''}">
+                                <a class="page-link" href="${pageContext.request.contextPath}/admin/products?tab=products&page=${page - 1}&keyword=${keyword}&status=${statusFilter}">«</a>
+                            </li>
+                            <c:forEach begin="1" end="${totalPages}" var="p">
+                                <li class="page-item ${p == page ? 'active' : ''}">
+                                    <a class="page-link" href="${pageContext.request.contextPath}/admin/products?tab=products&page=${p}&keyword=${keyword}&status=${statusFilter}">${p}</a>
+                                </li>
+                            </c:forEach>
+                            <li class="page-item ${page >= totalPages ? 'disabled' : ''}">
+                                <a class="page-link" href="${pageContext.request.contextPath}/admin/products?tab=products&page=${page + 1}&keyword=${keyword}&status=${statusFilter}">»</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </c:if>
             </div>
         </div>
+
+        <script>
+        function toggleSelectAllProducts(checked) {
+            document.querySelectorAll('.product-check').forEach(cb => cb.checked = checked);
+            updateSelectedCount();
+        }
+        function updateSelectedCount() {
+            var n = document.querySelectorAll('.product-check:checked').length;
+            document.getElementById('selectedCount').textContent = '已选 ' + n + ' 件';
+        }
+        function batchStatus(status) {
+            var ids = [];
+            document.querySelectorAll('.product-check:checked').forEach(function(cb) {
+                ids.push(cb.value);
+            });
+            if (ids.length === 0) { alert('请至少选择一件商品'); return; }
+            var label = status === 1 ? '上架' : '下架';
+            if (!confirm('确认批量' + label + '选中的 ' + ids.length + ' 件商品？')) return;
+
+            var formData = new URLSearchParams();
+            formData.append('action', 'batchStatus');
+            formData.append('ids', ids.join(','));
+            formData.append('status', status);
+            formData.append('tab', 'products');
+
+            fetch('${pageContext.request.contextPath}/admin/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString()
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) { alert(data.message); location.reload(); }
+                else { alert('操作失败：' + data.message); }
+            })
+            .catch(function(e) { alert('网络错误'); });
+        }
+        function uploadImg(fieldId) {
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = function(e) {
+                var file = e.target.files[0];
+                if (!file) return;
+                var fd = new FormData();
+                fd.append('avatar', file);
+                fd.append('action', 'upload');
+                fetch('${pageContext.request.contextPath}/avatar', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.url) document.getElementById(fieldId).value = data.url;
+                    else alert('上传失败');
+                }).catch(function(e) { alert('上传失败'); });
+            };
+            input.click();
+        }
+        </script>
     </c:if>
 
     <!-- 新增商品模态框 -->
@@ -919,7 +1027,7 @@
         </div>
     </c:if>
 
-    <!-- 分类管理 -->
+    <!-- 分类管理：美化后的树型结构 -->
     <c:if test="${param.tab == 'categories'}">
         <c:if test="${not empty adminSuccess}">
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -933,49 +1041,244 @@
         </c:if>
         <div class="content-card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title"><i class="bi bi-tags me-2"></i>分类管理</h5>
-                <form action="${pageContext.request.contextPath}/admin/categories" method="post" class="d-flex gap-2">
-                    <input type="hidden" name="tab" value="categories">
-                    <input type="hidden" name="action" value="add">
-                    <input type="text" name="name" class="form-control" placeholder="分类名称" required style="width:150px;">
-                    <select name="parentId" class="form-control" style="width:140px;">
-                        <option value="0">一级分类</option>
-                        <c:forEach items="${parentCategories}" var="pc">
-                            <option value="${pc.id}">└ ${pc.name}</option>
+                <h5 class="card-title"><i class="bi bi-diagram-3 me-2" style="color:var(--primary-red);"></i>商品分类管理</h5>
+                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#addCatModal">
+                    <i class="bi bi-plus-lg"></i> 新增分类
+                </button>
+            </div>
+            <div class="card-body" style="padding:24px;">
+                <style>
+                .cat-tree { list-style:none; padding:0; margin:0; }
+                .cat-tree ul { list-style:none; padding-left:32px; margin:4px 0; border-left:2px dashed #e8e8e8; }
+                .cat-tree li { position:relative; }
+                .cat-node {
+                    display:flex; align-items:center; gap:10px;
+                    padding:10px 14px; margin:3px 0;
+                    border-radius:8px; transition:all .15s;
+                    background:#fafafa; border:1px solid transparent;
+                    font-size:14px;
+                }
+                .cat-node:hover { background:#fff5f5; border-color:#ffcdd2; }
+                .cat-node.parent { cursor:pointer; }
+                .cat-toggle {
+                    width:22px; height:22px; display:inline-flex;
+                    align-items:center; justify-content:center;
+                    border-radius:5px; background:#eee;
+                    font-size:12px; transition:all .2s; cursor:pointer; flex-shrink:0;
+                }
+                .cat-toggle:hover { background:#e74c3c; color:#fff; }
+                .cat-name { font-weight:600; color:#333; }
+                .cat-badge {
+                    font-size:11px; padding:2px 10px; border-radius:12px;
+                    background:#f0f0f0; color:#888;
+                }
+                .cat-actions { margin-left:auto; display:flex; gap:3px; opacity:.3; transition:opacity .2s; }
+                .cat-node:hover .cat-actions { opacity:1; }
+                .cat-actions .btn-sm { padding:2px 10px; font-size:11px; border-radius:5px; }
+                </style>
+
+                <c:set var="parentCats" value="${parentCategories}"/>
+                <c:choose>
+                    <c:when test="${empty parentCats}">
+                        <div class="text-center py-5 text-muted"><i class="bi bi-tags" style="font-size:36px;display:block;margin-bottom:10px;"></i>暂无分类，点击右上角新增</div>
+                    </c:when>
+                    <c:otherwise>
+                        <ul class="cat-tree">
+                        <c:forEach items="${parentCats}" var="pcat">
+                            <c:set var="childCount" value="0"/>
+                            <c:forEach items="${allCategories}" var="ccat"><c:if test="${ccat.parentId == pcat.id}"><c:set var="childCount" value="${childCount + 1}"/></c:if></c:forEach>
+                            <li>
+                                <div class="cat-node parent" onclick="toggleCatChildren(this)">
+                                    <span class="cat-toggle"><i class="bi bi-chevron-right"></i></span>
+                                    <span class="cat-name">${pcat.name}</span>
+                                    <span class="cat-badge">${productCounts[pcat.id]}件商品</span>
+                                    <c:if test="${not empty pcat.description}"><span style="font-size:12px;color:#999;">${pcat.description}</span></c:if>
+                                    <span class="cat-actions">
+                                        <button class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation();editCategory(${pcat.id},'${pcat.name}',${pcat.parentId},'${pcat.description}')"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-outline-info btn-sm" onclick="event.stopPropagation();moveCategory(${pcat.id},'${pcat.name}')"><i class="bi bi-arrows-move"></i></button>
+                                        <c:choose>
+                                            <c:when test="${productCounts[pcat.id] == 0}"><a href="${pageContext.request.contextPath}/admin/categories?action=delete&id=${pcat.id}" class="btn btn-outline-danger btn-sm" onclick="return confirm('确定删除「${pcat.name}」？')"><i class="bi bi-trash"></i></a></c:when>
+                                            <c:otherwise><span class="btn btn-outline-secondary btn-sm disabled" title="有${productCounts[pcat.id]}件商品关联，不可删除"><i class="bi bi-lock"></i></span></c:otherwise>
+                                        </c:choose>
+                                    </span>
+                                </div>
+                                <c:if test="${childCount > 0}">
+                                <ul style="display:none;">
+                                    <c:forEach items="${allCategories}" var="ccat">
+                                        <c:if test="${ccat.parentId == pcat.id}">
+                                        <li>
+                                            <div class="cat-node">
+                                                <span class="cat-name">${ccat.name}</span>
+                                                <span class="cat-badge">${productCounts[ccat.id]}件商品</span>
+                                                <c:if test="${not empty ccat.description}"><span style="font-size:12px;color:#999;">${ccat.description}</span></c:if>
+                                                <span class="cat-actions">
+                                                    <button class="btn btn-outline-primary btn-sm" onclick="editCategory(${ccat.id},'${ccat.name}',${ccat.parentId},'${ccat.description}')"><i class="bi bi-pencil"></i></button>
+                                                    <button class="btn btn-outline-info btn-sm" onclick="moveCategory(${ccat.id},'${ccat.name}')"><i class="bi bi-arrows-move"></i></button>
+                                                    <c:choose>
+                                                        <c:when test="${productCounts[ccat.id] == 0}"><a href="${pageContext.request.contextPath}/admin/categories?action=delete&id=${ccat.id}" class="btn btn-outline-danger btn-sm" onclick="return confirm('确定删除「${ccat.name}」？')"><i class="bi bi-trash"></i></a></c:when>
+                                                        <c:otherwise><span class="btn btn-outline-secondary btn-sm disabled" title="有${productCounts[ccat.id]}件商品关联"><i class="bi bi-lock"></i></span></c:otherwise>
+                                                    </c:choose>
+                                                </span>
+                                            </div>
+                                        </li>
+                                        </c:if>
+                                    </c:forEach>
+                                </ul>
+                                </c:if>
+                            </li>
                         </c:forEach>
-                    </select>
-                    <input type="text" name="description" class="form-control" placeholder="描述" style="width:180px;">
-                    <button type="submit" class="btn btn-danger btn-sm">新增</button>
-                </form>
+                        </ul>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+        </div>
+
+        <script>
+        function toggleCatChildren(el) {
+            var ul = el.nextElementSibling;
+            if (!ul || ul.tagName !== 'UL') return;
+            var tog = el.querySelector('.cat-toggle i');
+            if (ul.style.display === 'none') { ul.style.display = ''; if (tog) tog.className = 'bi bi-chevron-down'; }
+            else { ul.style.display = 'none'; if (tog) tog.className = 'bi bi-chevron-right'; }
+        }
+        function editCategory(id, name, parentId, desc) {
+            document.getElementById('editCatId').value = id;
+            document.getElementById('editCatName').value = name;
+            document.getElementById('editCatParent').value = parentId;
+            document.getElementById('editCatDesc').value = desc || '';
+            new bootstrap.Modal(document.getElementById('editCatModal')).show();
+        }
+        function moveCategory(id, name) {
+            document.getElementById('moveCatId').value = id;
+            document.getElementById('moveCatName').textContent = name;
+            new bootstrap.Modal(document.getElementById('moveCatModal')).show();
+        }
+        </script>
+    </c:if>
+
+    <!-- 优惠券管理 -->
+    <c:if test="${param.tab == 'coupons'}">
+        <c:if test="${not empty adminSuccess}">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle"></i> ${adminSuccess}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </c:if>
+        <c:if test="${not empty adminError}">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                ${adminError}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </c:if>
+        <div class="content-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title"><i class="bi bi-ticket-perforated me-2"></i>优惠券管理</h5>
+                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#addCouponModal">
+                    <i class="bi bi-plus-circle"></i> 新建优惠券
+                </button>
             </div>
             <div class="card-body">
                 <table class="table">
-                    <thead><tr><th>ID</th><th>名称</th><th>父级</th><th>描述</th><th>操作</th></tr></thead>
+                    <thead>
+                    <tr><th>ID</th><th>名称</th><th>类型</th><th>面值</th><th>最低消费</th><th>库存</th><th>有效期</th><th>操作</th></tr>
+                    </thead>
                     <tbody>
-                        <c:forEach items="${allCategories}" var="cat">
+                        <c:forEach items="${couponList}" var="cp">
                             <tr>
-                                <td>${cat.id}</td>
-                                <td>
+                                <td>${cp.id}</td>
+                                <td><strong>${cp.name}</strong></td>
+                                <td>${cp.type}</td>
+                                <td style="color:#e74c3c;font-weight:700;">
                                     <c:choose>
-                                        <c:when test="${cat.parentId == 0}">
-                                            <strong>${cat.name}</strong>
-                                        </c:when>
-                                        <c:otherwise>
-                                            └ ${cat.name}
-                                        </c:otherwise>
+                                        <c:when test="${cp.type == '满减' || cp.type == 'reduce'}">¥<fmt:formatNumber value="${cp.value}" pattern="#0.00"/></c:when>
+                                        <c:otherwise>${cp.value}折</c:otherwise>
                                     </c:choose>
                                 </td>
-                                <td>${cat.parentId == 0 ? '一级' : '二级'}</td>
-                                <td>${cat.description}</td>
+                                <td>¥<fmt:formatNumber value="${cp.minAmount}" pattern="#0.00"/></td>
+                                <td>${cp.stock == -1 ? '不限' : cp.stock}</td>
+                                <td style="font-size:12px;">${cp.startDate} ~ ${cp.endDate}</td>
                                 <td>
-                                    <a href="${pageContext.request.contextPath}/admin/categories?tab=categories&action=delete&id=${cat.id}" class="btn btn-sm btn-danger" onclick="return confirm('确定删除？')">删除</a>
+                                    <button class="btn btn-sm btn-info" onclick="issueCoupon(${cp.id},'${cp.name}')">发放</button>
+                                    <a href="${pageContext.request.contextPath}/admin/coupons?action=delete&id=${cp.id}" class="btn btn-sm btn-danger" onclick="return confirm('确认删除该优惠券？')">删除</a>
                                 </td>
                             </tr>
                         </c:forEach>
+                        <c:if test="${empty couponList}">
+                            <tr><td colspan="8" class="text-center text-muted py-4">暂无优惠券</td></tr>
+                        </c:if>
                     </tbody>
                 </table>
             </div>
         </div>
+
+        <!-- 新建优惠券模态框 -->
+        <div class="modal fade" id="addCouponModal" tabindex="-1">
+            <div class="modal-dialog"><div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">新建优惠券</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <form action="${pageContext.request.contextPath}/admin/coupons" method="post">
+                    <input type="hidden" name="tab" value="coupons"><input type="hidden" name="action" value="add">
+                    <div class="modal-body">
+                        <div class="mb-3"><label class="form-label">优惠券名称</label><input type="text" name="name" class="form-control" required placeholder="如：满100减20"></div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">类型</label>
+                                <select name="type" class="form-select">
+                                    <option value="满减">满减</option>
+                                    <option value="折扣">折扣</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">面值</label>
+                                <input type="number" name="value" class="form-control" step="0.01" required placeholder="满减填金额，折扣填百分比">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label class="form-label">最低消费</label><input type="number" name="minAmount" class="form-control" step="0.01" value="0"></div>
+                            <div class="col-md-6 mb-3"><label class="form-label">库存（-1不限）</label><input type="number" name="stock" class="form-control" value="-1"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label class="form-label">生效日期</label><input type="date" name="startDate" class="form-control"></div>
+                            <div class="col-md-6 mb-3"><label class="form-label">失效日期</label><input type="date" name="endDate" class="form-control"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer"><button type="submit" class="btn btn-danger">创建</button></div>
+                </form>
+            </div></div>
+        </div>
+
+        <!-- 发放优惠券模态框 -->
+        <div class="modal fade" id="issueCouponModal" tabindex="-1">
+            <div class="modal-dialog"><div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">发放优惠券</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <form action="${pageContext.request.contextPath}/admin/coupons" method="post">
+                    <input type="hidden" name="tab" value="coupons"><input type="hidden" name="action" value="issue">
+                    <input type="hidden" name="couponId" id="issueCouponId">
+                    <div class="modal-body">
+                        <p>优惠券：<strong id="issueCouponName"></strong></p>
+                        <div class="mb-3">
+                            <label class="form-label">发放范围</label>
+                            <select name="scope" class="form-select" id="issueScope" onchange="document.getElementById('issueUserIdWrap').style.display=this.value==='user'?'':'none'">
+                                <option value="all">发放给所有用户</option>
+                                <option value="user">指定用户</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="issueUserIdWrap" style="display:none;">
+                            <label class="form-label">选择用户</label>
+                            <select name="userId" class="form-select">
+                                <c:forEach items="${allUsers}" var="u"><option value="${u.id}">${u.username}</option></c:forEach>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer"><button type="submit" class="btn btn-danger">确认发放</button></div>
+                </form>
+            </div></div>
+        </div>
+
+        <script>
+        function issueCoupon(id, name) {
+            document.getElementById('issueCouponId').value = id;
+            document.getElementById('issueCouponName').textContent = name;
+            new bootstrap.Modal(document.getElementById('issueCouponModal')).show();
+        }
+        </script>
     </c:if>
 
     <!-- 留言管理 -->

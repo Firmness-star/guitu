@@ -97,6 +97,32 @@ public class CategoryDao {
 
     public List<Category> findAllCategories() { return findAll(); }
 
+    public boolean update(Category category) {
+        if (category == null || category.getId() <= 0) return false;
+        String sql = "UPDATE category SET name = ?, parent_id = ?, description = ? WHERE id = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, category.getName());
+            pstmt.setInt(2, category.getParentId());
+            pstmt.setString(3, category.getDescription());
+            pstmt.setInt(4, category.getId());
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
+        return false;
+    }
+
+    public boolean updateParent(int id, int newParentId) {
+        if (id <= 0) return false;
+        String sql = "UPDATE category SET parent_id = ? WHERE id = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, newParentId);
+            pstmt.setInt(2, id);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
+        return false;
+    }
+
     private Category mapResultSetToCategory(ResultSet rs) throws SQLException {
         Category category = new Category();
         category.setId(rs.getInt("id"));

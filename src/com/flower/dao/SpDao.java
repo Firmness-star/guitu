@@ -178,6 +178,36 @@ public class SpDao {
         return false;
     }
 
+    public int countByCategory(int categoryId) {
+        if (categoryId <= 0) return 0;
+        String sql = "SELECT COUNT(*) FROM product WHERE category_id = ? OR category_id IN (SELECT id FROM category WHERE parent_id = ?)";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, categoryId);
+            pstmt.setInt(2, categoryId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
+        return 0;
+    }
+
+    public boolean batchUpdateStatus(List<Integer> ids, int status) {
+        if (ids == null || ids.isEmpty()) return false;
+        String sql = "UPDATE product SET status = ? WHERE id = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            int count = 0;
+            for (int id : ids) {
+                pstmt.setInt(1, status);
+                pstmt.setInt(2, id);
+                count += pstmt.executeUpdate();
+            }
+            return count > 0;
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
+        return false;
+    }
+
     private Sp mapResultSetToSp(ResultSet rs) throws SQLException {
         Sp sp = new Sp();
         sp.setId(rs.getInt("id"));

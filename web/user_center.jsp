@@ -501,6 +501,12 @@
             <div style="margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0;">
                 <div style="font-size:22px;font-weight:700;color:#e74c3c;">${user.jf}</div>
                 <div style="font-size:12px;color:#999;">我的积分</div>
+                <a href="javascript:void(0)" onclick="showJfDetail()" style="font-size:11px;color:#e74c3c;text-decoration:none;display:inline-block;margin-top:4px;">
+                  <i class="bi bi-list-ul"></i> 积分明细
+                </a>
+                <a href="javascript:void(0)" onclick="showJfRules()" style="font-size:11px;color:#e74c3c;text-decoration:none;display:inline-block;margin-left:10px;">
+                  <i class="bi bi-question-circle"></i> 积分规则
+                </a>
             </div>
         </div>
 
@@ -800,6 +806,88 @@
         };
         xhr.send();
     }
+</script>
+
+<!-- 积分明细模态框 -->
+<div class="modal fade" id="jfDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header" style="background:#e74c3c;color:white;">
+        <h5 class="modal-title"><i class="bi bi-coin"></i> 积分明细</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:0;">
+        <c:choose>
+          <c:when test="${not empty jfLogs}">
+            <div style="padding:15px;background:#f8f9fa;border-bottom:1px solid #eee;font-size:13px;color:#666;">
+              当前积分余额：<strong style="color:#e74c3c;">${user.jf}</strong>
+            </div>
+            <c:forEach items="${jfLogs}" var="log">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #f0f0f0;">
+                <div>
+                  <div style="font-size:14px;color:#333;">${log.description}</div>
+                  <div style="font-size:11px;color:#999;margin-top:2px;">
+                    <fmt:formatDate value="${log.createTime}" pattern="yyyy-MM-dd HH:mm"/>
+                  </div>
+                </div>
+                <div style="font-size:18px;font-weight:700;${log.amount > 0 ? 'color:#27ae60;' : 'color:#e74c3c;'}">
+                  ${log.amount > 0 ? '+' : ''}${log.amount}
+                </div>
+              </div>
+            </c:forEach>
+          </c:when>
+          <c:otherwise>
+            <div style="text-align:center;padding:60px 20px;color:#999;">
+              <i class="bi bi-inbox" style="font-size:40px;display:block;margin-bottom:10px;"></i>
+              暂无积分记录，快去获取积分吧！
+            </div>
+          </c:otherwise>
+        </c:choose>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 积分规则模态框 -->
+<div class="modal fade" id="jfRulesModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" style="background:#e74c3c;color:white;">
+        <h5 class="modal-title"><i class="bi bi-info-circle"></i> 积分规则</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:24px;">
+        <h6 style="color:#e74c3c;margin-bottom:16px;font-weight:600;">📌 获取积分</h6>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px;">
+          <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 4px;">新用户注册</td><td style="padding:8px 4px;color:#27ae60;font-weight:600;text-align:right;">+200</td></tr>
+          <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 4px;">每日首次登录</td><td style="padding:8px 4px;color:#27ae60;font-weight:600;text-align:right;">+5</td></tr>
+          <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 4px;">浏览商品（每件不重复）</td><td style="padding:8px 4px;color:#27ae60;font-weight:600;text-align:right;">+2</td></tr>
+          <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 4px;">首次添加收货地址</td><td style="padding:8px 4px;color:#27ae60;font-weight:600;text-align:right;">+50</td></tr>
+          <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 4px;">完善个人信息（首次）</td><td style="padding:8px 4px;color:#27ae60;font-weight:600;text-align:right;">+50</td></tr>
+          <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 4px;">更新个人信息</td><td style="padding:8px 4px;color:#27ae60;font-weight:600;text-align:right;">+10</td></tr>
+          <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 4px;">购物消费（每¥10积1分）</td><td style="padding:8px 4px;color:#27ae60;font-weight:600;text-align:right;">+1%</td></tr>
+        </table>
+        <h6 style="color:#e74c3c;margin-bottom:8px;font-weight:600;">📌 使用积分</h6>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 4px;">积分抵扣</td><td style="padding:8px 4px;color:#e74c3c;font-weight:600;text-align:right;">100积分 = ¥1</td></tr>
+          <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 4px;">最高抵扣比例</td><td style="padding:8px 4px;color:#666;text-align:right;">订单金额 50%</td></tr>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showCopyright() { document.getElementById('copyrightModal').classList.add('show'); }
+function closeCopyright() { document.getElementById('copyrightModal').classList.remove('show'); }
+function showJfDetail() { new bootstrap.Modal(document.getElementById('jfDetailModal')).show(); }
+function showJfRules() { new bootstrap.Modal(document.getElementById('jfRulesModal')).show(); }
 </script>
 </body>
 </html>

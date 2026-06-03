@@ -12,6 +12,15 @@ const payMethod = ref(route.query.payMethod || 'alipay')
 const order = ref(null)
 const loading = ref(false)
 const paying = ref(false)
+
+function formatTime(val) {
+  if (!val) return ''
+  let ms = typeof val === 'string' ? Date.parse(val) : (typeof val === 'number' ? val : null)
+  if (!ms || isNaN(ms)) return ''
+  const d = new Date(ms)
+  const pad = n => String(n).padStart(2, '0')
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes())
+}
 const payMethods = [
   { value: 'alipay', label: '支付宝', icon: 'alipay' },
   { value: 'wechat', label: '微信支付', icon: 'wechat' },
@@ -42,7 +51,16 @@ async function doPay() {
     const res = await post('/payment', formBody({ orderId: orderId.value }))
     if (res.code === 200) {
       showSuccessToast('支付成功')
-      setTimeout(() => router.replace('/orders'), 800)
+      setTimeout(() => {
+        router.replace({
+          path: '/payment-success',
+          query: {
+            orderNo: orderId.value,
+            amount: order.value?.totalAmount || order.value?.actualAmount || '0',
+            method: payMethod.value
+          }
+        })
+      }, 600)
     } else { showToast(res.message || '支付失败') }
   } catch (e) { showToast(e.message || '网络错误') }
   finally { paying.value = false }
@@ -56,8 +74,13 @@ async function doPay() {
       <div v-if="order" class="order-summary">
         <van-cell-group inset>
           <van-cell title="订单号" :value="order.orderId" />
+          <van-cell title="下单时间" :value="formatTime(order.createTime)" />
+          <van-cell title="商品数量" :value="order.totalCount + '件'" />
+          <van-cell title="收货信息" :label="(order.receiverName||'') + ' ' + (order.receiverPhone||'')" v-if="order.receiverName">
+            <template #value><span class="addr-text">{{ order.receiverAddress }}</span></template>
+          </van-cell>
           <van-cell title="应付金额">
-            <template #value><span class="amount">{{ order.totalAmount }}</span></template>
+            <template #value><span class="amount">&yen;{{ order.totalAmount }}</span></template>
           </van-cell>
         </van-cell-group>
       </div>
@@ -76,6 +99,12 @@ async function doPay() {
       <div class="back-btn">
         <van-button round block plain type="default" @click="router.push('/orders')">返回订单列表</van-button>
       </div>
+
+      <!-- Security tip -->
+      <div class="security-tip">
+        <van-icon name="info-o" size="14" color="#c8c9cc" />
+        <span>归途花店不会以任何理由向您索要支付密码，请谨防诈骗</span>
+      </div>
     </div>
   </div>
 </template>
@@ -86,4 +115,6 @@ async function doPay() {
 .amount { font-size:22px;font-weight:700;color:#ee0a24; }
 .pay-btn-wrap { margin:24px 0 12px; }
 .back-btn { margin-top:8px; }
+.addr-text { font-size:12px;color:#969799;max-width:160px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.security-tip { display:flex;align-items:center;justify-content:center;gap:6px;margin-top:20px;font-size:12px;color:#c8c9cc;line-height:1.4;text-align:center;padding:0 16px; }
 </style>

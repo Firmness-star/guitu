@@ -1,11 +1,16 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { showToast } from 'vant'
 import { get } from '../api'
 import { fixImg } from '../utils/img'
+import { useCartStore } from '../stores/cart'
+import { useUserStore } from '../stores/user'
 
 const route = useRoute()
 const router = useRouter()
+const cartStore = useCartStore()
+const userStore = useUserStore()
 
 const isSearch = computed(() => route.name === 'Search')
 const categoryId = computed(() => route.params.id || null)
@@ -113,6 +118,14 @@ function goProduct(id) {
   router.push(`/product/${id}`)
 }
 
+async function addToCart(item) {
+  if (!userStore.loggedIn) { showToast('请先登录'); router.push('/login'); return }
+  try {
+    await cartStore.add(item.id, 1)
+    showToast('已加入购物车')
+  } catch (e) { showToast(e.message || '添加失败') }
+}
+
 function goSubCat(id) {
   parentCategoryId.value = categoryId.value ? Number(categoryId.value) : parentCategoryId.value
   activeSubCat.value = Number(id)
@@ -184,6 +197,11 @@ onMounted(() => {
         >{{ cat.name }}</span>
       </div>
 
+      <!-- search result count -->
+      <div v-if="isSearch && keyword" class="search-result-count">
+        找到 <strong>{{ products.length }}</strong> 件相关商品
+      </div>
+
       <!-- product grid -->
       <div
         v-if="products.length > 0"
@@ -206,6 +224,9 @@ onMounted(() => {
             <!-- sold out overlay -->
             <div v-if="item.stock === 0" class="sold-out-overlay">
               <span>售罄</span>
+            </div>
+            <div v-if="item.stock !== 0" class="product-card-btn" @click.stop="addToCart(item)">
+              <van-icon name="cart-o" size="16" />
             </div>
           </div>
           <div class="product-card__body">
@@ -271,6 +292,14 @@ onMounted(() => {
   max-height: calc(100vh - 46px);
 }
 
+/* ── search result count ───────────────────────────────────────── */
+.search-result-count {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #969799;
+}
+.search-result-count strong { color: #ee0a24; font-weight: 700; }
+
 /* ── product card ─────────────────────────────────────────────── */
 .product-card {
   background: #fff;
@@ -327,6 +356,25 @@ onMounted(() => {
   padding: 4px 12px;
   border-radius: 12px;
 }
+
+.product-card-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  background: #ee0a24;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  transition: transform 0.2s;
+  box-shadow: 0 2px 6px rgba(238, 10, 36, 0.4);
+}
+.product-card-btn:active { transform: scale(1.15); background: #c0392b; }
 
 .product-card__body {
   padding: 8px 10px 10px;

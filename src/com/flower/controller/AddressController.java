@@ -1,6 +1,8 @@
 package com.flower.controller;
 
 import com.flower.dao.AddressDao;
+import com.flower.dao.JfDao;
+import com.flower.dao.UserDao;
 import com.flower.entity.Address;
 
 import javax.servlet.ServletException;
@@ -20,6 +22,7 @@ import java.util.List;
 public class AddressController extends HttpServlet {
 
     private AddressDao addressDao = new AddressDao();
+    private UserDao userDao = new UserDao();
 
     /**
      * 处理 GET 请求，查询并展示当前用户的收货地址列表
@@ -44,6 +47,7 @@ public class AddressController extends HttpServlet {
 
         List<Address> addressList = addressDao.findByUserId(userId);
         req.setAttribute("addressList", addressList);
+        req.setAttribute("firstAddressBonus", req.getParameter("first"));
         req.getRequestDispatcher("address.jsp").forward(req, resp);
     }
 
@@ -117,9 +121,16 @@ public class AddressController extends HttpServlet {
         address.setDefault(existing.isEmpty() || "on".equals(isDefault));
 
         boolean success = addressDao.save(address);
-        
+
         if (success) {
-            req.getSession().setAttribute("message", "添加成功");
+            // 添加第一个地址时奖励 50 积分
+            if (existing.isEmpty()) {
+                userDao.addJf(userId, 50);
+                new JfDao().addLog(userId, 50, "address", "首次添加地址获得50积分奖励");
+                req.getSession().setAttribute("message", "添加成功，首次添加地址获得 50 积分奖励！");
+            } else {
+                req.getSession().setAttribute("message", "添加成功");
+            }
         } else {
             req.getSession().setAttribute("error", "添加失败");
         }

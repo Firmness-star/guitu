@@ -16,6 +16,7 @@ public class Sp implements Serializable {
     private double price;
     private int stock;
     private String pic;
+    private String pics;      // 多图 JSON 数组（如 ["url1","url2","url3"]）
     private int categoryId;
     private int sales;
     private Date createTime;
@@ -93,6 +94,9 @@ public class Sp implements Serializable {
     public void setPic(String pic) {
         this.pic = pic;
     }
+
+    public String getPics() { return pics; }
+    public void setPics(String pics) { this.pics = pics; }
 
     public int getCategoryId() {
         return categoryId;

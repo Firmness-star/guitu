@@ -4,8 +4,12 @@ import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { get } from '../api'
 import { fixImg } from '../utils/img'
+import { useCartStore } from '../stores/cart'
+import { useUserStore } from '../stores/user'
 
 const router = useRouter()
+const cartStore = useCartStore()
+const userStore = useUserStore()
 
 const loading = ref(true)
 const refreshing = ref(false)
@@ -62,6 +66,20 @@ function startBannerAutoplay() {
   bannerTimer = setInterval(() => {
     currentBanner.value = (currentBanner.value + 1) % banners.value.length
   }, 3000)
+}
+
+async function addToCart(item) {
+  if (!userStore.loggedIn) {
+    showToast('请先登录')
+    router.push('/login')
+    return
+  }
+  try {
+    await cartStore.add(item.id, 1)
+    showToast('已加入购物车')
+  } catch (e) {
+    showToast(e.message || '添加失败')
+  }
 }
 
 function stopBannerAutoplay() {
@@ -185,6 +203,9 @@ onUnmounted(() => {
                 <span class="product-sales">已售 {{ item.sales }}</span>
               </div>
             </div>
+            <div class="product-card-btn" @click.stop="addToCart(item)">
+              <van-icon name="cart-o" size="16" />
+            </div>
           </div>
         </div>
       </div>
@@ -242,6 +263,25 @@ onUnmounted(() => {
 .product-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 12px 8px; }
 .product-card { background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06);cursor:pointer;transition:transform 0.2s; }
 .product-card:active { transform:scale(0.97); }
+.product-card { position:relative; }
+.product-card-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  background: #ee0a24;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: transform 0.2s;
+}
+.product-card-btn:active { transform: scale(1.1); background: #c0392b; }
+
 .product-img-wrapper { position:relative;overflow:hidden;aspect-ratio:4/3;background:#f7f8fa; }
 .product-img { width:100%;height:100%;object-fit:cover;display:block; }
 .hot-img { width:100%;height:160px;object-fit:cover;border-radius:10px;display:block;background:#f7f8fa; }

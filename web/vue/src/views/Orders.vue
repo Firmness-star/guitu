@@ -267,7 +267,29 @@ function actionType(action) {
               <div class="item-info">
                 <span class="item-name">{{ item.productName }}</span>
                 <span class="item-price">&yen;{{ item.productPrice.toFixed(2) }} x {{ item.quantity }}</span>
+                <span class="item-subtotal" v-if="item.productPrice && item.quantity">小计: &yen;{{ (item.productPrice * item.quantity).toFixed(2) }}</span>
               </div>
+            </div>
+          </div>
+
+          <!-- Receiver info -->
+          <div class="order-receiver" v-if="order.receiverName">
+            <van-icon name="location-o" size="14" color="#969799" />
+            <span class="receiver-text">
+              {{ order.receiverName }} {{ order.receiverPhone || '' }}
+              <span v-if="order.receiverAddress"> | {{ order.receiverAddress }}</span>
+            </span>
+          </div>
+
+          <!-- Logistics / Remark -->
+          <div class="order-extra" v-if="order.wlNo || order.remark">
+            <div class="extra-item" v-if="order.wlNo && (order.status === '已发货' || order.status === '已收货')">
+              <van-icon name="logistics" size="14" color="#722ed1" />
+              <span class="extra-text">物流单号: {{ order.wlNo }}</span>
+            </div>
+            <div class="extra-item" v-if="order.remark">
+              <van-icon name="notes-o" size="14" color="#969799" />
+              <span class="extra-text">备注: {{ order.remark }}</span>
             </div>
           </div>
 
@@ -371,6 +393,53 @@ function actionType(action) {
 .item-price {
   font-size: 12px;
   color: #999;
+}
+
+.item-subtotal {
+  font-size: 11px;
+  color: #ee0a24;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.order-receiver {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #fafafa;
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.receiver-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-extra {
+  padding: 4px 14px 8px;
+  background: #fafafa;
+}
+
+.extra-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.extra-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .order-footer {

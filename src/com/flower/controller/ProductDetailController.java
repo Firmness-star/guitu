@@ -2,13 +2,16 @@ package com.flower.controller;
 
 import com.flower.dao.CategoryDao;
 import com.flower.dao.CommentDao;
+import com.flower.dao.JfDao;
 import com.flower.dao.UserDao;
 import com.flower.entity.Category;
 import com.flower.entity.Comment;
 import com.flower.service.ISpService;
 import com.flower.service.ServiceFactory;
 import com.flower.entity.Sp;
+import com.flower.util.JsonUtil;
 import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -70,7 +73,25 @@ public class ProductDetailController extends HttpServlet {
             }
             
             req.setAttribute("product", product);
-            
+
+            // build multi-image list: main pic + extra pics
+            List<String> imageList = new ArrayList<>();
+            if (product.getPic() != null && !product.getPic().isEmpty()) {
+                imageList.add(product.getPic());
+            }
+            String pics = product.getPics();
+            if (pics != null && !pics.isEmpty()) {
+                String cleaned = pics.replaceAll("[\\[\\]\"]", "");
+                String[] urls = cleaned.split(",");
+                for (String url : urls) {
+                    url = url.trim();
+                    if (!url.isEmpty() && !url.equals(product.getPic())) {
+                        imageList.add(url);
+                    }
+                }
+            }
+            req.setAttribute("imageList", imageList);
+
             // 获取分类层级信息（用于面包屑导航）
             CategoryDao categoryDao = new CategoryDao();
             Category category = categoryDao.findById(product.getCategoryId());
@@ -99,6 +120,7 @@ public class ProductDetailController extends HttpServlet {
                 if (session.getAttribute(viewedKey) == null) {
                     UserDao userDao = new UserDao();
                     userDao.addJf(uid, 2);
+                    new JfDao().addLog(uid, 2, "browse", "浏览商品赠送2积分");
                     session.setAttribute(viewedKey, true);
                 }
             }

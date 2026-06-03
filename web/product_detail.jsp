@@ -1,5 +1,6 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 
 <!-- 若商品信息为空，则转发至首页 -->
@@ -382,11 +383,104 @@
 
   <!-- 商品详情主体 -->
   <div class="product-detail-container">
-    <!-- 商品图片区域 -->
+    <!-- 商品图片区域（多图轮播 + 点击放大） -->
     <div class="product-image-section">
-      <img src="${product.pic}" alt="${product.name}" class="product-main-image"
-           onerror="this.src='https://via.placeholder.com/500x500?text=暂无图片'">
+      <div id="productCarousel" class="carousel slide" data-bs-ride="false">
+        <!-- 轮播指示器 -->
+        <div class="carousel-indicators">
+          <c:forEach items="${imageList}" var="img" varStatus="vs">
+            <button type="button" data-bs-target="#productCarousel" data-bs-slide-to="${vs.index}"
+                    class="${vs.index == 0 ? 'active' : ''}" aria-current="${vs.index == 0 ? 'true' : ''}"></button>
+          </c:forEach>
+        </div>
+        <!-- 轮播图片 -->
+        <div class="carousel-inner" style="border-radius:8px;overflow:hidden;">
+          <c:forEach items="${imageList}" var="img" varStatus="vs">
+            <div class="carousel-item ${vs.index == 0 ? 'active' : ''}">
+              <img src="${img}" alt="${product.name} - ${vs.index + 1}"
+                   class="d-block w-100 product-main-image"
+                   style="cursor:zoom-in;"
+                   onclick="openLightbox('${vs.index}')"
+                   onerror="this.src='https://via.placeholder.com/500x500?text=暂无图片'">
+            </div>
+          </c:forEach>
+        </div>
+        <!-- 左右控制箭头 -->
+        <c:if test="${fn:length(imageList) > 1}">
+          <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">上一张</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">下一张</span>
+          </button>
+        </c:if>
+      </div>
     </div>
+
+    <!-- Lightbox 放大查看模态框 -->
+    <div class="lightbox-modal" id="lightboxModal" onclick="closeLightbox()">
+      <span class="lightbox-close">&times;</span>
+      <div class="lightbox-content" onclick="event.stopPropagation()">
+        <div id="lightboxCarousel" class="carousel slide" data-bs-ride="false">
+          <div class="carousel-inner">
+            <c:forEach items="${imageList}" var="img" varStatus="vs">
+              <div class="carousel-item ${vs.index == 0 ? 'active' : ''}">
+                <img src="${img}" alt="${product.name}" style="max-width:90vw;max-height:90vh;margin:0 auto;">
+              </div>
+            </c:forEach>
+          </div>
+          <c:if test="${fn:length(imageList) > 1}">
+            <button class="carousel-control-prev" type="button" data-bs-target="#lightboxCarousel" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#lightboxCarousel" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </button>
+          </c:if>
+        </div>
+      </div>
+    </div>
+
+    <style>
+    .lightbox-modal {
+      display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.92); z-index:99999;
+      align-items:center; justify-content:center;
+    }
+    .lightbox-modal.show { display:flex; }
+    .lightbox-close {
+      position:absolute; top:20px; right:30px; color:#fff; font-size:40px;
+      font-weight:300; cursor:pointer; z-index:10; line-height:1;
+    }
+    .lightbox-close:hover { color:#e74c3c; }
+    .lightbox-content { width:100%; display:flex; align-items:center; justify-content:center; }
+    .lightbox-content .carousel { width:100%; }
+    .lightbox-content .carousel-item { text-align:center; }
+    .lightbox-content .carousel-control-prev,
+    .lightbox-content .carousel-control-next { width:10%; }
+    </style>
+
+    <script>
+    var currentCarouselIndex = 0;
+    function openLightbox(index) {
+      var modal = document.getElementById('lightboxModal');
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+      // 同步到对应轮播位置
+      var carousel = document.getElementById('lightboxCarousel');
+      var bsCarousel = bootstrap.Carousel.getOrCreateInstance(carousel, { touch: true });
+      bsCarousel.to(parseInt(index));
+    }
+    function closeLightbox() {
+      document.getElementById('lightboxModal').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeLightbox();
+    });
+    </script>
 
     <!-- 商品信息区域 -->
     <div class="product-info-section">

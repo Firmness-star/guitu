@@ -13,6 +13,7 @@ const password = ref('')
 const verifyCode = ref('')
 const verifyCodeUrl = ref('/verifyCode')
 const loading = ref(false)
+const rememberMe = ref(false)
 
 function refreshVerifyCode() {
   verifyCodeUrl.value = '/verifyCode?t=' + Date.now()
@@ -121,6 +122,15 @@ async function handleLogin() {
         </div>
       </van-form>
 
+      <!-- Options -->
+      <div class="login-options">
+        <label class="remember-opt">
+          <input type="checkbox" v-model="rememberMe" />
+          <span>记住我</span>
+        </label>
+        <span class="forgot-link" @click="showToast('请联系管理员重置密码')">忘记密码？</span>
+      </div>
+
       <!-- Register link -->
       <div class="register-link">
         还没有账号？
@@ -168,6 +178,36 @@ async function handleLogin() {
   border-radius: 4px;
   border: 1px solid #ebedf0;
 }
+
+/* Login options */
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #969799;
+}
+.remember-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  min-height: 44px;
+}
+.remember-opt input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #ee0a24;
+}
+.forgot-link {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.forgot-link:active { color: #ee0a24; }
 
 /* Login button */
 .login-btn-wrap {

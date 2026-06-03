@@ -135,14 +135,25 @@ async function submitOrder() {
     const res = await post('/orders', orderData)
     closeToast()
     if (res.code === 200) {
-      const orderId = res.data?.id || res.data?.orderId
+      const orderData = res.data || {}
+      const orderId = orderData.id || orderData.orderId
       if (orderId) {
-        router.push({ path: '/payment', query: { orderId, method: paymentMethod.value } })
+        closeToast()
+        const addr = selectedAddress.value
+        router.push({
+          path: '/order-success',
+          query: {
+            orderNo: orderId,
+            amount: orderData.totalAmount || orderData.actualAmount || '0',
+            name: addr.receiverName || addr.name || '',
+            phone: addr.receiverPhone || addr.phone || '',
+            address: ((addr.province || '') + (addr.city || '') + (addr.district || '') + (addr.detailAddress || addr.detail || ''))
+          }
+        })
       } else {
         await cartStore.clear()
         router.push('/orders')
       }
-      showToast('下单成功')
     } else {
       showToast(res.message || '下单失败')
     }
@@ -316,7 +327,17 @@ onMounted(async () => {
               <span class="discount-text">-&yen;{{ pointsDiscountAmount.toFixed(2) }}</span>
             </template>
           </van-cell>
+          <van-cell title="运费">
+            <template #value>
+              <span class="free-shipping">免运费</span>
+            </template>
+          </van-cell>
         </van-cell-group>
+      </div>
+
+      <!-- 继续购物 -->
+      <div class="continue-link" @click="router.push('/')">
+        继续购物
       </div>
 
       <!-- 底部占位 (给 submit-bar 留空间) -->
@@ -527,4 +548,13 @@ onMounted(async () => {
   text-align: center;
   border-top: 1px solid #ebedf0;
 }
+
+.free-shipping { font-size: 14px; color: #27ae60; font-weight: 600; }
+
+.continue-link {
+  text-align: center; padding: 16px;
+  font-size: 13px; color: #1989fa; cursor: pointer; min-height: 44px;
+  display: flex; align-items: center; justify-content: center;
+}
+.continue-link:active { opacity: 0.7; }
 </style>

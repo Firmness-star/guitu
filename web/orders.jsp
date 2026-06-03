@@ -328,6 +328,28 @@
             font-weight: bold;
         }
 
+        .toggle-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            transition: all 0.3s;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .order-header:hover .toggle-indicator {
+            background: var(--primary-red);
+            color: white;
+        }
+
+        .order-header:hover {
+            background: #f5f5f5;
+        }
+
         .empty-state {
             text-align: center;
             padding: 80px 20px;
@@ -490,10 +512,10 @@
         </c:when>
 
         <c:otherwise>
-            <c:forEach items="${orderList}" var="order">
+            <c:forEach items="${orderList}" var="order" varStatus="os">
                 <div class="order-card">
-                    <!-- 订单头部：展示订单号、创建时间及当前状态 -->
-                    <div class="order-header">
+                    <!-- 订单头部：展示订单号、创建时间及当前状态，含展开/收起按钮 -->
+                    <div class="order-header" style="cursor:pointer;" onclick="toggleOrder('orderDetail_${os.index}')">
                         <div>
                             <span class="order-id">订单号：${order.orderId}</span>
                             <span class="order-time">
@@ -501,8 +523,11 @@
                                 <fmt:formatDate value="${order.createTime}" pattern="yyyy-MM-dd HH:mm"/>
                             </span>
                         </div>
-                        <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center gap-2">
                             <!-- 根据订单状态展示不同的徽章及可执行的操作按钮 -->
+                            <span class="toggle-indicator" id="toggleIcon_${os.index}">
+                                <i class="bi bi-chevron-down"></i>
+                            </span>
                             <c:choose>
                                 <c:when test="${order.status == '待付款'}">
                                     <span class="status-badge status-waiting">
@@ -571,43 +596,46 @@
                         </div>
                     </div>
 
-                    <!-- 订单商品列表：展示图片、名称、单价、数量及小计 -->
-                    <div class="order-items">
-                        <c:forEach items="${order.items}" var="item">
-                            <div class="item-row">
-                                <img src="${item.productPic}" alt="${item.productName}"
-                                     class="item-img" onerror="this.src='https://via.placeholder.com/60?text=暂无图'">
-                                <div class="item-info">
-                                    <div class="item-name">${item.productName}</div>
-                                    <div class="item-price">¥<fmt:formatNumber value="${item.productPrice}" pattern="#0.00"/></div>
+                    <!-- 订单详情（可折叠，默认展开第一个，其余收起） -->
+                    <div class="collapse ${os.index == 0 ? 'show' : ''}" id="orderDetail_${os.index}">
+                        <!-- 订单商品列表：展示图片、名称、单价、数量及小计 -->
+                        <div class="order-items">
+                            <c:forEach items="${order.items}" var="item">
+                                <div class="item-row">
+                                    <img src="${item.productPic}" alt="${item.productName}"
+                                         class="item-img" onerror="this.src='https://via.placeholder.com/60?text=暂无图'">
+                                    <div class="item-info">
+                                        <div class="item-name">${item.productName}</div>
+                                        <div class="item-price">¥<fmt:formatNumber value="${item.productPrice}" pattern="#0.00"/></div>
+                                    </div>
+                                    <div class="item-qty">×${item.quantity}</div>
+                                    <div class="item-subtotal">
+                                        ¥<fmt:formatNumber value="${item.subtotal}" pattern="#0.00"/>
+                                    </div>
                                 </div>
-                                <div class="item-qty">×${item.quantity}</div>
-                                <div class="item-subtotal">
-                                    ¥<fmt:formatNumber value="${item.subtotal}" pattern="#0.00"/>
-                                </div>
-                            </div>
-                        </c:forEach>
-                    </div>
-
-                    <!-- 订单底部：展示收货信息及实付总金额 -->
-                    <div class="order-footer">
-                        <div class="receiver-info">
-                            <i class="bi bi-geo-alt"></i>
-                            收货人：${order.receiverName} ${order.receiverPhone}
-                            <br>
-                            <i class="bi bi-house"></i>
-                            地址：${order.receiverAddress}
-                            <c:if test="${not empty order.remark}">
-                                <br>
-                                <i class="bi bi-chat-left-text"></i>
-                                备注：${order.remark}
-                            </c:if>
+                            </c:forEach>
                         </div>
-                        <div class="order-total">
-                            <span class="total-label">共 ${order.totalCount} 件商品，实付金额：</span>
-                            <span class="total-amount">
-                                ¥<fmt:formatNumber value="${order.totalAmount}" pattern="#0.00"/>
-                            </span>
+
+                        <!-- 订单底部：展示收货信息及实付总金额 -->
+                        <div class="order-footer">
+                            <div class="receiver-info">
+                                <i class="bi bi-geo-alt"></i>
+                                收货人：${order.receiverName} ${order.receiverPhone}
+                                <br>
+                                <i class="bi bi-house"></i>
+                                地址：${order.receiverAddress}
+                                <c:if test="${not empty order.remark}">
+                                    <br>
+                                    <i class="bi bi-chat-left-text"></i>
+                                    备注：${order.remark}
+                                </c:if>
+                            </div>
+                            <div class="order-total">
+                                <span class="total-label">共 ${order.totalCount} 件商品，实付金额：</span>
+                                <span class="total-amount">
+                                    ¥<fmt:formatNumber value="${order.totalAmount}" pattern="#0.00"/>
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -639,6 +667,27 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    function toggleOrder(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var bsCollapse = bootstrap.Collapse.getOrCreateInstance(el, { toggle: false });
+        bsCollapse.toggle();
+    }
+
+    // 监听折叠事件，更新图标
+    document.querySelectorAll('.collapse').forEach(function(el) {
+        el.addEventListener('show.bs.collapse', function() {
+            var idx = this.id.replace('orderDetail_', '');
+            var icon = document.querySelector('#toggleIcon_' + idx + ' i');
+            if (icon) { icon.className = 'bi bi-chevron-up'; }
+        });
+        el.addEventListener('hide.bs.collapse', function() {
+            var idx = this.id.replace('orderDetail_', '');
+            var icon = document.querySelector('#toggleIcon_' + idx + ' i');
+            if (icon) { icon.className = 'bi bi-chevron-down'; }
+        });
+    });
+
     // 显示版权说明模态框
     function showCopyright() {
         document.getElementById('copyrightModal').classList.add('show');

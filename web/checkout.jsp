@@ -348,9 +348,44 @@
                     <div style="display:flex;gap:10px;align-items:center;">
                         <input type="number" id="usePoints" name="usePoints" class="form-control"
                                placeholder="0 表示不使用积分" style="flex:1;" min="0" max="${userJf}" value="0"
-                               oninput="updatePointsDiscount()" ${userJf == 0 ? 'disabled' : ''}>
+                               oninput="updateDiscount()" ${userJf == 0 ? 'disabled' : ''}>
                     </div>
                     <span id="pointsMsg" style="font-size:12px;color:#999;"></span>
+                </div>
+
+                <!-- 优惠券抵扣 -->
+                <div class="form-group mt-3">
+                    <label class="form-label">优惠券抵扣</label>
+                    <c:choose>
+                        <c:when test="${not empty coupons}">
+                            <c:forEach items="${coupons}" var="cp" varStatus="cps">
+                                <div style="display:flex;align-items:center;gap:10px;border:1.5px solid #ddd;border-radius:8px;padding:12px 16px;margin-bottom:8px;cursor:pointer;transition:all 0.2s;background:#fff;" class="coupon-item" onclick="toggleCoupon(this, ${cp.ucId}, ${cp.value}, '${cp.type}', ${cp.minAmount}, ${cps.index})" data-index="${cps.index}">
+                                    <input type="radio" name="couponUcId" value="${cp.ucId}" style="display:none;">
+                                    <div style="flex:1;">
+                                        <div style="font-weight:600;font-size:14px;color:#333;">${cp.name}</div>
+                                        <div style="font-size:12px;color:#999;">
+                                            满 ¥<fmt:formatNumber value="${cp.minAmount}" pattern="#0"/> 可用
+                                            <c:if test="${not empty cp.endDate}"> | 至 ${cp.endDate}</c:if>
+                                        </div>
+                                    </div>
+                                    <div style="font-size:22px;font-weight:700;color:#e74c3c;">
+                                        <c:choose>
+                                            <c:when test="${cp.type == '满减' || cp.type == 'reduce'}">¥<fmt:formatNumber value="${cp.value}" pattern="#0"/></c:when>
+                                            <c:otherwise>${cp.value}折</c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                    <span class="coupon-check" style="display:none;color:#27ae60;font-size:20px;"><i class="bi bi-check-circle-fill"></i></span>
+                                </div>
+                            </c:forEach>
+                            <div style="text-align:right;margin-top:4px;">
+                                <a href="javascript:void(0)" id="clearCouponBtn" style="font-size:12px;color:#999;text-decoration:none;display:none;" onclick="clearCoupon()">取消优惠券</a>
+                            </div>
+                        </c:when>
+                        <c:otherwise>
+                            <span style="font-size:13px;color:#999;">暂无可用优惠券</span>
+                            <input type="hidden" name="couponUcId" value="0">
+                        </c:otherwise>
+                    </c:choose>
                 </div>
             </form>
         </div>
@@ -374,6 +409,11 @@
                 <div class="summary-row" id="pointsRow" style="display:none;">
                     <span>积分抵扣</span>
                     <span style="color:var(--primary-green);" id="pointsText">-¥0.00</span>
+                </div>
+
+                <div class="summary-row" id="couponRow" style="display:none;">
+                    <span>优惠券抵扣</span>
+                    <span style="color:var(--primary-green);" id="couponText">-¥0.00</span>
                 </div>
 
                 <div class="summary-row total">
@@ -433,43 +473,121 @@
         });
     });
 
-    // 积分抵扣实时计算
+    // 优惠券交互（自由切换/取消）
     var totalAmount = ${totalAmount};
     var userJf = ${userJf};
+    var selectedCouponDiscount = 0;
+    var selectedCouponIndex = -1;
 
-    function updatePointsDiscount() {
+    function toggleCoupon(el, ucId, value, type, minAmount, index) {
+        if (selectedCouponIndex === index) { clearCoupon(); return; }
+        document.querySelectorAll('.coupon-item').forEach(function(item, i) {
+            item.style.borderColor = '#ddd'; item.style.background = '#fff';
+            var ck = item.querySelector('.coupon-check'); if (ck) ck.style.display = 'none';
+        });
+        el.style.borderColor = '#e74c3c'; el.style.background = '#fff5f5';
+        var ck = el.querySelector('.coupon-check'); if (ck) ck.style.display = 'inline';
+        var radio = el.querySelector('input[type="radio"]'); if (radio) radio.checked = true;
+        ensureCouponHidden(ucId);
+        selectedCouponIndex = index;
+        if (totalAmount < minAmount) { selectedCouponDiscount = 0; document.getElementById('couponRow').style.display = 'none'; }
+        else {
+            selectedCouponDiscount = (type === '满减' || type === 'reduce') ? Math.min(value, totalAmount) : Math.round(totalAmount * (100 - value) / 100 * 100) / 100;
+        }
+        document.getElementById('clearCouponBtn').style.display = 'inline';
+        updateDiscount();
+    }
+
+    function clearCoupon() {
+        selectedCouponIndex = -1; selectedCouponDiscount = 0;
+        document.querySelectorAll('.coupon-item').forEach(function(item) {
+            item.style.borderColor = '#ddd'; item.style.background = '#fff';
+            var ck = item.querySelector('.coupon-check'); if (ck) ck.style.display = 'none';
+            var radio = item.querySelector('input[type="radio"]'); if (radio) radio.checked = false;
+        });
+        document.getElementById('couponRow').style.display = 'none';
+        document.getElementById('clearCouponBtn').style.display = 'none';
+        var hid = document.getElementById('couponUcIdInput'); if (hid) hid.value = '0';
+        updateDiscount();
+    }
+
+    function ensureCouponHidden(ucId) {
+        var hid = document.getElementById('couponUcIdInput');
+        if (!hid) { hid = document.createElement('input'); hid.type = 'hidden'; hid.name = 'couponUcId'; hid.id = 'couponUcIdInput'; document.getElementById('orderForm').appendChild(hid); }
+        hid.value = ucId;
+    }
+
+    function updateDiscount() {
         var input = document.getElementById('usePoints');
-        var val = parseInt(input.value) || 0;
+        var val = parseInt(input ? input.value : 0) || 0;
         if (val < 0) val = 0;
         if (val > userJf) val = userJf;
-        // 最多抵50%订单金额 = totalAmount * 0.5 * 100 积分
         var maxByAmount = Math.floor(totalAmount * 50);
         if (val > maxByAmount) val = maxByAmount;
-        input.value = val;
+        if (input) input.value = val;
 
-        var discount = val / 100;  // 100积分 = 1元
-        var discountFix = Math.round(discount * 100) / 100;
-        var finalAmount = totalAmount - discountFix;
+        var pointsDiscount = val / 100;
+        var pointsFix = Math.round(pointsDiscount * 100) / 100;
+
+        var finalAmount = totalAmount - selectedCouponDiscount - pointsFix;
         if (finalAmount < 0) finalAmount = 0;
         finalAmount = Math.round(finalAmount * 100) / 100;
 
         var pointsRow = document.getElementById('pointsRow');
         var pointsText = document.getElementById('pointsText');
+        var couponRow = document.getElementById('couponRow');
+        var couponText = document.getElementById('couponText');
         var finalTotal = document.getElementById('finalTotal');
         var msg = document.getElementById('pointsMsg');
 
+        if (selectedCouponDiscount > 0) {
+            couponRow.style.display = 'flex';
+            couponText.textContent = '-¥' + selectedCouponDiscount.toFixed(2);
+        } else {
+            couponRow.style.display = 'none';
+        }
+
         if (val > 0) {
             pointsRow.style.display = 'flex';
-            pointsText.textContent = '-¥' + discountFix.toFixed(2);
-            finalTotal.textContent = '¥' + finalAmount.toFixed(2);
-            msg.textContent = '使用 ' + val + ' 积分，抵扣 ¥' + discountFix.toFixed(2);
+            pointsText.textContent = '-¥' + pointsFix.toFixed(2);
+            msg.textContent = '使用 ' + val + ' 积分，抵扣 ¥' + pointsFix.toFixed(2);
             msg.style.color = '#27ae60';
         } else {
             pointsRow.style.display = 'none';
-            finalTotal.textContent = '¥' + totalAmount.toFixed(2);
             msg.textContent = '';
         }
+
+        finalTotal.textContent = '¥' + finalAmount.toFixed(2);
     }
+
+    // ── 表单提交前校验 ──
+    document.getElementById('orderForm').addEventListener('submit', function(e) {
+        var name = document.getElementsByName('receiverName')[0];
+        var phone = document.getElementsByName('receiverPhone')[0];
+        var addr = document.getElementsByName('receiverAddress')[0];
+        if (!name || !name.value || name.value.trim() === '') {
+            e.preventDefault(); alert('请选择收货地址'); return;
+        }
+        if (!phone || !phone.value || !phone.value.match(/^1[3-9]\d{9}$/)) {
+            e.preventDefault(); alert('请填写有效的收货人手机号'); return;
+        }
+        if (!addr || !addr.value || addr.value.trim() === '') {
+            e.preventDefault(); alert('请选择收货地址'); return;
+        }
+    });
+
+    // ── 应付金额变化动画 ──
+    var finalTotalEl = document.getElementById('finalTotal');
+    var observer = new MutationObserver(function() {
+        finalTotalEl.style.transition = 'all 0.3s ease';
+        finalTotalEl.style.transform = 'scale(1.1)';
+        finalTotalEl.style.color = '#ff6b6b';
+        setTimeout(function() {
+            finalTotalEl.style.transform = 'scale(1)';
+            finalTotalEl.style.color = '#e74c3c';
+        }, 300);
+    });
+    observer.observe(finalTotalEl, { childList: true, characterData: true, subtree: true });
 
     function selectAddress(el, name, phone, address) {
         document.querySelectorAll('.address-item-modal').forEach(function(item) {

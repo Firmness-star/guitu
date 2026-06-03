@@ -1,8 +1,6 @@
 package com.flower.controller;
 
-import com.flower.dao.AddressDao;
-import com.flower.dao.OrderDao;
-import com.flower.dao.UserDao;
+import com.flower.dao.*;
 import com.flower.util.TransactionManager;
 import com.flower.entity.Address;
 import com.flower.entity.CartItem;
@@ -185,10 +183,20 @@ public class CheckoutController extends HttpServlet {
         // 查询用户的默认收货地址和积分
         Address defaultAddress = addressDao.findDefaultByUserId(userId);
         List<Address> allAddresses = addressDao.findByUserId(userId);
+
+        // 若用户无收货地址，跳转到地址管理页并提示添加地址赠送积分
+        if (allAddresses == null || allAddresses.isEmpty()) {
+            resp.sendRedirect("address?first=1");
+            return;
+        }
+
         int userJf = userDao.getJf(userId);
 
         // 积分抵扣规则：每100积分抵1元，最多抵商品总价的50%
         int maxJfDeduct = Math.min(userJf, (int)(totalAmount * 50 / 1));
+
+        // 加载用户可用的优惠券
+        java.util.List<java.util.Map<String, Object>> availableCoupons = new CouponDao().findAvailableByUser(userId);
 
         // 显示结算确认页面（准备数据并转发到checkout.jsp）
         req.setAttribute("selectedItems", selectedItems);
@@ -199,6 +207,7 @@ public class CheckoutController extends HttpServlet {
         req.setAttribute("allAddresses", allAddresses);
         req.setAttribute("userJf", userJf);
         req.setAttribute("maxJfDeduct", maxJfDeduct);
+        req.setAttribute("coupons", availableCoupons);
 
         req.getRequestDispatcher("checkout.jsp").forward(req, resp);
     }
@@ -268,8 +277,25 @@ public class CheckoutController extends HttpServlet {
 
         // 处理积分抵扣
         int usePoints = 0;
+        int couponUcId = 0;
+        double couponDiscount = 0;
         double actualAmount = totalAmount;
         try {
+            // 处理优惠券
+            String couponIdStr = req.getParameter("couponUcId");
+            if (couponIdStr != null && !couponIdStr.trim().isEmpty()) {
+                couponUcId = Integer.parseInt(couponIdStr.trim());
+                CouponDao couponDao = new CouponDao();
+                java.util.List<java.util.Map<String, Object>> available = couponDao.findAvailableByUser(userId);
+                for (java.util.Map<String, Object> c : available) {
+                    if (((Number) c.get("ucId")).intValue() == couponUcId) {
+                        couponDiscount = couponDao.calcDiscount(c, totalAmount);
+                        actualAmount -= couponDiscount;
+                        if (actualAmount < 0) { couponDiscount += actualAmount; actualAmount = 0; }
+                        break;
+                    }
+                }
+            }
             if (usePointsStr != null && !usePointsStr.trim().isEmpty()) {
                 usePoints = Integer.parseInt(usePointsStr.trim());
                 if (usePoints > 0) {
@@ -307,12 +333,19 @@ public class CheckoutController extends HttpServlet {
             // 积分处理：使用事务连接确保原子性
             try {
                 java.sql.Connection txConn = TransactionManager.getConnection();
+                JfDao jfDao = new JfDao();
                 if (usePoints > 0) {
                     userDao.deductJf(userId, usePoints, txConn);
+                    jfDao.addLog(userId, -usePoints, "usePoints", "订单积分抵扣" + usePoints + "积分", txConn);
                 }
                 int earnJf = (int)(actualAmount * 0.1);
                 if (earnJf > 0) {
                     userDao.addJf(userId, earnJf, txConn);
+                    jfDao.addLog(userId, earnJf, "order", "购物获得" + earnJf + "积分（订单金额¥" + actualAmount + "）", txConn);
+                }
+                // 使用优惠券
+                if (couponUcId > 0) {
+                    new CouponDao().useCoupon(couponUcId, order.getOrderId(), txConn);
                 }
             } catch (Exception e) {
                 System.err.println("[CTRL] " + e.getMessage());

@@ -9,6 +9,7 @@ const userStore = useUserStore()
 
 const formRef = ref(null)
 const submitting = ref(false)
+const agreeTerms = ref(false)
 const verifyCodeSrc = ref('/verifyCode?t=' + Date.now())
 
 const form = reactive({
@@ -168,6 +169,13 @@ async function onSubmit() {
           </template>
         </van-field>
 
+        <div class="agreement-row">
+          <label class="agreement-opt">
+            <input type="checkbox" v-model="agreeTerms" />
+            <span>我已阅读并同意 <a href="javascript:void(0)" @click="showToast('用户协议内容')">用户协议</a></span>
+          </label>
+        </div>
+
         <div class="submit-wrapper">
           <van-button
             round
@@ -175,6 +183,7 @@ async function onSubmit() {
             type="primary"
             native-type="submit"
             :loading="submitting"
+            :disabled="!agreeTerms"
             loading-text="注册中..."
           >
             注册
@@ -203,6 +212,27 @@ async function onSubmit() {
 .submit-wrapper {
   margin: 24px 16px 0;
 }
+
+.agreement-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px 0;
+  font-size: 13px;
+  color: #969799;
+}
+.agreement-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  min-height: 44px;
+}
+.agreement-opt input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #ee0a24;
+}
+.agreement-opt a { color: #1989fa; text-decoration: none; }
 
 .verify-code-img {
   width: 100px;

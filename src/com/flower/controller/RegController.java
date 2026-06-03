@@ -1,5 +1,6 @@
 package com.flower.controller;
 import com.flower.dao.UserDao;
+import com.flower.dao.JfDao;
 import com.flower.entity.User;
 import com.flower.util.JsonUtil;
 
@@ -21,6 +22,7 @@ import java.util.Map;
 public class RegController extends HttpServlet {
 
     private UserDao userDao = new UserDao();
+    private JfDao jfDao = new JfDao();
 
     /**
      * 处理 GET 请求，展示注册页面或处理 AJAX 请求
@@ -117,6 +119,11 @@ public class RegController extends HttpServlet {
         user.setJf(200);  // 新用户注册赠送200积分
 
         if (userDao.save(user)) {
+            // 记录注册积分流水
+            User saved = userDao.findByUsername(username);
+            if (saved != null) {
+                jfDao.addLog(saved.getId(), 200, "register", "新用户注册赠送200积分");
+            }
             resp.sendRedirect("login.jsp?registered=1");
         } else {
             req.setAttribute("error", "注册失败，请稍后重试");

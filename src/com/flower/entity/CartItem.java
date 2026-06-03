@@ -16,6 +16,8 @@ public class CartItem implements Serializable {
     private double productPrice;
     private int quantity;
     private boolean selected = true;
+    private int stock;
+    private int status;
 
     /**
      * 无参构造函数
@@ -116,6 +118,14 @@ public class CartItem implements Serializable {
         this.selected = selected;
     }
 
+    public int getStock() { return stock; }
+    public void setStock(int stock) { this.stock = stock; }
+
+    public int getStatus() { return status; }
+    public void setStatus(int status) { this.status = status; }
+
+    public boolean isValid() { return status == 1 && stock > 0; }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -138,6 +148,8 @@ public class CartItem implements Serializable {
                 ", quantity=" + quantity +
                 ", subtotal=" + getSubtotal() +
                 ", selected=" + selected +
+                ", stock=" + stock +
+                ", status=" + status +
                 '}';
     }
 }
