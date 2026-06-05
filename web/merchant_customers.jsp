@@ -2,7 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
-<!-- 权限校验：仅允许商家用户访问客户管理页面 -->
+<!-- 权限校验：仅允许商家访问客户管理页面 -->
 <c:if test="${empty sessionScope.userId || sessionScope.userRole != '商家'}">
     <jsp:forward page="/login.jsp"/>
 </c:if>

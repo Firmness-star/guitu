@@ -260,6 +260,106 @@ pageContext.setAttribute("favSet", favSet);
 
     /* 海报轮播 */
     .banner-section { max-width:1200px; margin:20px auto 0; padding:0 15px; }
+
+    /* 秒杀区块 */
+    .seckill-section {
+      max-width: 1200px;
+      margin: 25px auto 0;
+      padding: 0 15px;
+    }
+    .seckill-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .seckill-header h3 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #333;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .seckill-header h3 i { color: var(--primary-red); }
+    .seckill-header a {
+      color: var(--primary-red);
+      font-size: 14px;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .seckill-header a:hover { text-decoration: underline; }
+    .seckill-scroll {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: #ccc #f1f1f1;
+    }
+    .seckill-scroll::-webkit-scrollbar { height: 6px; }
+    .seckill-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+    .seckill-scroll::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+    .seckill-mini-card {
+      flex: 0 0 200px;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      transition: all 0.2s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      border: 2px solid transparent;
+    }
+    .seckill-mini-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(231,76,60,0.15);
+      border-color: var(--primary-red);
+      color: inherit;
+    }
+    .seckill-mini-card .mini-img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+    }
+    .seckill-mini-card .mini-body {
+      padding: 10px 12px;
+    }
+    .seckill-mini-card .mini-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 6px;
+    }
+    .seckill-mini-card .mini-price {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary-red);
+    }
+    .seckill-mini-card .mini-price small {
+      font-size: 12px;
+      font-weight: 400;
+    }
+    .seckill-mini-card .mini-original {
+      font-size: 12px;
+      color: #999;
+      text-decoration: line-through;
+      margin-left: 6px;
+    }
+    .seckill-mini-card .mini-countdown {
+      font-size: 11px;
+      color: var(--primary-red);
+      font-weight: 600;
+      font-family: monospace;
+      margin-top: 4px;
+    }
     .banner-wrapper { position:relative; border-radius:12px; overflow:hidden; }
     .banner-slide { display:none; }
     .banner-slide.active { display:block; }
@@ -589,6 +689,7 @@ pageContext.setAttribute("favSet", favSet);
     <a class="brand" href="javascript:void(0)" onclick="showCopyright()">归途</a>
     <ul class="nav-links">
       <li><a href="index.jsp">首页</a></li>
+      <li><a href="seckill?action=list" style="color:var(--primary-red);font-weight:600;"><i class="bi bi-lightning-charge-fill"></i> 限时秒杀</a></li>
       <li>
         <!-- 顶部全局搜索框 -->
         <form class="search-box" action="index" method="get">
@@ -710,6 +811,53 @@ pageContext.setAttribute("favSet", favSet);
     if (totalBanners > 1) {
       setInterval(function() { showBanner((currentBanner + 1) % totalBanners); }, autoPlaySpeed);
     }
+  </script>
+</c:if>
+
+<!-- 限时秒杀区块 -->
+<c:if test="${not empty activeSeckillList}">
+  <div class="seckill-section">
+    <div class="seckill-header">
+      <h3><i class="bi bi-lightning-charge-fill"></i> 限时秒杀</h3>
+      <a href="seckill?action=list">查看全部 <i class="bi bi-chevron-right"></i></a>
+    </div>
+    <div class="seckill-scroll">
+      <c:forEach items="${activeSeckillList}" var="sk">
+        <a href="seckill?action=list" class="seckill-mini-card" data-end-time="${sk.endTime.time}">
+          <img src="${sk.productPic}" alt="${sk.productName}" class="mini-img"
+               onerror="this.src='https://via.placeholder.com/200x140?text=秒杀'">
+          <div class="mini-body">
+            <div class="mini-name">${sk.productName}</div>
+            <div>
+              <span class="mini-price"><small>秒杀价</small> <fmt:formatNumber value="${sk.seckillPrice}" pattern="#0.00"/></span>
+              <span class="mini-original"><fmt:formatNumber value="${sk.productPrice}" pattern="#0.00"/></span>
+            </div>
+            <div class="mini-countdown" data-remaining="${sk.remainingSeconds}"></div>
+          </div>
+        </a>
+      </c:forEach>
+    </div>
+  </div>
+  <script>
+    (function() {
+      function fmt(s) {
+        var h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+        var p = [];
+        if (h>0) p.push(h+'时');
+        p.push(m+'分'); p.push(sec+'秒');
+        return '剩余 ' + p.join('');
+      }
+      document.querySelectorAll('.mini-countdown[data-remaining]').forEach(function(el) {
+        el.textContent = fmt(parseInt(el.getAttribute('data-remaining')));
+      });
+      setInterval(function() {
+        document.querySelectorAll('.mini-countdown[data-remaining]').forEach(function(el) {
+          var r = parseInt(el.getAttribute('data-remaining'));
+          if (r > 0) { r--; el.setAttribute('data-remaining', r); el.textContent = fmt(r); }
+          else { el.textContent = '已结束'; }
+        });
+      }, 1000);
+    })();
   </script>
 </c:if>
 

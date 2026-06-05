@@ -5,9 +5,11 @@ import com.flower.service.ICategoryService;
 import com.flower.service.ServiceFactory;
 import com.flower.dao.BannerDao;
 import com.flower.dao.OrderDao;
+import com.flower.dao.SeckillDao;
 import com.flower.entity.Sp;
 import com.flower.entity.Category;
 import com.flower.entity.Banner;
+import com.flower.entity.SeckillActivity;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -29,6 +31,7 @@ public class IndexController extends HttpServlet {
     private ICategoryService categoryService;
     private BannerDao bannerDao;
     private OrderDao orderDao;
+    private SeckillDao seckillDao;
 
     @Override
     public void init() throws ServletException {
@@ -37,6 +40,7 @@ public class IndexController extends HttpServlet {
         this.categoryService = ServiceFactory.getCategoryService();
         this.bannerDao = new BannerDao();
         this.orderDao = new OrderDao();
+        this.seckillDao = new SeckillDao();
     }
 
     /**
@@ -134,6 +138,10 @@ public class IndexController extends HttpServlet {
                     .count();
             req.setAttribute("pendingOrderCount", pendingOrderCount);
         }
+
+        // 加载进行中的秒杀活动
+        List<SeckillActivity> activeSeckillList = seckillDao.findActive();
+        req.setAttribute("activeSeckillList", activeSeckillList);
 
         req.getRequestDispatcher("index.jsp").forward(req, resp);
     }

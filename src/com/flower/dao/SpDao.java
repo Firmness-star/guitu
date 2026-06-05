@@ -32,6 +32,22 @@ public class SpDao {
         return null;
     }
 
+    /**
+     * 根据 ID 查询商品（不限状态，管理后台使用）
+     */
+    public Sp findByIdAnyStatus(int id) {
+        if (id <= 0) return null;
+        String sql = "SELECT * FROM product WHERE id = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) return mapResultSetToSp(rs);
+            }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
+        return null;
+    }
+
     public Sp findById(int id, Connection conn) throws SQLException {
         if (id <= 0) return null;
         String sql = "SELECT * FROM product WHERE id = ? AND status = 1";

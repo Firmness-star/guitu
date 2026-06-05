@@ -139,3 +139,37 @@ CREATE TABLE `favorite` (
   CONSTRAINT `fk_fav_product` FOREIGN KEY (`product_id`) REFERENCES `product` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_fav_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='商品收藏表';
+
+-- 14. 秒杀活动表
+DROP TABLE IF EXISTS `seckill_activity`;
+CREATE TABLE `seckill_activity` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `product_id` int NOT NULL COMMENT '关联商品ID',
+  `seckill_price` decimal(10,2) NOT NULL COMMENT '秒杀价格',
+  `seckill_stock` int NOT NULL DEFAULT 0 COMMENT '秒杀库存（独立于普通库存）',
+  `per_user_limit` int NOT NULL DEFAULT 1 COMMENT '每人限购数量',
+  `start_time` datetime NOT NULL COMMENT '秒杀开始时间',
+  `end_time` datetime NOT NULL COMMENT '秒杀结束时间',
+  `status` tinyint NOT NULL DEFAULT 1 COMMENT '状态：0关闭 1开启',
+  `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_product` (`product_id`),
+  KEY `idx_time` (`start_time`,`end_time`),
+  CONSTRAINT `fk_seckill_product` FOREIGN KEY (`product_id`) REFERENCES `product` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='秒杀活动表';
+
+-- 15. 秒杀订单表
+DROP TABLE IF EXISTS `seckill_order`;
+CREATE TABLE `seckill_order` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `seckill_id` int NOT NULL COMMENT '秒杀活动ID',
+  `user_id` int NOT NULL COMMENT '用户ID',
+  `order_id` varchar(50) NOT NULL COMMENT '关联订单号',
+  `quantity` int NOT NULL DEFAULT 1 COMMENT '购买数量',
+  `seckill_price` decimal(10,2) NOT NULL COMMENT '秒杀价格快照',
+  `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_seckill_user` (`seckill_id`,`user_id`) COMMENT '同一用户同一活动只能下一单',
+  KEY `idx_user` (`user_id`),
+  KEY `idx_order` (`order_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='秒杀订单表';

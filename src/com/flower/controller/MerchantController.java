@@ -2,10 +2,12 @@ package com.flower.controller;
 
 import com.flower.dao.CategoryDao;
 import com.flower.dao.OrderDao;
+import com.flower.dao.SeckillDao;
 import com.flower.dao.SpDao;
 import com.flower.dao.UserDao;
 import com.flower.entity.Category;
 import com.flower.entity.Order;
+import com.flower.entity.SeckillActivity;
 import com.flower.entity.Sp;
 import com.flower.entity.User;
 import com.flower.util.JsonUtil;
@@ -33,6 +35,7 @@ public class MerchantController extends HttpServlet {
     private OrderDao orderDao;
     private CategoryDao categoryDao;
     private UserDao userDao;
+    private SeckillDao seckillDao;
 
     @Override
     public void init() throws ServletException {
@@ -41,6 +44,7 @@ public class MerchantController extends HttpServlet {
         this.orderDao = new OrderDao();
         this.categoryDao = new CategoryDao();
         this.userDao = new UserDao();
+        this.seckillDao = new SeckillDao();
     }
 
     /**
@@ -74,6 +78,8 @@ public class MerchantController extends HttpServlet {
             showOrderManagement(req, resp);
         } else if ("/customers".equals(pathInfo)) {
             showCustomerManagement(req, resp);
+        } else if ("/seckill".equals(pathInfo)) {
+            showSeckillManagement(req, resp);
         } else {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
@@ -109,6 +115,8 @@ public class MerchantController extends HttpServlet {
             handleProductActionWithRedirect(req, resp, action);
         } else if ("/orders".equals(pathInfo)) {
             handleOrderActionWithRedirect(req, resp, action);
+        } else if ("/seckill".equals(pathInfo)) {
+            handleSeckillAction(req, resp, action);
         } else {
             doGet(req, resp);
         }
@@ -839,5 +847,114 @@ public class MerchantController extends HttpServlet {
 
         // 重定向回订单管理页面
         resp.sendRedirect(req.getContextPath() + "/merchant/orders?tab=orders");
+    }
+
+    /**
+     * 展示商家秒杀管理页面
+     */
+    private void showSeckillManagement(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        HttpSession session = req.getSession();
+        if (session.getAttribute("merchantSuccess") != null) {
+            req.setAttribute("merchantSuccess", session.getAttribute("merchantSuccess"));
+            session.removeAttribute("merchantSuccess");
+        }
+        if (session.getAttribute("merchantError") != null) {
+            req.setAttribute("merchantError", session.getAttribute("merchantError"));
+            session.removeAttribute("merchantError");
+        }
+
+        String keyword = req.getParameter("keyword");
+        String statusFilter = req.getParameter("status");
+
+        List<SeckillActivity> activities = seckillDao.findAll();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String searchKey = keyword.trim().toLowerCase();
+            activities = activities.stream()
+                    .filter(a -> a.getProductName() != null && a.getProductName().toLowerCase().contains(searchKey))
+                    .collect(Collectors.toList());
+        }
+        if (statusFilter != null && !statusFilter.isEmpty()) {
+            if ("ongoing".equals(statusFilter)) {
+                activities = activities.stream().filter(SeckillActivity::isOngoing).collect(Collectors.toList());
+            } else if ("waiting".equals(statusFilter)) {
+                activities = activities.stream().filter(a -> a.getStatus() == 1 && !a.isStarted()).collect(Collectors.toList());
+            } else if ("ended".equals(statusFilter)) {
+                activities = activities.stream().filter(a -> a.isEnded() || a.getStatus() == 0).collect(Collectors.toList());
+            }
+        }
+
+        req.setAttribute("seckillList", activities);
+        req.setAttribute("allProducts", spDao.findAll());
+        req.setAttribute("seckillKeyword", keyword);
+        req.setAttribute("seckillStatusFilter", statusFilter);
+        req.getRequestDispatcher("/merchant.jsp").forward(req, resp);
+    }
+
+    /**
+     * 处理商家秒杀管理的 POST 操作
+     */
+    private void handleSeckillAction(HttpServletRequest req, HttpServletResponse resp, String action)
+            throws ServletException, IOException {
+        HttpSession session = req.getSession();
+        try {
+            if ("add".equals(action)) {
+                SeckillActivity activity = new SeckillActivity();
+                activity.setProductId(Integer.parseInt(req.getParameter("productId")));
+                activity.setSeckillPrice(Double.parseDouble(req.getParameter("seckillPrice")));
+                activity.setSeckillStock(Integer.parseInt(req.getParameter("seckillStock")));
+                activity.setPerUserLimit(Integer.parseInt(req.getParameter("perUserLimit")));
+                activity.setStatus(Integer.parseInt(req.getParameter("status")));
+
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+                activity.setStartTime(sdf.parse(req.getParameter("startTime")));
+                activity.setEndTime(sdf.parse(req.getParameter("endTime")));
+
+                Sp product = spDao.findByIdAnyStatus(activity.getProductId());
+                if (product != null && activity.getSeckillPrice() >= product.getPrice()) {
+                    session.setAttribute("merchantError", "秒杀价必须低于原价（¥" + product.getPrice() + "）");
+                } else if (activity.getStartTime().after(activity.getEndTime())) {
+                    session.setAttribute("merchantError", "开始时间不能晚于结束时间");
+                } else if (seckillDao.save(activity)) {
+                    session.setAttribute("merchantSuccess", "秒杀活动已创建");
+                } else {
+                    session.setAttribute("merchantError", "创建失败");
+                }
+            } else if ("update".equals(action)) {
+                SeckillActivity activity = new SeckillActivity();
+                activity.setId(Integer.parseInt(req.getParameter("id")));
+                activity.setProductId(Integer.parseInt(req.getParameter("productId")));
+                activity.setSeckillPrice(Double.parseDouble(req.getParameter("seckillPrice")));
+                activity.setSeckillStock(Integer.parseInt(req.getParameter("seckillStock")));
+                activity.setPerUserLimit(Integer.parseInt(req.getParameter("perUserLimit")));
+                activity.setStatus(Integer.parseInt(req.getParameter("status")));
+
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+                activity.setStartTime(sdf.parse(req.getParameter("startTime")));
+                activity.setEndTime(sdf.parse(req.getParameter("endTime")));
+
+                if (seckillDao.update(activity)) {
+                    session.setAttribute("merchantSuccess", "秒杀活动已更新");
+                } else {
+                    session.setAttribute("merchantError", "更新失败");
+                }
+            } else if ("delete".equals(action)) {
+                int id = Integer.parseInt(req.getParameter("id"));
+                seckillDao.deleteById(id);
+                session.setAttribute("merchantSuccess", "秒杀活动已删除");
+            } else if ("enable".equals(action)) {
+                int id = Integer.parseInt(req.getParameter("id"));
+                seckillDao.updateStatus(id, 1);
+                session.setAttribute("merchantSuccess", "秒杀活动已开启");
+            } else if ("disable".equals(action)) {
+                int id = Integer.parseInt(req.getParameter("id"));
+                seckillDao.updateStatus(id, 0);
+                session.setAttribute("merchantSuccess", "秒杀活动已关闭");
+            }
+        } catch (Exception e) {
+            session.setAttribute("merchantError", "操作失败：" + e.getMessage());
+        }
+        resp.sendRedirect(req.getContextPath() + "/merchant/seckill?tab=seckill");
     }
 }

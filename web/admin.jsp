@@ -213,6 +213,11 @@
                 <i class="bi bi-ticket-perforated"></i> 优惠券管理
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link ${param.tab == 'seckill' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/seckill?tab=seckill">
+                <i class="bi bi-lightning"></i> 秒杀管理
+            </a>
+        </li>
     </ul>
 
     <!-- 首页概览模块：展示统计数据及最近记录 -->
@@ -1277,6 +1282,250 @@
             document.getElementById('issueCouponId').value = id;
             document.getElementById('issueCouponName').textContent = name;
             new bootstrap.Modal(document.getElementById('issueCouponModal')).show();
+        }
+        </script>
+    </c:if>
+
+    <!-- 秒杀管理 -->
+    <c:if test="${param.tab == 'seckill'}">
+        <c:if test="${not empty adminSuccess}">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle"></i> ${adminSuccess}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </c:if>
+        <c:if test="${not empty adminError}">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                ${adminError}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </c:if>
+
+        <!-- 筛选栏 -->
+        <div class="filter-bar">
+            <form class="row g-2 align-items-end" method="get" action="${pageContext.request.contextPath}/admin/seckill">
+                <input type="hidden" name="tab" value="seckill">
+                <div class="col-md-4">
+                    <input type="text" name="keyword" class="form-control" placeholder="搜索商品名称..." value="${seckillKeyword}">
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">全部状态</option>
+                        <option value="ongoing" ${seckillStatusFilter == 'ongoing' ? 'selected' : ''}>进行中</option>
+                        <option value="waiting" ${seckillStatusFilter == 'waiting' ? 'selected' : ''}>未开始</option>
+                        <option value="ended" ${seckillStatusFilter == 'ended' ? 'selected' : ''}>已结束</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-outline-secondary w-100"><i class="bi bi-search"></i> 搜索</button>
+                </div>
+                <div class="col-md-3 text-end">
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#addSeckillModal">
+                        <i class="bi bi-plus-circle"></i> 新增秒杀活动
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <h5 class="card-title"><i class="bi bi-lightning me-2"></i>秒杀活动列表 <span class="badge bg-danger">${fn:length(seckillList)}</span></h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>商品</th>
+                            <th>原价</th>
+                            <th>秒杀价</th>
+                            <th>秒杀库存</th>
+                            <th>已售</th>
+                            <th>限购</th>
+                            <th>开始时间</th>
+                            <th>结束时间</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <c:forEach items="${seckillList}" var="sk">
+                            <tr>
+                                <td>${sk.id}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <c:if test="${not empty sk.productPic}">
+                                            <img src="${sk.productPic}" class="product-img me-2" onerror="this.style.display='none'">
+                                        </c:if>
+                                        <span>${sk.productName}</span>
+                                    </div>
+                                </td>
+                                <td>¥<fmt:formatNumber value="${sk.productPrice}" pattern="#0.00"/></td>
+                                <td style="color:#e74c3c;font-weight:700;">¥<fmt:formatNumber value="${sk.seckillPrice}" pattern="#0.00"/></td>
+                                <td>${sk.seckillStock}</td>
+                                <td>${sk.soldCount}</td>
+                                <td>${sk.perUserLimit}件/人</td>
+                                <td style="font-size:12px;"><fmt:formatDate value="${sk.startTime}" pattern="yyyy-MM-dd HH:mm"/></td>
+                                <td style="font-size:12px;"><fmt:formatDate value="${sk.endTime}" pattern="yyyy-MM-dd HH:mm"/></td>
+                                <td>
+                                    <c:choose>
+                                        <c:when test="${sk.status == 0}">
+                                            <span class="badge-status badge-disabled">已关闭</span>
+                                        </c:when>
+                                        <c:when test="${sk.ongoing}">
+                                            <span class="badge-status badge-active">进行中</span>
+                                        </c:when>
+                                        <c:when test="${!sk.started}">
+                                            <span class="badge-status badge-info">未开始</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="badge-status badge-warning">已结束</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
+                                <td>
+                                    <fmt:formatDate value="${sk.startTime}" pattern="yyyy-MM-dd'T'HH:mm" var="skStartFmt"/>
+                                    <fmt:formatDate value="${sk.endTime}" pattern="yyyy-MM-dd'T'HH:mm" var="skEndFmt"/>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editSeckill(${sk.id},${sk.productId},${sk.seckillPrice},${sk.seckillStock},${sk.perUserLimit},'${skStartFmt}','${skEndFmt}',${sk.status})">编辑</button>
+                                    <c:choose>
+                                        <c:when test="${sk.status == 1}">
+                                            <a href="${pageContext.request.contextPath}/admin/seckill?action=disable&id=${sk.id}" class="btn btn-sm btn-outline-warning">关闭</a>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <a href="${pageContext.request.contextPath}/admin/seckill?action=enable&id=${sk.id}" class="btn btn-sm btn-outline-success">开启</a>
+                                        </c:otherwise>
+                                    </c:choose>
+                                    <a href="${pageContext.request.contextPath}/admin/seckill?action=delete&id=${sk.id}" class="btn btn-sm btn-outline-danger" onclick="return confirm('确认删除该秒杀活动？')">删除</a>
+                                </td>
+                            </tr>
+                        </c:forEach>
+                        <c:if test="${empty seckillList}">
+                            <tr><td colspan="11" class="text-center text-muted py-4">暂无秒杀活动</td></tr>
+                        </c:if>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 新增秒杀活动模态框 -->
+        <div class="modal fade" id="addSeckillModal" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">新增秒杀活动</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <form action="${pageContext.request.contextPath}/admin/seckill" method="post">
+                    <input type="hidden" name="tab" value="seckill">
+                    <input type="hidden" name="action" value="add">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">选择商品</label>
+                            <select name="productId" class="form-select" required>
+                                <option value="">请选择商品</option>
+                                <c:forEach items="${allProducts}" var="p">
+                                    <option value="${p.id}">${p.name} (¥${p.price} / 库存${p.stock})</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">秒杀价 (¥)</label>
+                                <input type="number" name="seckillPrice" class="form-control" step="0.01" min="0.01" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">秒杀库存</label>
+                                <input type="number" name="seckillStock" class="form-control" min="1" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">每人限购</label>
+                                <input type="number" name="perUserLimit" class="form-control" min="1" value="1" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">开始时间</label>
+                                <input type="datetime-local" name="startTime" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">结束时间</label>
+                                <input type="datetime-local" name="endTime" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">状态</label>
+                            <select name="status" class="form-select">
+                                <option value="1">开启</option>
+                                <option value="0">关闭</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer"><button type="submit" class="btn btn-danger">创建活动</button></div>
+                </form>
+            </div></div>
+        </div>
+
+        <!-- 编辑秒杀活动模态框 -->
+        <div class="modal fade" id="editSeckillModal" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">编辑秒杀活动</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <form action="${pageContext.request.contextPath}/admin/seckill" method="post">
+                    <input type="hidden" name="tab" value="seckill">
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" name="id" id="editSeckillId">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">选择商品</label>
+                            <select name="productId" id="editSeckillProduct" class="form-select" required>
+                                <c:forEach items="${allProducts}" var="p">
+                                    <option value="${p.id}">${p.name} (¥${p.price} / 库存${p.stock})</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">秒杀价 (¥)</label>
+                                <input type="number" name="seckillPrice" id="editSeckillPrice" class="form-control" step="0.01" min="0.01" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">秒杀库存</label>
+                                <input type="number" name="seckillStock" id="editSeckillStock" class="form-control" min="1" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">每人限购</label>
+                                <input type="number" name="perUserLimit" id="editSeckillLimit" class="form-control" min="1" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">开始时间</label>
+                                <input type="datetime-local" name="startTime" id="editSeckillStart" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">结束时间</label>
+                                <input type="datetime-local" name="endTime" id="editSeckillEnd" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">状态</label>
+                            <select name="status" id="editSeckillStatus" class="form-select">
+                                <option value="1">开启</option>
+                                <option value="0">关闭</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer"><button type="submit" class="btn btn-danger">保存修改</button></div>
+                </form>
+            </div></div>
+        </div>
+
+        <script>
+        function editSeckill(id, productId, price, stock, limit, startTime, endTime, status) {
+            document.getElementById('editSeckillId').value = id;
+            document.getElementById('editSeckillProduct').value = productId;
+            document.getElementById('editSeckillPrice').value = price;
+            document.getElementById('editSeckillStock').value = stock;
+            document.getElementById('editSeckillLimit').value = limit;
+            document.getElementById('editSeckillStart').value = startTime;
+            document.getElementById('editSeckillEnd').value = endTime;
+            document.getElementById('editSeckillStatus').value = status;
+            new bootstrap.Modal(document.getElementById('editSeckillModal')).show();
         }
         </script>
     </c:if>

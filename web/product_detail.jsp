@@ -516,10 +516,35 @@ pageContext.setAttribute("isFavorited", isFav);
       
       <!-- 价格区域 -->
       <div class="product-price-section">
-        <div class="price-label">商品价格</div>
-        <div>
-          <span class="current-price">￥<fmt:formatNumber value="${product.price}" pattern="#0.00"/></span>
-        </div>
+        <c:choose>
+          <c:when test="${not empty activeSeckill && activeSeckill.ongoing && activeSeckill.seckillStock > 0}">
+            <div class="price-label" style="color:var(--primary-red);">
+              <i class="bi bi-lightning-charge-fill"></i> 秒杀价
+            </div>
+            <div>
+              <span class="current-price" style="color:var(--primary-red);font-size:28px;">
+                ￥<fmt:formatNumber value="${activeSeckill.seckillPrice}" pattern="#0.00"/>
+              </span>
+              <span style="font-size:16px;color:#999;text-decoration:line-through;margin-left:10px;">
+                ￥<fmt:formatNumber value="${product.price}" pattern="#0.00"/>
+              </span>
+              <span style="display:inline-block;background:linear-gradient(135deg,#e74c3c,#ff6b6b);color:white;padding:2px 10px;border-radius:20px;font-size:12px;margin-left:10px;font-weight:600;">
+                <i class="bi bi-lightning-charge-fill"></i> 限时秒杀
+              </span>
+            </div>
+            <div style="margin-top:8px;font-size:13px;color:#666;">
+              秒杀库存：<span style="color:var(--primary-red);font-weight:600;">${activeSeckill.seckillStock}</span>件
+              &nbsp;|&nbsp; 每人限购 ${activeSeckill.perUserLimit} 件
+              &nbsp;|&nbsp; 剩余 <span id="detailCountdown" style="color:var(--primary-red);font-weight:600;" data-remaining="${activeSeckill.remainingSeconds}"></span>
+            </div>
+          </c:when>
+          <c:otherwise>
+            <div class="price-label">商品价格</div>
+            <div>
+              <span class="current-price">￥<fmt:formatNumber value="${product.price}" pattern="#0.00"/></span>
+            </div>
+          </c:otherwise>
+        </c:choose>
       </div>
 
       <!-- 商品描述 -->
@@ -565,23 +590,45 @@ pageContext.setAttribute("isFavorited", isFav);
 
       <!-- 操作按钮 -->
       <div class="action-buttons">
-        <form action="${ctx}/cart" method="post" id="addToCartForm">
-          <input type="hidden" name="action" value="add">
-          <input type="hidden" name="productId" value="${product.id}">
-          <input type="hidden" name="quantity" id="cartQuantity" value="1">
-          <button type="submit" class="add-cart-btn" ${product.stock <= 0 ? 'disabled' : ''}>
-            <i class="bi bi-cart-plus"></i> ${product.stock <= 0 ? '暂时缺货' : '加入购物车'}
-          </button>
-        </form>
+        <c:choose>
+          <c:when test="${not empty activeSeckill && activeSeckill.ongoing && activeSeckill.seckillStock > 0}">
+            <!-- 秒杀模式：显示秒杀按钮 -->
+            <a href="${ctx}/seckill?action=buy&seckillId=${activeSeckill.id}&quantity=1"
+               class="buy-now-btn"
+               style="flex:2;background:linear-gradient(135deg,#e74c3c,#ff6b6b);text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;"
+               onclick="return confirm('确定要抢购此商品吗？秒杀价：￥${activeSeckill.seckillPrice}')">
+              <i class="bi bi-lightning-charge-fill"></i> 立即秒杀 ￥<fmt:formatNumber value="${activeSeckill.seckillPrice}" pattern="#0.00"/>
+            </a>
+            <form action="${ctx}/cart" method="post" style="flex:1;">
+              <input type="hidden" name="action" value="add">
+              <input type="hidden" name="productId" value="${product.id}">
+              <input type="hidden" name="quantity" value="1">
+              <button type="submit" class="add-cart-btn" ${product.stock <= 0 ? 'disabled' : ''}>
+                <i class="bi bi-cart-plus"></i> 加入购物车
+              </button>
+            </form>
+          </c:when>
+          <c:otherwise>
+            <!-- 普通模式 -->
+            <form action="${ctx}/cart" method="post" id="addToCartForm">
+              <input type="hidden" name="action" value="add">
+              <input type="hidden" name="productId" value="${product.id}">
+              <input type="hidden" name="quantity" id="cartQuantity" value="1">
+              <button type="submit" class="add-cart-btn" ${product.stock <= 0 ? 'disabled' : ''}>
+                <i class="bi bi-cart-plus"></i> ${product.stock <= 0 ? '暂时缺货' : '加入购物车'}
+              </button>
+            </form>
 
-        <form action="${ctx}/checkout" method="post" id="buyNowForm">
-          <input type="hidden" name="productId" value="${product.id}">
-          <input type="hidden" name="quantity" id="buyNowQuantity" value="1">
-          <input type="hidden" name="action" value="directBuy">
-          <button type="submit" class="buy-now-btn" ${product.stock <= 0 ? 'disabled' : ''}>
-            <i class="bi bi-lightning-charge"></i> ${product.stock <= 0 ? '暂时缺货' : '立即购买'}
-          </button>
-        </form>
+            <form action="${ctx}/checkout" method="post" id="buyNowForm">
+              <input type="hidden" name="productId" value="${product.id}">
+              <input type="hidden" name="quantity" id="buyNowQuantity" value="1">
+              <input type="hidden" name="action" value="directBuy">
+              <button type="submit" class="buy-now-btn" ${product.stock <= 0 ? 'disabled' : ''}>
+                <i class="bi bi-lightning-charge"></i> ${product.stock <= 0 ? '暂时缺货' : '立即购买'}
+              </button>
+            </form>
+          </c:otherwise>
+        </c:choose>
 
         <button class="detail-fav-btn" onclick="toggleDetailFav(${product.id})" title="收藏">
           <i class="bi ${isFavorited ? 'bi-heart-fill' : 'bi-heart'}"></i>
@@ -834,6 +881,25 @@ async function toggleDetailFav(productId) {
     }
   } catch (e) { console.error(e); }
 }
+
+// 秒杀倒计时
+(function() {
+  var el = document.getElementById('detailCountdown');
+  if (!el) return;
+  function fmt(s) {
+    var h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+    var p = [];
+    if (h>0) p.push(h+'时');
+    p.push(m+'分'); p.push(sec+'秒');
+    return p.join('');
+  }
+  el.textContent = fmt(parseInt(el.getAttribute('data-remaining')));
+  setInterval(function() {
+    var r = parseInt(el.getAttribute('data-remaining'));
+    if (r > 0) { r--; el.setAttribute('data-remaining', r); el.textContent = fmt(r); }
+    else { el.textContent = '已结束'; }
+  }, 1000);
+})();
 </script>
 
 <jsp:include page="common/copyright.jsp"/>

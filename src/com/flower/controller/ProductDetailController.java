@@ -3,9 +3,11 @@ package com.flower.controller;
 import com.flower.dao.CategoryDao;
 import com.flower.dao.CommentDao;
 import com.flower.dao.JfDao;
+import com.flower.dao.SeckillDao;
 import com.flower.dao.UserDao;
 import com.flower.entity.Category;
 import com.flower.entity.Comment;
+import com.flower.entity.SeckillActivity;
 import com.flower.service.ISpService;
 import com.flower.service.ServiceFactory;
 import com.flower.entity.Sp;
@@ -124,7 +126,12 @@ public class ProductDetailController extends HttpServlet {
                     session.setAttribute(viewedKey, true);
                 }
             }
-            
+
+            // 查询该商品是否有进行中的秒杀活动
+            SeckillDao seckillDao = new SeckillDao();
+            SeckillActivity activeSeckill = seckillDao.findActiveByProductId(productId);
+            req.setAttribute("activeSeckill", activeSeckill);
+
             req.getRequestDispatcher("/product_detail.jsp").forward(req, resp);
             
         } catch (NumberFormatException e) {
