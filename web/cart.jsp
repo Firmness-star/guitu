@@ -94,25 +94,14 @@
 </head>
 <body>
 
-<nav style="background:#fff;position:sticky;top:0;z-index:1000;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:0 20px;height:64px;display:flex;align-items:center;justify-content:space-between;">
-  <a href="index.jsp" style="font-weight:700;font-size:20px;background:linear-gradient(135deg,#e74c3c,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none;">归途</a>
-  <div style="display:flex;gap:16px;align-items:center;font-size:14px;">
-    <c:choose>
-      <c:when test="${not empty sessionScope.username}"><span style="color:#666;">${sessionScope.username}</span><a href="logout" style="color:#555;text-decoration:none;">退出</a></c:when>
-      <c:otherwise><a href="login.jsp" style="color:#555;text-decoration:none;">登录</a><a href="reg.jsp" style="color:#555;text-decoration:none;">注册</a></c:otherwise>
-    </c:choose>
-    <a href="orders" style="color:#555;text-decoration:none;">订单</a>
-    <a href="usercenter" style="color:#555;text-decoration:none;">个人中心</a>
-    <c:if test="${sessionScope.userRole == '管理员'}"><a href="admin/index" style="color:#e74c3c;text-decoration:none;font-weight:600;">管理</a></c:if>
-  </div>
-</nav>
+<jsp:include page="common/navbar.jsp"/>
 
 <div class="cart-container">
   <h4 style="margin-bottom:18px;"><i class="bi bi-cart3" style="color:var(--primary-red);"></i> 我的购物车 <span class="count-badge" id="headerCount">${totalNum}</span></h4>
 
   <c:choose>
     <c:when test="${empty sessionScope.cart || fn:length(sessionScope.cart) == 0}">
-      <div class="empty-state"><i class="bi bi-cart-x"></i><p>购物车是空的</p><a href="index.jsp" class="btn btn-danger mt-2">去购物</a></div>
+      <div class="empty-state"><i class="bi bi-cart-x"></i><p>购物车是空的</p><a href="index" class="btn btn-danger mt-2">去购物</a></div>
     </c:when>
 
     <c:otherwise>
@@ -176,7 +165,7 @@
                 <c:otherwise>请选择至少一件商品</c:otherwise>
               </c:choose>
             </a>
-            <a href="index.jsp" class="btn btn-outline-secondary w-100 mt-2">继续购物</a>
+            <a href="index" class="btn btn-outline-secondary w-100 mt-2">继续购物</a>
           </div>
         </div>
       </div>

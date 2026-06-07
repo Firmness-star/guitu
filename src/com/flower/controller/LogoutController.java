@@ -36,7 +36,7 @@ public class LogoutController extends HttpServlet {
         cookie.setPath("/");
         resp.addCookie(cookie);
 
-        resp.sendRedirect("index.jsp");
+        resp.sendRedirect("index");
     }
 
     /**

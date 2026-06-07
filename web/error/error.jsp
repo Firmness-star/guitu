@@ -55,7 +55,7 @@
     <div class="error-icon">⚠️</div>
     <h2 class="error-title">系统发生错误</h2>
     <p class="error-message">很抱歉，系统遇到了一个意外问题</p>
-    <a href="${pageContext.request.contextPath}/index.jsp" class="btn btn-primary btn-lg">返回首页</a>
+    <a href="${pageContext.request.contextPath}/index" class="btn btn-primary btn-lg">返回首页</a>
 
     <!-- 展示具体的异常类型和错误消息，辅助定位问题 -->
     <div class="error-detail mt-4">

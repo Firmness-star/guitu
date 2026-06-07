@@ -76,6 +76,7 @@ public class LoginApi extends ApiBaseServlet {
         data.put("role", user.getRole());
         data.put("email", user.getEmail());
         data.put("phone", user.getTel());
+        data.put("gender", user.getGender());
         data.put("avatar", user.getAvatar());
         data.put("jf", user.getJf());
         ok(resp, "登录成功", data);

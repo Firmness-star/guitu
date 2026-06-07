@@ -53,7 +53,7 @@ public class UserCenterController extends HttpServlet {
         Integer userId = (Integer) session.getAttribute("userId");
 
         if (username == null || userId == null) {
-            resp.sendRedirect("login.jsp?redirect=usercenter");
+            resp.sendRedirect("login?redirect=usercenter");
             return;
         }
 
@@ -72,7 +72,7 @@ public class UserCenterController extends HttpServlet {
         User user = userDao.findByUsername(username);
         if (user == null) {
             session.invalidate();
-            resp.sendRedirect("login.jsp");
+            resp.sendRedirect("login");
             return;
         }
 
@@ -157,7 +157,7 @@ public class UserCenterController extends HttpServlet {
         Integer userId = (Integer) session.getAttribute("userId");
 
         if (userId == null) {
-            resp.sendRedirect("login.jsp");
+            resp.sendRedirect("login");
             return;
         }
 
@@ -181,6 +181,19 @@ public class UserCenterController extends HttpServlet {
             return;
         }
 
+        // 只在真正修改了手机号/邮箱时才查重
+        User current = userDao.findById(userId);
+        if ((current == null || !tel.trim().equals(current.getTel())) && userDao.isTelUsedByOther(tel.trim(), userId)) {
+            session.setAttribute("updateError", "该手机号已被其他用户使用");
+            resp.sendRedirect("usercenter");
+            return;
+        }
+        if ((current == null || !email.trim().equals(current.getEmail())) && userDao.isEmailUsedByOther(email.trim(), userId)) {
+            session.setAttribute("updateError", "该邮箱已被其他用户使用");
+            resp.sendRedirect("usercenter");
+            return;
+        }
+
         // 更新资料（手机、邮箱、性别）
         boolean success = userDao.updateUserInfo(userId, tel.trim(), email.trim());
 
@@ -191,10 +204,10 @@ public class UserCenterController extends HttpServlet {
 
         // 完善个人资料奖励积分
         if (success) {
-            User current = userDao.findById(userId);
-            boolean firstTime = current != null &&
-                    (current.getTel() == null || current.getTel().isEmpty() ||
-                     current.getEmail() == null || current.getEmail().isEmpty());
+            User profileUser = userDao.findById(userId);
+            boolean firstTime = profileUser != null &&
+                    (profileUser.getTel() == null || profileUser.getTel().isEmpty() ||
+                     profileUser.getEmail() == null || profileUser.getEmail().isEmpty());
             int jfAmount = firstTime ? 50 : 10;
             userDao.addJf(userId, jfAmount);
             new JfDao().addLog(userId, jfAmount, "completeProfile",

@@ -47,23 +47,6 @@ pageContext.setAttribute("isFavorited", isFav);
     body { background: #fff; }
     a { text-decoration: none; }
 
-    .navbar { border-bottom: 1px solid #e0e0e0; padding: 0; background: #fff; }
-    .nav-container { max-width: 1200px; margin: 0 auto; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
-    .brand { font-weight: 700; color: #333; font-size: 22px; letter-spacing: 2px; background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; transition: transform 0.2s; cursor: pointer; }
-    .brand:hover { transform: scale(1.05); }
-
-    .nav-links { display: flex; gap: 24px; list-style: none; align-items: center; }
-    .nav-links a { color: #666; text-decoration: none; font-size: 14px; transition: color 0.2s; }
-    .nav-links a:hover { color: var(--primary-red); }
-
-    .search-box { display: flex; }
-    .search-box input { border: 1px solid #ddd; padding: 6px 12px; font-size: 14px; outline: none; width: 200px; }
-    .search-box input:focus { border-color: var(--primary-red); }
-    .search-box button { border: 1px solid #ddd; background: #f5f5f5; padding: 6px 16px; cursor: pointer; font-size: 14px; }
-    .search-box button:hover { background: #e8e8e8; }
-
-    .cart-badge { background: var(--primary-green); color: white; font-size: 11px; padding: 2px 6px; border-radius: 50%; margin-left: 4px; display: inline-block; min-width: 18px; text-align: center; }
-
     .main { max-width: 1200px; margin: 30px auto 50px; padding: 0 15px; }
 
     .breadcrumb {
@@ -329,61 +312,7 @@ pageContext.setAttribute("isFavorited", isFav);
 </head>
 <body>
 
-<nav class="navbar">
-  <div class="nav-container">
-    <a class="brand" href="javascript:void(0)" onclick="showCopyright()"> 归途</a>
-    <ul class="nav-links">
-      <li><a href="${ctx}/index">首页</a></li>
-      <li>
-        <form class="search-box" action="${ctx}/index" method="get">
-          <input type="hidden" name="action" value="search">
-          <input type="search" name="keyword" placeholder="搜索商品..." required>
-          <button type="submit">查询</button>
-        </form>
-      </li>
-      <li>
-        <c:choose>
-          <c:when test="${not empty sessionScope.username}">
-            <a href="${ctx}/logout">退出(${sessionScope.username})</a>
-          </c:when>
-          <c:otherwise>
-            <a href="${ctx}/login.jsp">登录</a>
-          </c:otherwise>
-        </c:choose>
-      </li>
-      <li>
-        <c:if test="${empty sessionScope.username}">
-          <a href="${ctx}/reg.jsp">注册</a>
-        </c:if>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="${ctx}/cart">
-          我的购物车<span class="cart-badge">${cartItemCount > 0 ? cartItemCount : '0'}</span>
-        </a>
-      </li>
-      <c:if test="${not empty sessionScope.username}">
-        <li class="nav-item"><a href="${ctx}/favorite"><i class="bi bi-heart"></i> 收藏</a></li>
-      </c:if>
-      <c:if test="${not empty sessionScope.username}">
-        <li class="nav-item">
-          <a href="${ctx}/orders">
-            <i class="bi bi-receipt"></i> 我的订单
-          </a>
-        </li>
-      </c:if>
-      <c:if test="${not empty sessionScope.username}">
-        <li><a href="${ctx}/usercenter">
-          <i class="bi bi-person-circle"></i> 个人中心
-        </a></li>
-      </c:if>
-      <c:if test="${sessionScope.userRole == '管理员'}">
-        <li><a href="${ctx}/admin/index" style="color:var(--primary-red);font-weight:600;">
-          <i class="bi bi-gear"></i> 管理中心
-        </a></li>
-      </c:if>
-    </ul>
-  </div>
-</nav>
+<jsp:include page="common/navbar.jsp"/>
 
 <div class="main">
   <!-- 面包屑导航 -->
@@ -516,35 +445,10 @@ pageContext.setAttribute("isFavorited", isFav);
       
       <!-- 价格区域 -->
       <div class="product-price-section">
-        <c:choose>
-          <c:when test="${not empty activeSeckill && activeSeckill.ongoing && activeSeckill.seckillStock > 0}">
-            <div class="price-label" style="color:var(--primary-red);">
-              <i class="bi bi-lightning-charge-fill"></i> 秒杀价
-            </div>
-            <div>
-              <span class="current-price" style="color:var(--primary-red);font-size:28px;">
-                ￥<fmt:formatNumber value="${activeSeckill.seckillPrice}" pattern="#0.00"/>
-              </span>
-              <span style="font-size:16px;color:#999;text-decoration:line-through;margin-left:10px;">
-                ￥<fmt:formatNumber value="${product.price}" pattern="#0.00"/>
-              </span>
-              <span style="display:inline-block;background:linear-gradient(135deg,#e74c3c,#ff6b6b);color:white;padding:2px 10px;border-radius:20px;font-size:12px;margin-left:10px;font-weight:600;">
-                <i class="bi bi-lightning-charge-fill"></i> 限时秒杀
-              </span>
-            </div>
-            <div style="margin-top:8px;font-size:13px;color:#666;">
-              秒杀库存：<span style="color:var(--primary-red);font-weight:600;">${activeSeckill.seckillStock}</span>件
-              &nbsp;|&nbsp; 每人限购 ${activeSeckill.perUserLimit} 件
-              &nbsp;|&nbsp; 剩余 <span id="detailCountdown" style="color:var(--primary-red);font-weight:600;" data-remaining="${activeSeckill.remainingSeconds}"></span>
-            </div>
-          </c:when>
-          <c:otherwise>
-            <div class="price-label">商品价格</div>
-            <div>
-              <span class="current-price">￥<fmt:formatNumber value="${product.price}" pattern="#0.00"/></span>
-            </div>
-          </c:otherwise>
-        </c:choose>
+        <div class="price-label">商品价格</div>
+        <div>
+          <span class="current-price">￥<fmt:formatNumber value="${product.price}" pattern="#0.00"/></span>
+        </div>
       </div>
 
       <!-- 商品描述 -->
@@ -590,45 +494,23 @@ pageContext.setAttribute("isFavorited", isFav);
 
       <!-- 操作按钮 -->
       <div class="action-buttons">
-        <c:choose>
-          <c:when test="${not empty activeSeckill && activeSeckill.ongoing && activeSeckill.seckillStock > 0}">
-            <!-- 秒杀模式：显示秒杀按钮 -->
-            <a href="${ctx}/seckill?action=buy&seckillId=${activeSeckill.id}&quantity=1"
-               class="buy-now-btn"
-               style="flex:2;background:linear-gradient(135deg,#e74c3c,#ff6b6b);text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;"
-               onclick="return confirm('确定要抢购此商品吗？秒杀价：￥${activeSeckill.seckillPrice}')">
-              <i class="bi bi-lightning-charge-fill"></i> 立即秒杀 ￥<fmt:formatNumber value="${activeSeckill.seckillPrice}" pattern="#0.00"/>
-            </a>
-            <form action="${ctx}/cart" method="post" style="flex:1;">
-              <input type="hidden" name="action" value="add">
-              <input type="hidden" name="productId" value="${product.id}">
-              <input type="hidden" name="quantity" value="1">
-              <button type="submit" class="add-cart-btn" ${product.stock <= 0 ? 'disabled' : ''}>
-                <i class="bi bi-cart-plus"></i> 加入购物车
-              </button>
-            </form>
-          </c:when>
-          <c:otherwise>
-            <!-- 普通模式 -->
-            <form action="${ctx}/cart" method="post" id="addToCartForm">
-              <input type="hidden" name="action" value="add">
-              <input type="hidden" name="productId" value="${product.id}">
-              <input type="hidden" name="quantity" id="cartQuantity" value="1">
-              <button type="submit" class="add-cart-btn" ${product.stock <= 0 ? 'disabled' : ''}>
-                <i class="bi bi-cart-plus"></i> ${product.stock <= 0 ? '暂时缺货' : '加入购物车'}
-              </button>
-            </form>
+        <form action="${ctx}/cart" method="post" id="addToCartForm">
+          <input type="hidden" name="action" value="add">
+          <input type="hidden" name="productId" value="${product.id}">
+          <input type="hidden" name="quantity" id="cartQuantity" value="1">
+          <button type="submit" class="add-cart-btn" ${product.stock <= 0 ? 'disabled' : ''}>
+            <i class="bi bi-cart-plus"></i> ${product.stock <= 0 ? '暂时缺货' : '加入购物车'}
+          </button>
+        </form>
 
-            <form action="${ctx}/checkout" method="post" id="buyNowForm">
-              <input type="hidden" name="productId" value="${product.id}">
-              <input type="hidden" name="quantity" id="buyNowQuantity" value="1">
-              <input type="hidden" name="action" value="directBuy">
-              <button type="submit" class="buy-now-btn" ${product.stock <= 0 ? 'disabled' : ''}>
-                <i class="bi bi-lightning-charge"></i> ${product.stock <= 0 ? '暂时缺货' : '立即购买'}
-              </button>
-            </form>
-          </c:otherwise>
-        </c:choose>
+        <form action="${ctx}/checkout" method="post" id="buyNowForm">
+          <input type="hidden" name="productId" value="${product.id}">
+          <input type="hidden" name="quantity" id="buyNowQuantity" value="1">
+          <input type="hidden" name="action" value="directBuy">
+          <button type="submit" class="buy-now-btn" ${product.stock <= 0 ? 'disabled' : ''}>
+            <i class="bi bi-lightning-charge"></i> ${product.stock <= 0 ? '暂时缺货' : '立即购买'}
+          </button>
+        </form>
 
         <button class="detail-fav-btn" onclick="toggleDetailFav(${product.id})" title="收藏">
           <i class="bi ${isFavorited ? 'bi-heart-fill' : 'bi-heart'}"></i>
@@ -694,7 +576,7 @@ pageContext.setAttribute("isFavorited", isFav);
       </c:when>
       <c:otherwise>
         <div style="text-align:center;padding:20px;color:#999;font-size:14px;">
-          请<a href="${ctx}/login.jsp" style="color:var(--primary-red);">登录</a>后发表评论
+          请<a href="${ctx}/login" style="color:var(--primary-red);">登录</a>后发表评论
         </div>
       </c:otherwise>
     </c:choose>
@@ -804,69 +686,60 @@ pageContext.setAttribute("isFavorited", isFav);
 </footer>
 
 <script>
+  function getMaxQuantity() {
+    return ${product.stock > 0 ? product.stock : 1};
+  }
+
   function increaseQuantity() {
-    const input = document.getElementById('quantityInput');
-    const maxStock = ${product.stock > 0 ? product.stock : 1};
-    let currentValue = parseInt(input.value) || 1;
-    
-    if (currentValue < maxStock) {
-      currentValue++;
-      input.value = currentValue;
-      updateHiddenInputs(currentValue);
-    }
+    var input = document.getElementById('quantityInput');
+    var maxStock = getMaxQuantity();
+    var v = parseInt(input.value) || 1;
+    if (v < maxStock) { v++; input.value = v; updateInputs(v); }
   }
 
   function decreaseQuantity() {
-    const input = document.getElementById('quantityInput');
-    let currentValue = parseInt(input.value) || 1;
-    
-    if (currentValue > 1) {
-      currentValue--;
-      input.value = currentValue;
-      updateHiddenInputs(currentValue);
-    }
+    var input = document.getElementById('quantityInput');
+    var v = parseInt(input.value) || 1;
+    if (v > 1) { v--; input.value = v; updateInputs(v); }
   }
 
-  function updateHiddenInputs(quantity) {
-    document.getElementById('cartQuantity').value = quantity;
-    document.getElementById('buyNowQuantity').value = quantity;
+  function updateInputs(q) {
+    var c = document.getElementById('cartQuantity');
+    var b = document.getElementById('buyNowQuantity');
+    if (c) c.value = q;
+    if (b) b.value = q;
   }
 
   document.getElementById('quantityInput').addEventListener('change', function() {
-    const maxStock = ${product.stock > 0 ? product.stock : 1};
-    let value = parseInt(this.value) || 1;
-    
-    if (value < 1) {
-      value = 1;
-    } else if (value > maxStock) {
-      value = maxStock;
-    }
-    
-    this.value = value;
-    updateHiddenInputs(value);
+    var m = getMaxQuantity();
+    var v = parseInt(this.value) || 1;
+    if (v < 1) v = 1; else if (v > m) v = m;
+    this.value = v; updateInputs(v);
   });
 
-  document.getElementById('addToCartForm').addEventListener('submit', function(e) {
-    const quantity = parseInt(document.getElementById('cartQuantity').value);
-    const maxStock = ${product.stock > 0 ? product.stock : 1};
-    
-    if (quantity <= 0 || quantity > maxStock) {
-      e.preventDefault();
-      alert('请输入有效的购买数量！');
-      return false;
-    }
-  });
+  var addToCartForm = document.getElementById('addToCartForm');
+  if (addToCartForm) {
+    addToCartForm.addEventListener('submit', function(e) {
+      var quantity = parseInt(document.getElementById('cartQuantity').value);
+      var maxStock = ${product.stock > 0 ? product.stock : 1};
+      if (quantity <= 0 || quantity > maxStock) {
+        e.preventDefault();
+        alert('请输入有效的购买数量！');
+      }
+    });
+  }
 
-  document.getElementById('buyNowForm').addEventListener('submit', function(e) {
-    const quantity = parseInt(document.getElementById('buyNowQuantity').value);
-    const maxStock = ${product.stock > 0 ? product.stock : 1};
-    
-    if (quantity <= 0 || quantity > maxStock) {
-      e.preventDefault();
-      alert('请输入有效的购买数量！');
-      return false;
-    }
-  });
+  var buyNowForm = document.getElementById('buyNowForm');
+  if (buyNowForm) {
+    buyNowForm.addEventListener('submit', function(e) {
+      var quantity = parseInt(document.getElementById('buyNowQuantity').value);
+      var maxStock = ${product.stock > 0 ? product.stock : 1};
+      if (quantity <= 0 || quantity > maxStock) {
+        e.preventDefault();
+        alert('请输入有效的购买数量！');
+      }
+    });
+  }
 
 // 收藏切换
 async function toggleDetailFav(productId) {
@@ -881,25 +754,6 @@ async function toggleDetailFav(productId) {
     }
   } catch (e) { console.error(e); }
 }
-
-// 秒杀倒计时
-(function() {
-  var el = document.getElementById('detailCountdown');
-  if (!el) return;
-  function fmt(s) {
-    var h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
-    var p = [];
-    if (h>0) p.push(h+'时');
-    p.push(m+'分'); p.push(sec+'秒');
-    return p.join('');
-  }
-  el.textContent = fmt(parseInt(el.getAttribute('data-remaining')));
-  setInterval(function() {
-    var r = parseInt(el.getAttribute('data-remaining'));
-    if (r > 0) { r--; el.setAttribute('data-remaining', r); el.textContent = fmt(r); }
-    else { el.textContent = '已结束'; }
-  }, 1000);
-})();
 </script>
 
 <jsp:include page="common/copyright.jsp"/>

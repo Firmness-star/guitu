@@ -87,7 +87,7 @@ public class CheckoutController extends HttpServlet {
         String username = (String) session.getAttribute("username");
         Integer userId = (Integer) session.getAttribute("userId");
         if (username == null || userId == null) {
-            resp.sendRedirect("login.jsp?redirect=checkout");
+            resp.sendRedirect("login?redirect=checkout");
             return;
         }
 
@@ -165,7 +165,7 @@ public class CheckoutController extends HttpServlet {
         if (selectedItems.isEmpty()) {
             if (cart == null || cart.isEmpty()) {
                 // 购物车完全为空，重定向到购物车页面
-                resp.sendRedirect("cart.jsp");
+                resp.sendRedirect("cart");
             } else {
                 // 购物车有商品但没有选中
                 req.setAttribute("error", "请至少选择一件商品进行结算");
@@ -271,17 +271,17 @@ public class CheckoutController extends HttpServlet {
         }
 
         if (userId == null) {
-            resp.sendRedirect("login.jsp?redirect=checkout");
+            resp.sendRedirect("login?redirect=checkout");
             return;
         }
 
-        // 处理积分抵扣
+        // 处理积分抵扣和优惠券
         int usePoints = 0;
         int couponUcId = 0;
         double couponDiscount = 0;
         double actualAmount = totalAmount;
         try {
-            // 处理优惠券
+            // 先处理优惠券折扣
             String couponIdStr = req.getParameter("couponUcId");
             if (couponIdStr != null && !couponIdStr.trim().isEmpty()) {
                 couponUcId = Integer.parseInt(couponIdStr.trim());
@@ -296,15 +296,16 @@ public class CheckoutController extends HttpServlet {
                     }
                 }
             }
+            // 再处理积分抵扣（基于优惠券后的金额）
             if (usePointsStr != null && !usePointsStr.trim().isEmpty()) {
                 usePoints = Integer.parseInt(usePointsStr.trim());
                 if (usePoints > 0) {
                     int userJf = userDao.getJf(userId);
                     if (usePoints > userJf) usePoints = userJf;
-                    // 每100积分抵1元，积分抵扣不超过商品总价的50%
-                    int maxDeduct = (int)(totalAmount * 50);
+                    // 每100积分抵1元，积分抵扣不超过优惠后金额的50%
+                    int maxDeduct = (int)(actualAmount * 50);
                     if (usePoints > maxDeduct) usePoints = maxDeduct;
-                    actualAmount = totalAmount - usePoints / 100.0;
+                    actualAmount = actualAmount - usePoints / 100.0;
                     if (actualAmount < 0) actualAmount = 0;
                     actualAmount = Math.round(actualAmount * 100.0) / 100.0;
                 }

@@ -28,10 +28,8 @@ async function fetchBadges() {
 }
 
 onMounted(async () => {
-  if (userStore.loggedIn || userStore.username) {
-    try { await userStore.fetchProfile() } catch {}
-  }
-  fetchBadges()
+  try { await userStore.fetchProfile() } catch {}
+  await fetchBadges()
 })
 </script>
 

@@ -38,7 +38,7 @@ public class PaymentController extends HttpServlet {
         Integer userId = (Integer) session.getAttribute("userId");
 
         if (username == null || userId == null) {
-            resp.sendRedirect("login.jsp?redirect=payment");
+            resp.sendRedirect("login?redirect=payment");
             return;
         }
 
@@ -87,7 +87,7 @@ public class PaymentController extends HttpServlet {
         Integer userId = (Integer) session.getAttribute("userId");
 
         if (username == null || userId == null) {
-            resp.sendRedirect("login.jsp?redirect=payment");
+            resp.sendRedirect("login?redirect=payment");
             return;
         }
 

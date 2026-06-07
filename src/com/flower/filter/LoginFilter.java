@@ -55,7 +55,7 @@ public class LoginFilter implements Filter {
             chain.doFilter(request, response);
         } else {
             // 未登录，重定向到登录页
-            resp.sendRedirect(contextPath + "/login.jsp");
+            resp.sendRedirect(contextPath + "/login");
         }
     }
 

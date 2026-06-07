@@ -20,125 +20,6 @@
     <link rel="stylesheet" href="css/common.css">
     <style>
         body { background: var(--bg-gray); }
-
-        /* 优化后的导航栏 */
-        .navbar {
-            background: #fff;
-            padding: 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            border-bottom: none;
-        }
-        
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 22px;
-            letter-spacing: 2px;
-            background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            transition: transform 0.2s;
-            cursor: pointer;
-        }
-        
-        .navbar-brand:hover {
-            transform: scale(1.05);
-        }
-        
-        .navbar-brand i {
-            -webkit-text-fill-color: var(--primary-red);
-        }
-        
-        /* 版权说明模态框 */
-        .copyright-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 10000;
-            align-items: center;
-            justify-content: center;
-        }
-        .copyright-modal.show {
-            display: flex;
-        }
-        .copyright-content {
-            background: white;
-            padding: 50px;
-            border-radius: 16px;
-            text-align: center;
-            max-width: 550px;
-            width: 90%;
-            animation: modalSlideIn 0.3s ease;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-        }
-        @keyframes modalSlideIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .copyright-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-        .copyright-title {
-            font-size: 28px;
-            background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-        .copyright-divider {
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary-red) 0%, #ff6b6b 100%);
-            margin: 0 auto 20px;
-            border-radius: 2px;
-        }
-        .copyright-message {
-            color: #666;
-            font-size: 16px;
-            line-height: 1.8;
-            margin-bottom: 15px;
-        }
-        .copyright-warning {
-            background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
-            border-left: 4px solid var(--primary-red);
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            text-align: left;
-        }
-        .copyright-warning p {
-            color: #666;
-            font-size: 14px;
-            margin: 0;
-            line-height: 1.6;
-        }
-        .copyright-warning strong {
-            color: var(--primary-red);
-        }
-        .copyright-btn {
-            background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%);
-            color: white;
-            border: none;
-            padding: 14px 50px;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 20px;
-            font-weight: 600;
-        }
-        .copyright-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
-        }
         
         .nav-link {
             color: #555 !important;
@@ -443,19 +324,7 @@
 </head>
 <body>
 
-<nav style="background:#fff;padding:0;position:sticky;top:0;z-index:1000;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-    <div style="max-width:1200px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:70px;">
-        <a href="javascript:void(0)" onclick="showCopyright()" style="font-weight:700;font-size:22px;letter-spacing:2px;background:linear-gradient(135deg,#e74c3c,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;cursor:pointer;text-decoration:none;">归途</a>
-        <ul style="display:flex;gap:20px;list-style:none;align-items:center;margin:0;padding:0;">
-            <li><span style="color:#555;font-size:14px;">欢迎，${sessionScope.username}</span></li>
-            <li><a href="usercenter" style="color:#555;text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.color='#e74c3c';this.style.background='#fff5f5'" onmouseout="this.style.color='#555';this.style.background='transparent'">个人中心</a></li>
-            <li><a href="index.jsp" style="color:#555;text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.color='#e74c3c';this.style.background='#fff5f5'" onmouseout="this.style.color='#555';this.style.background='transparent'">继续购物</a></li>
-            <c:if test="${sessionScope.userRole == '管理员'}">
-            <li><a href="admin/index" style="color:#e74c3c;text-decoration:none;font-size:14px;font-weight:600;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.background='#fff5f5'" onmouseout="this.style.background='transparent'">管理中心</a></li>
-            </c:if>
-        </ul>
-    </div>
-</nav>
+<jsp:include page="common/navbar.jsp"/>
 
 <div class="orders-container">
     <h4 class="page-title">
@@ -505,7 +374,7 @@
                 </div>
                 <h5 class="empty-text">暂无订单</h5>
                 <p class="text-muted mb-4">您还没有下单，快去选购心仪的商品吧</p>
-                <a href="index.jsp" class="btn btn-danger">
+                <a href="index" class="btn btn-danger">
                     <i class="bi bi-shop"></i> 去购物
                 </a>
             </div>
@@ -644,70 +513,6 @@
     </c:choose>
 </div>
 
-<!-- 版权说明模态框 -->
-<div class="copyright-modal" id="copyrightModal">
-    <div class="copyright-content">
-        <div class="copyright-icon">🌸</div>
-        <h2 class="copyright-title">关于「归途」</h2>
-        <div class="copyright-divider"></div>
-        <p class="copyright-message">
-            「归途花店」是一款基于 Java Web 技术开发的电商学习项目
-        </p>
-        <div class="copyright-warning">
-            <p><strong>⚠️ 声明：</strong>本项目仅供个人学习与技术研究使用，所有代码、设计及内容版权归开发者本人所有。</p>
-            <p style="margin-top: 10px;"><strong>🚫 请勿抄袭：</strong>未经授权，任何人不得将本项目或其部分内容用于商业目的、课程作业提交或任何形式的抄袭行为。</p>
-            <p style="margin-top: 10px;">如有学习需求，欢迎交流探讨，但请尊重他人劳动成果。</p>
-        </div>
-        <p class="copyright-message" style="font-size: 14px; color: #999; margin-top: 25px;">
-            © 2026 归途花店 · 保留所有权利
-        </p>
-        <button class="copyright-btn" onclick="closeCopyright()">我知道了</button>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    function toggleOrder(id) {
-        var el = document.getElementById(id);
-        if (!el) return;
-        var bsCollapse = bootstrap.Collapse.getOrCreateInstance(el, { toggle: false });
-        bsCollapse.toggle();
-    }
-
-    // 监听折叠事件，更新图标
-    document.querySelectorAll('.collapse').forEach(function(el) {
-        el.addEventListener('show.bs.collapse', function() {
-            var idx = this.id.replace('orderDetail_', '');
-            var icon = document.querySelector('#toggleIcon_' + idx + ' i');
-            if (icon) { icon.className = 'bi bi-chevron-up'; }
-        });
-        el.addEventListener('hide.bs.collapse', function() {
-            var idx = this.id.replace('orderDetail_', '');
-            var icon = document.querySelector('#toggleIcon_' + idx + ' i');
-            if (icon) { icon.className = 'bi bi-chevron-down'; }
-        });
-    });
-
-    // 显示版权说明模态框
-    function showCopyright() {
-        document.getElementById('copyrightModal').classList.add('show');
-    }
-
-    // 关闭版权说明模态框
-    function closeCopyright() {
-        document.getElementById('copyrightModal').classList.remove('show');
-    }
-
-    // 点击模态框背景关闭
-    document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById('copyrightModal');
-        if (modal) {
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    closeCopyright();
-                }
-            });
-        }
     });
 </script>
 </body>

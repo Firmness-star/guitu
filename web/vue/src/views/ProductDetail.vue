@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showToast, showSuccessToast, showFailToast, showImagePreview } from 'vant'
-import { get, post } from '../api'
+import { get, post, del } from '../api'
 import { fixImg } from '../utils/img'
 import { useCartStore } from '../stores/cart'
 import { useUserStore } from '../stores/user'
@@ -42,6 +42,8 @@ const product = ref(null)
 const loading = ref(true)
 const refreshing = ref(false)
 const quantity = ref(1)
+const isFavorited = ref(false)
+const favLoading = ref(false)
 
 // ── Comments ──
 const comments = ref([])
@@ -127,12 +129,46 @@ async function fetchProduct() {
     if (res.code === 200) {
       product.value = res.data.product || res.data
       relatedProducts.value = (res.data.hotProducts || []).slice(0, 6)
+      checkFavorite()
     } else {
       showFailToast(res.message || '商品不存在')
     }
   } catch (e) {
     showFailToast(e.message || '网络错误')
   }
+}
+
+async function checkFavorite() {
+  if (!userStore.loggedIn) return
+  try {
+    const res = await get('/favorites')
+    if (res.code === 200) {
+      const list = res.data?.list || res.data || []
+      isFavorited.value = list.some(f => f.productId === product.value?.id)
+    }
+  } catch {}
+}
+
+async function toggleFavorite() {
+  if (!userStore.loggedIn) {
+    showToast({ message: '请先登录', icon: 'warning-o' })
+    setTimeout(() => router.push('/login'), 800)
+    return
+  }
+  favLoading.value = true
+  try {
+    if (isFavorited.value) {
+      const res = await del(`/favorites?productId=${product.value.id}`)
+      if (res.code === 200) { isFavorited.value = false; showToast('已取消收藏') }
+    } else {
+      const body = new URLSearchParams()
+      body.append('productId', String(product.value.id))
+      const res = await post('/favorites', body)
+      if (res.code === 200) { isFavorited.value = true; showToast('已添加收藏') }
+      else showToast(res.message || '收藏失败')
+    }
+  } catch (e) { showToast(e.message || '操作失败') }
+  finally { favLoading.value = false }
 }
 
 async function fetchComments() {
@@ -338,7 +374,12 @@ function formatTime(t) {
         <!-- ═══ Info Card ═══ -->
         <div class="info-card">
           <div class="info-header">
-            <h1 class="product-name">{{ product.name }}</h1>
+            <div class="info-header-top">
+              <h1 class="product-name">{{ product.name }}</h1>
+              <div class="fav-btn" :class="{ favorited: isFavorited }" @click="toggleFavorite">
+                <van-icon :name="isFavorited ? 'like' : 'like-o'" size="22" :loading="favLoading" />
+              </div>
+            </div>
             <div class="price-row">
               <span class="price-symbol">¥</span>
               <span class="price-value">{{ product.price.toFixed(2) }}</span>
@@ -670,9 +711,26 @@ function formatTime(t) {
   font-weight: 700;
   color: #1a1a1a;
   line-height: 1.4;
-  margin: 0 0 12px;
+  margin: 0;
   letter-spacing: 0.3px;
+  flex: 1;
 }
+.info-header-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+.fav-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f5f5f5;
+  cursor: pointer;
+  color: #999;
+  transition: all 0.2s;
+}
+.fav-btn:active { transform: scale(0.9); }
+.fav-btn.favorited { background: #fff0f0; color: #ee0a24; }
 
 .price-row {
   display: flex;

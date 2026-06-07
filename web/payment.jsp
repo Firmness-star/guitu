@@ -1,110 +1,5 @@
 <!-- C:\Users\guitu\OneDrive\Desktop\guitushop\web\payment.jsp -->
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-
-<!-- 确定选中的支付方式：优先 URL 参数，其次 request 属性 -->
-<c:set var="selectedPay" value="${not empty param.payMethod ? param.payMethod : payMethod}" />
-
-<!-- 校验订单是否存在，若不存在则重定向至订单列表页 -->
-<c:if test="${empty order}">
-    <jsp:forward page="orders"/>
-</c:if>
-
-<!-- 校验订单状态是否为“待付款”，若非待付款状态则禁止进入支付页面 -->
-<c:if test="${order.status != '待付款'}">
-    <jsp:forward page="orders"/>
-</c:if>
-
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>订单支付 - 花店商城</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/common.css">
-    <style>
-        body { background: var(--bg-gray); }
-
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 22px;
-            letter-spacing: 2px;
-            background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            transition: transform 0.2s;
-            cursor: pointer;
-        }
-        .navbar-brand:hover {
-            transform: scale(1.05);
-        }
-        .navbar-brand i {
-            -webkit-text-fill-color: var(--primary-red);
-        }
-
-        /* 版权说明模态框 */
-        .copyright-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 10000;
-            align-items: center;
-            justify-content: center;
-        }
-        .copyright-modal.show {
-            display: flex;
-        }
-        .copyright-content {
-            background: white;
-            padding: 50px;
-            border-radius: 16px;
-            text-align: center;
-            max-width: 550px;
-            width: 90%;
-            animation: modalSlideIn 0.3s ease;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-        }
-        @keyframes modalSlideIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .copyright-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-        .copyright-title {
-            font-size: 28px;
-            background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-        .copyright-divider {
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary-red) 0%, #ff6b6b 100%);
-            margin: 0 auto 20px;
-            border-radius: 2px;
-        }
-        .copyright-message {
-            color: #666;
-            font-size: 16px;
-            line-height: 1.8;
-            margin-bottom: 15px;
-        }
-        .copyright-warning {
-            background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
-            border-left: 4px solid var(--primary-red);
-            padding: 15px 20px;
-            border-radius: 8px;
             margin: 20px 0;
             text-align: left;
         }
@@ -301,18 +196,7 @@
 </head>
 <body>
 
-<nav style="background:#fff;padding:0;position:sticky;top:0;z-index:1000;box-shadow:0 2px 12px rgba(0,0,0,0.08);margin-bottom:1.5rem;">
-    <div style="max-width:1200px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:70px;">
-        <a href="javascript:void(0)" onclick="showCopyright()" style="font-weight:700;font-size:22px;letter-spacing:2px;background:linear-gradient(135deg,#e74c3c,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;cursor:pointer;text-decoration:none;">归途</a>
-        <ul style="display:flex;gap:20px;list-style:none;align-items:center;margin:0;padding:0;">
-            <li><span style="color:#555;font-size:14px;">欢迎，${sessionScope.username}</span></li>
-            <li><a href="orders" style="color:#555;text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.color='#e74c3c';this.style.background='#fff5f5'" onmouseout="this.style.color='#555';this.style.background='transparent'">我的订单</a></li>
-            <c:if test="${sessionScope.userRole == '管理员'}">
-            <li><a href="admin/index" style="color:#e74c3c;text-decoration:none;font-size:14px;font-weight:600;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.background='#fff5f5'" onmouseout="this.style.background='transparent'">管理中心</a></li>
-            </c:if>
-        </ul>
-    </div>
-</nav>
+<jsp:include page="common/navbar.jsp"/>
 
 <div class="payment-container">
     <h3 class="mb-4">
@@ -405,45 +289,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- 版权说明模态框 -->
-<div class="copyright-modal" id="copyrightModal">
-    <div class="copyright-content">
-        <div class="copyright-icon">🌸</div>
-        <h2 class="copyright-title">关于「归途」</h2>
-        <div class="copyright-divider"></div>
-        <p class="copyright-message">
-            「归途花店」是一款基于 Java Web 技术开发的电商学习项目
-        </p>
-        <div class="copyright-warning">
-            <p><strong>⚠️ 声明：</strong>本项目仅供个人学习与技术研究使用，所有代码、设计及内容版权归开发者本人所有。</p>
-            <p style="margin-top: 10px;"><strong>🚫 请勿抄袭：</strong>未经授权，任何人不得将本项目或其部分内容用于商业目的、课程作业提交或任何形式的抄袭行为。</p>
-            <p style="margin-top: 10px;">如有学习需求，欢迎交流探讨，但请尊重他人劳动成果。</p>
-        </div>
-        <p class="copyright-message" style="font-size: 14px; color: #999; margin-top: 25px;">
-            © 2026 归途花店 · 保留所有权利
-        </p>
-        <button class="copyright-btn" onclick="closeCopyright()">我知道了</button>
-    </div>
-</div>
-<script>
-    // 显示版权说明模态框
-    function showCopyright() {
-        document.getElementById('copyrightModal').classList.add('show');
-    }
-    // 关闭版权说明模态框
-    function closeCopyright() {
-        document.getElementById('copyrightModal').classList.remove('show');
-    }
-    // 点击模态框背景关闭
-    document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById('copyrightModal');
-        if (modal) {
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    closeCopyright();
-                }
-            });
-        }
     });
 
     // 监听支付方式选项点击事件，切换选中状态的视觉样式

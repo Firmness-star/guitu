@@ -14,6 +14,48 @@ public class RegisterApi extends ApiBaseServlet {
     private UserDao userDao = new UserDao();
 
     @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String action = req.getParameter("action");
+        if ("checkUsername".equals(action)) {
+            checkUsername(req, resp);
+        } else if ("checkTel".equals(action)) {
+            checkTel(req, resp);
+        } else if ("checkEmail".equals(action)) {
+            checkEmail(req, resp);
+        } else {
+            fail(resp, 400, "未知操作");
+        }
+    }
+
+    private void checkUsername(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String username = req.getParameter("username");
+        if (username == null || username.trim().isEmpty()) { fail(resp, 400, "用户名不能为空"); return; }
+        username = username.trim();
+        if (username.length() < 3 || username.length() > 20) { fail(resp, 400, "用户名长度应为3-20位"); return; }
+        if (!username.matches("^[a-zA-Z0-9_]+$")) { fail(resp, 400, "用户名只能包含字母、数字和下划线"); return; }
+        if (userDao.isUsernameExists(username)) fail(resp, 400, "该用户名已被占用");
+        else ok(resp, "用户名可用", null);
+    }
+
+    private void checkTel(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String tel = req.getParameter("tel");
+        if (tel == null || tel.trim().isEmpty()) { fail(resp, 400, "手机号不能为空"); return; }
+        tel = tel.trim();
+        if (!tel.matches("^1[3-9]\\d{9}$")) { fail(resp, 400, "请输入有效的11位手机号"); return; }
+        if (userDao.isTelExists(tel)) fail(resp, 400, "该手机号已被占用");
+        else ok(resp, "手机号可用", null);
+    }
+
+    private void checkEmail(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String email = req.getParameter("email");
+        if (email == null || email.trim().isEmpty()) { fail(resp, 400, "邮箱不能为空"); return; }
+        email = email.trim();
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) { fail(resp, 400, "请输入有效的邮箱地址"); return; }
+        if (userDao.isEmailExists(email)) fail(resp, 400, "该邮箱已被占用");
+        else ok(resp, "邮箱可用", null);
+    }
+
+    @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
         String username = req.getParameter("username");

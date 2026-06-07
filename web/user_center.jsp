@@ -31,45 +31,6 @@
             background: var(--bg-gray);
         }
 
-        .top-navbar {
-            background: white;
-            border-bottom: 1px solid #e0e0e0;
-            padding: 15px 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .brand-logo {
-            font-size: 20px;
-            font-weight: 700;
-            color: #333;
-            text-decoration: none;
-            cursor: pointer;
-            background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            transition: transform 0.2s;
-        }
-
-        .brand-logo:hover {
-            transform: scale(1.05);
-        }
-
-        /* 版权说明模态框 */
-        .copyright-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; }
-        .copyright-modal.show { display: flex; }
-        .copyright-content { background: white; padding: 50px; border-radius: 16px; text-align: center; max-width: 550px; width: 90%; animation: modalSlideIn 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
-        @keyframes modalSlideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        .copyright-icon { font-size: 64px; margin-bottom: 20px; }
-        .copyright-title { font-size: 28px; background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; font-weight: 700; }
-        .copyright-divider { width: 60px; height: 3px; background: linear-gradient(90deg, var(--primary-red) 0%, #ff6b6b 100%); margin: 0 auto 20px; border-radius: 2px; }
-        .copyright-message { color: #666; font-size: 16px; line-height: 1.8; margin-bottom: 15px; }
-        .copyright-warning { background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%); border-left: 4px solid var(--primary-red); padding: 15px 20px; border-radius: 8px; margin: 20px 0; text-align: left; }
-        .copyright-warning p { color: #666; font-size: 14px; margin: 0; line-height: 1.6; }
-        .copyright-warning strong { color: var(--primary-red); }
-        .copyright-btn { background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%); color: white; border: none; padding: 14px 50px; border-radius: 8px; font-size: 16px; cursor: pointer; transition: all 0.3s; margin-top: 20px; font-weight: 600; }
-        .copyright-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4); }
 
         .center-container {
             max-width: 1200px;
@@ -459,20 +420,7 @@
 </head>
 <body>
 
-<nav class="top-navbar">
-    <div class="container d-flex justify-content-between align-items-center">
-        <a href="javascript:void(0)" onclick="showCopyright()" class="brand-logo"> 归途</a>
-        <div>
-            <span class="text-muted me-3">欢迎，${sessionScope.username}</span>
-            <c:if test="${sessionScope.userRole == '管理员'}">
-            <a href="${pageContext.request.contextPath}/admin/index" class="btn btn-sm me-2" style="color:var(--primary-red);border:1px solid var(--primary-red);border-radius:4px;text-decoration:none;padding:6px 12px;">
-                <i class="bi bi-gear"></i> 管理中心
-            </a>
-            </c:if>
-            <a href="index.jsp" class="btn btn-outline-danger btn-sm">返回首页</a>
-        </div>
-    </div>
-</nav>
+<jsp:include page="common/navbar.jsp"/>
 
 <div class="center-container">
     <aside class="sidebar">
@@ -583,22 +531,22 @@
         <!-- 订单状态统计卡片：展示各阶段订单数量并支持点击跳转 -->
         <c:if test="${empty param.tab}">
             <div class="stats-grid">
-                <a href="orders" class="stat-card pending">
+                <a href="orders?status=待付款" class="stat-card pending">
                     <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
                     <div class="stat-num">${orderStats['待付款']}</div>
                     <div class="stat-label">待付款</div>
                 </a>
-                <a href="orders" class="stat-card paid">
+                <a href="orders?status=已付款" class="stat-card paid">
                     <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
                     <div class="stat-num">${orderStats['已付款']}</div>
                     <div class="stat-label">待发货</div>
                 </a>
-                <a href="orders" class="stat-card shipped">
+                <a href="orders?status=已发货" class="stat-card shipped">
                     <div class="stat-icon"><i class="bi bi-truck"></i></div>
                     <div class="stat-num">${orderStats['已发货']}</div>
                     <div class="stat-label">待收货</div>
                 </a>
-                <a href="orders" class="stat-card completed">
+                <a href="orders?status=已收货" class="stat-card completed">
                     <div class="stat-icon"><i class="bi bi-bag-check"></i></div>
                     <div class="stat-num">${orderStats['已收货']}</div>
                     <div class="stat-label">已收货</div>
@@ -626,7 +574,7 @@
                         <div class="empty-state">
                             <div class="empty-icon"><i class="bi bi-inbox"></i></div>
                             <p class="empty-text">暂无订单，快去选购心仪的商品吧</p>
-                            <a href="index.jsp" class="btn btn-danger btn-sm mt-2">去购物</a>
+                            <a href="index" class="btn btn-danger btn-sm mt-2">去购物</a>
                         </div>
                     </c:when>
 
@@ -680,11 +628,15 @@
                     </div>
                     <div class="info-row">
                         <span class="info-label">手机号</span>
-                        <span class="info-value">${user.tel}</span>
+                        <span class="info-value">${not empty user.tel ? user.tel : '未设置'}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">邮箱</span>
-                        <span class="info-value">${user.email}</span>
+                        <span class="info-value">${not empty user.email ? user.email : '未设置'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">性别</span>
+                        <span class="info-value">${not empty user.gender ? user.gender : '保密'}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">注册时间</span>
@@ -695,7 +647,12 @@
                     <div class="info-row" style="border-bottom: none;">
                         <span class="info-label">最后登录</span>
                         <span class="info-value">
-                            <fmt:formatDate value="${user.lastLoginTime}" pattern="yyyy-MM-dd HH:mm"/>
+                            <c:choose>
+                                <c:when test="${not empty user.lastLoginTime}">
+                                    <fmt:formatDate value="${user.lastLoginTime}" pattern="yyyy-MM-dd HH:mm"/>
+                                </c:when>
+                                <c:otherwise>—</c:otherwise>
+                            </c:choose>
                         </span>
                     </div>
                 </div>
@@ -736,7 +693,7 @@
                         <select name="gender" class="form-control" style="width:100%;padding:10px 15px;border:1px solid #ddd;border-radius:6px;font-size:14px;outline:none;">
                             <option value="男" ${user.gender == '男' ? 'selected' : ''}>男</option>
                             <option value="女" ${user.gender == '女' ? 'selected' : ''}>女</option>
-                            <option value="未知" ${user.gender == '未知' ? 'selected' : ''}>未知</option>
+                            <option value="保密" ${user.gender == '保密' ? 'selected' : ''}>保密</option>
                         </select>
                         <div class="form-hint">请选择您的性别</div>
                     </div>
@@ -751,30 +708,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- 版权说明模态框 -->
-<div class="copyright-modal" id="copyrightModal">
-    <div class="copyright-content">
-        <div class="copyright-icon">🌸</div>
-        <h2 class="copyright-title">关于「归途」</h2>
-        <div class="copyright-divider"></div>
-        <p class="copyright-message">「归途花店」是一款基于 Java Web 技术开发的电商学习项目</p>
-        <div class="copyright-warning">
-            <p><strong>⚠️ 声明：</strong>本项目仅供个人学习与技术研究使用，所有代码、设计及内容版权归开发者本人所有。</p>
-            <p style="margin-top: 10px;"><strong>🚫 请勿抄袭：</strong>未经授权，任何人不得将本项目或其部分内容用于商业目的、课程作业提交或任何形式的抄袭行为。</p>
-            <p style="margin-top: 10px;">如有学习需求，欢迎交流探讨，但请尊重他人劳动成果。</p>
-        </div>
-        <p class="copyright-message" style="font-size: 14px; color: #999; margin-top: 25px;">© 2026 归途花店 · 保留所有权利</p>
-        <button class="copyright-btn" onclick="closeCopyright()">我知道了</button>
-    </div>
-</div>
 <script>
-    function showCopyright() { document.getElementById('copyrightModal').classList.add('show'); }
-    function closeCopyright() { document.getElementById('copyrightModal').classList.remove('show'); }
-    document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById('copyrightModal');
-        if (modal) { modal.addEventListener('click', function(e) { if (e.target === modal) closeCopyright(); }); }
-    });
-
     // AJAX 检查手机号唯一性
     function checkTel() {
         var tel = document.getElementById('editTel').value;
@@ -890,8 +824,6 @@
 </div>
 
 <script>
-function showCopyright() { document.getElementById('copyrightModal').classList.add('show'); }
-function closeCopyright() { document.getElementById('copyrightModal').classList.remove('show'); }
 function showJfDetail() { new bootstrap.Modal(document.getElementById('jfDetailModal')).show(); }
 function showJfRules() { new bootstrap.Modal(document.getElementById('jfRulesModal')).show(); }
 </script>

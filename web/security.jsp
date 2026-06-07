@@ -215,15 +215,7 @@
 </head>
 <body>
 
-<nav class="top-navbar">
-    <div class="container d-flex justify-content-between align-items-center">
-        <a href="javascript:void(0)" onclick="showCopyright()" class="brand-logo"> 归途</a>
-        <div>
-            <span class="text-muted me-3">欢迎，${sessionScope.username}</span>
-            <a href="usercenter" class="btn btn-outline-danger btn-sm">返回个人中心</a>
-        </div>
-    </div>
-</nav>
+<jsp:include page="common/navbar.jsp"/>
 
 <div class="security-container">
     <!-- 显示错误或成功消息 -->
@@ -372,30 +364,8 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- 版权说明模态框 -->
-<div class="copyright-modal" id="copyrightModal">
-    <div class="copyright-content">
-        <div class="copyright-icon">🌸</div>
-        <h2 class="copyright-title">关于「归途」</h2>
-        <div class="copyright-divider"></div>
-        <p class="copyright-message">「归途花店」是一款基于 Java Web 技术开发的电商学习项目</p>
-        <div class="copyright-warning">
-            <p><strong>️ 声明：</strong>本项目仅供个人学习与技术研究使用，所有代码、设计及内容版权归开发者本人所有。</p>
-            <p style="margin-top: 10px;"><strong>🚫 请勿抄袭：</strong>未经授权，任何人不得将本项目或其部分内容用于商业目的、课程作业提交或任何形式的抄袭行为。</p>
-            <p style="margin-top: 10px;">如有学习需求，欢迎交流探讨，但请尊重他人劳动成果。</p>
-        </div>
-        <p class="copyright-message" style="font-size: 14px; color: #999; margin-top: 25px;">© 2026 归途花店 · 保留所有权利</p>
-        <button class="copyright-btn" onclick="closeCopyright()">我知道了</button>
-    </div>
-</div>
 <script>
-    function showCopyright() { document.getElementById('copyrightModal').classList.add('show'); }
-    function closeCopyright() { document.getElementById('copyrightModal').classList.remove('show'); }
     document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById('copyrightModal');
-        if (modal) { modal.addEventListener('click', function(e) { if (e.target === modal) closeCopyright(); }); }
-
-        // 安全提示：检查是否已关闭
         if (!localStorage.getItem('securityTipDismissed')) {
             document.getElementById('securityTip').style.display = '';
         }

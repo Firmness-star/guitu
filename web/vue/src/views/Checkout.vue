@@ -1,15 +1,21 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { showToast, showLoadingToast, closeToast } from 'vant'
 import { get, post } from '../api'
 import { fixImg } from '../utils/img'
 import { useCartStore } from '../stores/cart'
 import { useUserStore } from '../stores/user'
 
+const route = useRoute()
 const router = useRouter()
 const cartStore = useCartStore()
 const userStore = useUserStore()
+
+// direct buy mode
+const isDirectBuy = computed(() => !!(route.query.productId))
+const directItem = ref(null)
+const directLoading = ref(false)
 
 // ---------- 地址 ----------
 const addresses = ref([])
@@ -58,27 +64,50 @@ function goAddAddress() {
 const addressDisplay = computed(() => {
   const a = selectedAddress.value
   if (!a) return ''
-  return `${a.province || ''}${a.city || ''}${a.district || ''} ${a.detailAddress || a.detail || ''}`
+  return `${a.province || ''}${a.city || ''}${a.district || ''} ${a.detailAddress || ''}`
 })
 
 // ---------- 支付方式 ----------
-const paymentMethod = ref('wechat')
+const paymentMethod = ref('alipay')
 const paymentOptions = [
-  { name: '微信支付', value: 'wechat' },
   { name: '支付宝', value: 'alipay' },
-  { name: '银行卡', value: 'bankcard' }
+  { name: '微信支付', value: 'wechat' },
+  { name: '银行卡', value: 'bank' }
 ]
 
 // ---------- 备注 ----------
 const remark = ref('')
 
+// ---------- 优惠券 ----------
+const coupons = ref([])
+const selectedCouponId = ref(null)
+const couponDiscount = ref(0)
+
+async function fetchCoupons() {
+  try {
+    const res = await get('/coupons')
+    if (res.code === 200) {
+      coupons.value = res.data?.list || res.data || []
+    }
+  } catch {}
+}
+
+function selectCoupon(c) {
+  if (selectedCouponId.value === c.ucId) {
+    selectedCouponId.value = null
+    couponDiscount.value = 0
+  } else {
+    selectedCouponId.value = c.ucId
+    couponDiscount.value = c.discountAmount || c.value || 0
+  }
+}
+
 // ---------- 积分抵扣 ----------
 const usedPoints = ref(0)
 const maxPoints = computed(() => userStore.jf || 0)
-const pointsRate = 100 // 100积分 = 1元
 const pointsDiscountAmount = computed(() => {
   const pts = Number(usedPoints.value) || 0
-  return Math.floor(pts / pointsRate)
+  return Math.round(pts) / 100
 })
 
 function onPointsChange(val) {
@@ -87,20 +116,33 @@ function onPointsChange(val) {
     usedPoints.value = 0
     return
   }
-  const maxDeduction = Math.floor((Number(cartStore.totalAmount) || 0) * 50)
+  const maxDeduction = Math.floor((Number(cartTotal.value) || 0) * 100)
   usedPoints.value = Math.min(n, maxPoints.value, maxDeduction)
 }
 
 // ---------- 金额计算 ----------
+const cartTotal = computed(() => {
+  let t = 0
+  cartItems.value.forEach(i => {
+    t += (Number(i.productPrice || i.price) || 0) * (i.quantity || 1)
+  })
+  return Math.round(t * 100) / 100
+})
 const totalPay = computed(() => {
-  const amt = Number(cartStore.totalAmount) || 0
+  const amt = Number(cartTotal.value) || 0
   const disc = Number(pointsDiscountAmount.value) || 0
-  const raw = amt - disc
+  const coupDisc = Number(couponDiscount.value) || 0
+  const raw = amt - coupDisc - disc
   return Math.max(raw, 0).toFixed(2)
 })
 
 // ---------- 商品清单 ----------
-const cartItems = computed(() => cartStore.items || [])
+const cartItems = computed(() => {
+  if (isDirectBuy.value && directItem.value) {
+    return [directItem.value]
+  }
+  return cartStore.items || []
+})
 
 // ---------- 提交订单 ----------
 const submitting = ref(false)
@@ -132,24 +174,22 @@ async function submitOrder() {
     orderData.append('remark', remark.value)
     orderData.append('payMethod', paymentMethod.value)
     orderData.append('usePoints', String(usedPoints.value))
+    if (selectedCouponId.value) orderData.append('couponUcId', String(selectedCouponId.value))
+    // direct buy params
+    if (isDirectBuy.value && directItem.value) {
+      orderData.append('productId', String(directItem.value.productId))
+      orderData.append('quantity', String(directItem.value.quantity))
+      orderData.append('action', 'directBuy')
+    }
     const res = await post('/orders', orderData)
     closeToast()
     if (res.code === 200) {
-      const orderData = res.data || {}
-      const orderId = orderData.id || orderData.orderId
+      const result = res.data || {}
+      const orderId = result.orderId || result.id
       if (orderId) {
         closeToast()
-        const addr = selectedAddress.value
-        router.push({
-          path: '/order-success',
-          query: {
-            orderNo: orderId,
-            amount: orderData.totalAmount || orderData.actualAmount || '0',
-            name: addr.receiverName || addr.name || '',
-            phone: addr.receiverPhone || addr.phone || '',
-            address: ((addr.province || '') + (addr.city || '') + (addr.district || '') + (addr.detailAddress || addr.detail || ''))
-          }
-        })
+        await cartStore.clear()
+        router.push({ path: '/payment', query: { orderId, payMethod: paymentMethod.value } })
       } else {
         await cartStore.clear()
         router.push('/orders')
@@ -170,12 +210,41 @@ onMounted(async () => {
   if (!userStore.loggedIn) {
     await userStore.fetchProfile()
   }
-  if (userStore.loggedIn) {
-    await cartStore.fetch()
-    await fetchAddresses()
-  } else {
-    router.replace({ path: '/login', query: { redirect: '/checkout' } })
+  if (!userStore.loggedIn) {
+    router.replace({ path: '/login', query: { redirect: '/checkout?' + new URLSearchParams(route.query).toString() } })
+    return
   }
+  if (isDirectBuy.value) {
+    directLoading.value = true
+    try {
+      const pid = Number(route.query.productId)
+      const qty = Number(route.query.quantity) || 1
+      const res = await get(`/product/detail?id=${pid}`)
+      if (res.code === 200) {
+        const p = res.data.product || res.data
+        directItem.value = {
+          productId: p.id,
+          productName: p.name,
+          productPic: p.pic,
+          productPrice: p.price,
+          price: p.price,
+          name: p.name,
+          quantity: qty,
+          selected: true,
+          stock: p.stock,
+          status: p.status
+        }
+      }
+    } catch (e) {
+      showToast('加载商品失败')
+    } finally {
+      directLoading.value = false
+    }
+  } else {
+    await cartStore.fetch()
+  }
+  await fetchAddresses()
+  await fetchCoupons()
 })
 </script>
 
@@ -249,9 +318,10 @@ onMounted(async () => {
             <div class="item-info">
               <div class="item-name">{{ item.name || item.productName }}</div>
               <div class="item-bottom">
-                <span class="item-price">&yen;{{ Number(item.price).toFixed(2) }}</span>
+                <span class="item-price">&yen;{{ Number(item.productPrice || item.price).toFixed(2) }}</span>
                 <span class="item-qty">x{{ item.quantity }}</span>
               </div>
+              <div class="item-subtotal">小计: &yen;{{ (Number(item.productPrice || item.price) * item.quantity).toFixed(2) }}</div>
             </div>
           </div>
         </template>
@@ -282,7 +352,7 @@ onMounted(async () => {
       <!-- 积分抵扣 -->
       <div class="checkout-section">
         <div class="section-title">积分抵扣</div>
-        <van-cell :title="`可用积分: ${maxPoints}`" :value="`${pointsRate}积分=1元`" />
+        <van-cell :title="`可用积分: ${maxPoints}`" value="100积分=1元" />
         <van-field
           v-model="usedPoints"
           type="digit"
@@ -297,6 +367,26 @@ onMounted(async () => {
             </span>
           </template>
         </van-field>
+      </div>
+
+      <!-- 优惠券 -->
+      <div class="checkout-section" v-if="coupons.length > 0">
+        <div class="section-title">优惠券</div>
+        <div class="coupon-list">
+          <div
+            v-for="c in coupons"
+            :key="c.ucId"
+            class="coupon-chip"
+            :class="{ active: selectedCouponId === c.ucId }"
+            @click="selectCoupon(c)"
+          >
+            <div class="coupon-chip-left">
+              <span class="coupon-chip-value">{{ c.type === '满减' ? '减' : '折' }}</span>
+              <span class="coupon-chip-name">{{ c.name }}</span>
+            </div>
+            <span class="coupon-chip-amount" v-if="c.discountAmount || c.value">&yen;{{ (c.discountAmount || c.value || 0).toFixed(2) }}</span>
+          </div>
+        </div>
       </div>
 
       <!-- 订单备注 -->
@@ -319,7 +409,12 @@ onMounted(async () => {
         <van-cell-group>
           <van-cell title="商品合计">
             <template #value>
-              <span class="price-text">&yen;{{ Number(cartStore.totalAmount).toFixed(2) }}</span>
+              <span class="price-text">&yen;{{ cartTotal.toFixed(2) }}</span>
+            </template>
+          </van-cell>
+          <van-cell v-if="couponDiscount > 0" title="优惠券">
+            <template #value>
+              <span class="discount-text">-&yen;{{ Number(couponDiscount).toFixed(2) }}</span>
             </template>
           </van-cell>
           <van-cell v-if="pointsDiscountAmount > 0" title="积分抵扣">
@@ -366,30 +461,26 @@ onMounted(async () => {
       <div class="address-sheet">
         <div v-if="!addresses.length" class="address-sheet-empty">
           <van-empty description="暂无地址" />
-          <van-button type="primary" block round @click="goAddAddress">
-            新增收货地址
-          </van-button>
+          <van-button type="primary" block round @click="goAddAddress">新增收货地址</van-button>
         </div>
-        <van-address-list
-          v-else
-          v-model="selectedAddressId"
-          :list="addresses.map(a => ({
-            id: a.id,
-            name: a.receiverName || a.name,
-            tel: a.receiverPhone || a.phone,
-            address: `${a.province || ''}${a.city || ''}${a.district || ''} ${a.detail || ''}`,
-            isDefault: a.isDefault
-          }))"
-          default-tag-text="默认"
-          @select="(item) => {
-            const found = addresses.find(a => a.id === item.id)
-            if (found) selectAddress(found)
-          }"
-        />
+        <div v-else class="address-list">
+          <div
+            v-for="a in addresses"
+            :key="a.id"
+            class="address-card"
+            :class="{ active: selectedAddress?.id === a.id }"
+            @click="selectAddress(a)"
+          >
+            <div class="address-card-top">
+              <span class="address-card-name">{{ a.receiverName || a.name }}</span>
+              <span class="address-card-phone">{{ a.receiverPhone || a.phone }}</span>
+              <span v-if="a.isDefault" class="address-card-tag">默认</span>
+            </div>
+            <div class="address-card-detail">{{ a.province || '' }}{{ a.city || '' }}{{ a.district || '' }} {{ a.detailAddress || a.detail || '' }}</div>
+          </div>
+        </div>
         <div class="address-sheet-footer">
-          <van-button type="primary" size="small" plain @click="goAddAddress">
-            新增地址
-          </van-button>
+          <van-button type="primary" block round @click="goAddAddress">新增收货地址</van-button>
         </div>
       </div>
     </van-action-sheet>
@@ -492,6 +583,12 @@ onMounted(async () => {
   font-size: 13px;
   color: #969799;
 }
+.item-subtotal {
+  font-size: 12px;
+  color: #ee0a24;
+  font-weight: 600;
+  margin-top: 4px;
+}
 
 .payment-radio-group .van-cell {
   align-items: center;
@@ -527,27 +624,35 @@ onMounted(async () => {
   color: #ee0a24;
 }
 
+.coupon-list { padding: 0 16px 8px; }
+.coupon-chip { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; }
+.coupon-chip.active { background: #fff0f0; border-color: #ee0a24; }
+.coupon-chip-left { display: flex; align-items: center; gap: 8px; }
+.coupon-chip-value { background: #ee0a24; color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+.coupon-chip-name { font-size: 13px; color: #333; font-weight: 500; }
+.coupon-chip-amount { font-size: 16px; font-weight: 700; color: #ee0a24; }
+
 .submit-bar-label {
   font-size: 14px;
   color: #323233;
   margin-right: 4px;
 }
 
-.address-sheet {
-  max-height: 60vh;
-  overflow-y: auto;
-  padding-bottom: 16px;
+.address-sheet { max-height: 60vh; overflow-y: auto; padding-bottom: 16px; }
+.address-sheet-empty { padding: 20px 16px; }
+.address-list { padding: 0 16px; }
+.address-card {
+  padding: 14px 16px; background: #f8f9fa; border-radius: 8px;
+  margin-bottom: 10px; cursor: pointer; border: 2px solid transparent;
+  transition: all 0.2s;
 }
-
-.address-sheet-empty {
-  padding: 20px 16px;
-}
-
-.address-sheet-footer {
-  padding: 12px 16px;
-  text-align: center;
-  border-top: 1px solid #ebedf0;
-}
+.address-card.active { background: #fff0f0; border-color: #ee0a24; }
+.address-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.address-card-name { font-size: 15px; font-weight: 600; color: #333; }
+.address-card-phone { font-size: 13px; color: #666; }
+.address-card-tag { font-size: 11px; background: #ee0a24; color: #fff; padding: 1px 8px; border-radius: 10px; font-weight: 600; }
+.address-card-detail { font-size: 13px; color: #969799; line-height: 1.5; }
+.address-sheet-footer { padding: 12px 16px; text-align: center; }
 
 .free-shipping { font-size: 14px; color: #27ae60; font-weight: 600; }
 

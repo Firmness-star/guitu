@@ -2,12 +2,10 @@ package com.flower.controller;
 
 import com.flower.dao.CategoryDao;
 import com.flower.dao.OrderDao;
-import com.flower.dao.SeckillDao;
 import com.flower.dao.SpDao;
 import com.flower.dao.UserDao;
 import com.flower.entity.Category;
 import com.flower.entity.Order;
-import com.flower.entity.SeckillActivity;
 import com.flower.entity.Sp;
 import com.flower.entity.User;
 import com.flower.util.JsonUtil;
@@ -35,7 +33,6 @@ public class MerchantController extends HttpServlet {
     private OrderDao orderDao;
     private CategoryDao categoryDao;
     private UserDao userDao;
-    private SeckillDao seckillDao;
 
     @Override
     public void init() throws ServletException {
@@ -44,7 +41,6 @@ public class MerchantController extends HttpServlet {
         this.orderDao = new OrderDao();
         this.categoryDao = new CategoryDao();
         this.userDao = new UserDao();
-        this.seckillDao = new SeckillDao();
     }
 
     /**
@@ -78,8 +74,6 @@ public class MerchantController extends HttpServlet {
             showOrderManagement(req, resp);
         } else if ("/customers".equals(pathInfo)) {
             showCustomerManagement(req, resp);
-        } else if ("/seckill".equals(pathInfo)) {
-            showSeckillManagement(req, resp);
         } else {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
@@ -107,18 +101,15 @@ public class MerchantController extends HttpServlet {
             return;
         }
 
-        String pathInfo = req.getPathInfo();
         String action = req.getParameter("action");
 
-        if ("/products".equals(pathInfo)) {
-            // 商品操作后重定向回商品管理页面
-            handleProductActionWithRedirect(req, resp, action);
-        } else if ("/orders".equals(pathInfo)) {
-            handleOrderActionWithRedirect(req, resp, action);
-        } else if ("/seckill".equals(pathInfo)) {
-            handleSeckillAction(req, resp, action);
-        } else {
+        // 根据 action 参数路由，不依赖 getPathInfo()
+        if (action == null) {
             doGet(req, resp);
+        } else if ("ship".equals(action) || "complete".equals(action) || "cancel".equals(action)) {
+            handleOrderActionWithRedirect(req, resp, action);
+        } else {
+            handleProductActionWithRedirect(req, resp, action);
         }
     }
 
@@ -758,7 +749,6 @@ public class MerchantController extends HttpServlet {
                 boolean success = orderDao.updateStatusById(orderId, "已取消");
                 result.put("success", success);
                 result.put("message", success ? "取消成功" : "取消失败");
-                // 异步 AJAX 取消暂不记录来源备注（orderId 为整数 ID，不支持 append remark）
             }
 
             out.print(JsonUtil.toJson(result));
@@ -785,38 +775,44 @@ public class MerchantController extends HttpServlet {
 
         try {
             String orderNo = req.getParameter("orderId");
+            if (orderNo != null) orderNo = orderNo.trim();
             boolean success = false;
             String message = "";
 
             if ("ship".equals(action)) {
-                // 获取物流信息
-                String logisticsCompany = req.getParameter("logisticsCompany");
-                String trackingNumber = req.getParameter("trackingNumber");
-                String shipRemark = req.getParameter("shipRemark");
-                
-                // 构建物流信息备注
-                StringBuilder remarkBuilder = new StringBuilder();
-                remarkBuilder.append("\n【发货信息】\n");
-                remarkBuilder.append("发货时间: ").append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())).append("\n");
-                if (logisticsCompany != null && !logisticsCompany.trim().isEmpty()) {
-                    remarkBuilder.append("物流公司: ").append(logisticsCompany).append("\n");
-                }
-                if (trackingNumber != null && !trackingNumber.trim().isEmpty()) {
-                    remarkBuilder.append("物流单号: ").append(trackingNumber).append("\n");
-                }
-                if (shipRemark != null && !shipRemark.trim().isEmpty()) {
-                    remarkBuilder.append("备注: ").append(shipRemark).append("\n");
-                }
-                
-                String remark = remarkBuilder.toString();
-                
-                // 更新订单状态为已发货，并保存物流信息
-                success = orderDao.updateStatusAndRemarkByOrderNo(orderNo, "已发货", remark);
-                
-                if (success) {
-                    message = "发货成功！物流信息已保存。";
+                if (orderNo == null || orderNo.isEmpty()) {
+                    message = "订单号不能为空";
                 } else {
-                    message = "发货失败，请重试";
+                    // 验证订单存在且状态正确
+                    Order shipOrder = orderDao.findByOrderId(orderNo);
+                    if (shipOrder == null) {
+                        message = "订单不存在";
+                    } else if (!"已付款".equals(shipOrder.getStatus())) {
+                        message = "该订单当前状态为【" + shipOrder.getStatus() + "】，无法发货";
+                    } else {
+                        // 获取物流信息
+                        String logisticsCompany = req.getParameter("logisticsCompany");
+                        String trackingNumber = req.getParameter("trackingNumber");
+                        String shipRemark = req.getParameter("shipRemark");
+
+                        // 构建物流信息备注
+                        StringBuilder remarkBuilder = new StringBuilder();
+                        remarkBuilder.append("\n【发货信息】\n");
+                        remarkBuilder.append("发货时间: ").append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())).append("\n");
+                        if (logisticsCompany != null && !logisticsCompany.trim().isEmpty()) {
+                            remarkBuilder.append("物流公司: ").append(logisticsCompany.trim()).append("\n");
+                        }
+                        if (trackingNumber != null && !trackingNumber.trim().isEmpty()) {
+                            remarkBuilder.append("物流单号: ").append(trackingNumber.trim()).append("\n");
+                        }
+                        if (shipRemark != null && !shipRemark.trim().isEmpty()) {
+                            remarkBuilder.append("备注: ").append(shipRemark.trim()).append("\n");
+                        }
+
+                        String remark = remarkBuilder.toString();
+                        success = orderDao.updateStatusAndRemarkByOrderNo(orderNo, "已发货", remark);
+                        message = success ? "发货成功！物流信息已保存。" : "发货失败，请重试";
+                    }
                 }
             } else if ("complete".equals(action)) {
                 Order checkOrder = orderDao.findByOrderId(orderNo);
@@ -847,114 +843,5 @@ public class MerchantController extends HttpServlet {
 
         // 重定向回订单管理页面
         resp.sendRedirect(req.getContextPath() + "/merchant/orders?tab=orders");
-    }
-
-    /**
-     * 展示商家秒杀管理页面
-     */
-    private void showSeckillManagement(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        HttpSession session = req.getSession();
-        if (session.getAttribute("merchantSuccess") != null) {
-            req.setAttribute("merchantSuccess", session.getAttribute("merchantSuccess"));
-            session.removeAttribute("merchantSuccess");
-        }
-        if (session.getAttribute("merchantError") != null) {
-            req.setAttribute("merchantError", session.getAttribute("merchantError"));
-            session.removeAttribute("merchantError");
-        }
-
-        String keyword = req.getParameter("keyword");
-        String statusFilter = req.getParameter("status");
-
-        List<SeckillActivity> activities = seckillDao.findAll();
-
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            String searchKey = keyword.trim().toLowerCase();
-            activities = activities.stream()
-                    .filter(a -> a.getProductName() != null && a.getProductName().toLowerCase().contains(searchKey))
-                    .collect(Collectors.toList());
-        }
-        if (statusFilter != null && !statusFilter.isEmpty()) {
-            if ("ongoing".equals(statusFilter)) {
-                activities = activities.stream().filter(SeckillActivity::isOngoing).collect(Collectors.toList());
-            } else if ("waiting".equals(statusFilter)) {
-                activities = activities.stream().filter(a -> a.getStatus() == 1 && !a.isStarted()).collect(Collectors.toList());
-            } else if ("ended".equals(statusFilter)) {
-                activities = activities.stream().filter(a -> a.isEnded() || a.getStatus() == 0).collect(Collectors.toList());
-            }
-        }
-
-        req.setAttribute("seckillList", activities);
-        req.setAttribute("allProducts", spDao.findAll());
-        req.setAttribute("seckillKeyword", keyword);
-        req.setAttribute("seckillStatusFilter", statusFilter);
-        req.getRequestDispatcher("/merchant.jsp").forward(req, resp);
-    }
-
-    /**
-     * 处理商家秒杀管理的 POST 操作
-     */
-    private void handleSeckillAction(HttpServletRequest req, HttpServletResponse resp, String action)
-            throws ServletException, IOException {
-        HttpSession session = req.getSession();
-        try {
-            if ("add".equals(action)) {
-                SeckillActivity activity = new SeckillActivity();
-                activity.setProductId(Integer.parseInt(req.getParameter("productId")));
-                activity.setSeckillPrice(Double.parseDouble(req.getParameter("seckillPrice")));
-                activity.setSeckillStock(Integer.parseInt(req.getParameter("seckillStock")));
-                activity.setPerUserLimit(Integer.parseInt(req.getParameter("perUserLimit")));
-                activity.setStatus(Integer.parseInt(req.getParameter("status")));
-
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
-                activity.setStartTime(sdf.parse(req.getParameter("startTime")));
-                activity.setEndTime(sdf.parse(req.getParameter("endTime")));
-
-                Sp product = spDao.findByIdAnyStatus(activity.getProductId());
-                if (product != null && activity.getSeckillPrice() >= product.getPrice()) {
-                    session.setAttribute("merchantError", "秒杀价必须低于原价（¥" + product.getPrice() + "）");
-                } else if (activity.getStartTime().after(activity.getEndTime())) {
-                    session.setAttribute("merchantError", "开始时间不能晚于结束时间");
-                } else if (seckillDao.save(activity)) {
-                    session.setAttribute("merchantSuccess", "秒杀活动已创建");
-                } else {
-                    session.setAttribute("merchantError", "创建失败");
-                }
-            } else if ("update".equals(action)) {
-                SeckillActivity activity = new SeckillActivity();
-                activity.setId(Integer.parseInt(req.getParameter("id")));
-                activity.setProductId(Integer.parseInt(req.getParameter("productId")));
-                activity.setSeckillPrice(Double.parseDouble(req.getParameter("seckillPrice")));
-                activity.setSeckillStock(Integer.parseInt(req.getParameter("seckillStock")));
-                activity.setPerUserLimit(Integer.parseInt(req.getParameter("perUserLimit")));
-                activity.setStatus(Integer.parseInt(req.getParameter("status")));
-
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
-                activity.setStartTime(sdf.parse(req.getParameter("startTime")));
-                activity.setEndTime(sdf.parse(req.getParameter("endTime")));
-
-                if (seckillDao.update(activity)) {
-                    session.setAttribute("merchantSuccess", "秒杀活动已更新");
-                } else {
-                    session.setAttribute("merchantError", "更新失败");
-                }
-            } else if ("delete".equals(action)) {
-                int id = Integer.parseInt(req.getParameter("id"));
-                seckillDao.deleteById(id);
-                session.setAttribute("merchantSuccess", "秒杀活动已删除");
-            } else if ("enable".equals(action)) {
-                int id = Integer.parseInt(req.getParameter("id"));
-                seckillDao.updateStatus(id, 1);
-                session.setAttribute("merchantSuccess", "秒杀活动已开启");
-            } else if ("disable".equals(action)) {
-                int id = Integer.parseInt(req.getParameter("id"));
-                seckillDao.updateStatus(id, 0);
-                session.setAttribute("merchantSuccess", "秒杀活动已关闭");
-            }
-        } catch (Exception e) {
-            session.setAttribute("merchantError", "操作失败：" + e.getMessage());
-        }
-        resp.sendRedirect(req.getContextPath() + "/merchant/seckill?tab=seckill");
     }
 }

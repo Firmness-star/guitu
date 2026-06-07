@@ -179,7 +179,7 @@ public class LoginController extends HttpServlet {
             } else if ("商家".equals(user.getRole())) {
                 resp.sendRedirect(req.getContextPath() + "/merchant/index");
             } else {
-                resp.sendRedirect("index.jsp?welcome=1");
+                resp.sendRedirect("index?welcome=1");
             }
 
         } else {

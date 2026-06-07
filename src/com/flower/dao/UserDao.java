@@ -58,7 +58,7 @@ public class UserDao {
             pstmt.setString(2, MD5Util.encrypt(user.getPass()));
             pstmt.setString(3, user.getTel());
             pstmt.setString(4, user.getEmail());
-            pstmt.setString(5, user.getGender() != null ? user.getGender() : "未知");
+            pstmt.setString(5, user.getGender() != null ? user.getGender() : "保密");
             pstmt.setString(6, user.getState() != null ? user.getState() : "可用");
             pstmt.setString(7, user.getRole() != null ? user.getRole() : "用户");
             pstmt.setInt(8, user.getJf());

@@ -47,6 +47,63 @@ public class OrderDao {
                 pstmtItem.addBatch();
             }
             for (int r : pstmtItem.executeBatch()) if (r <= 0) throw new SQLException("插入订单明细失败");
+
+            // 扣减商品库存 + 增加销量
+            SpDao spDao = new SpDao();
+            for (CartItem item : order.getItems()) {
+                if (!spDao.deductStock(item.getProductId(), item.getQuantity(), conn)) {
+                    throw new SQLException("商品 [" + item.getProductName() + "] 库存不足，下单失败");
+                }
+            }
+
+            return true;
+        } catch (SQLException e) {
+            System.err.println("[DAO] " + e.getMessage());
+            throw new RuntimeException("保存订单失败：" + e.getMessage(), e);
+        } finally {
+            closeQuietly(rs); closeQuietly(pstmtItem); closeQuietly(pstmtOrder);
+        }
+    }
+
+    /**
+     * 保存订单但不扣除商品库存（秒杀订单使用，库存由秒杀控制器自行管理）
+     */
+    public boolean saveOrderWithoutStock(Order order) {
+        if (order == null || order.getUserId() == null) return false;
+        String orderSql = "INSERT INTO orders (user_id,total_amount,total_count,status,receiver_name,receiver_phone,receiver_address,remark,create_time,order_no,actual_amount) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+        String itemSql = "INSERT INTO order_item (order_id,product_id,product_name,product_price,quantity,subtotal) VALUES (?,?,?,?,?,?)";
+        Connection conn = null;
+        PreparedStatement pstmtOrder = null, pstmtItem = null;
+        ResultSet rs = null;
+        try {
+            conn = TransactionManager.getConnection();
+            pstmtOrder = conn.prepareStatement(orderSql, Statement.RETURN_GENERATED_KEYS);
+            pstmtOrder.setInt(1, order.getUserId());
+            pstmtOrder.setDouble(2, order.getTotalAmount());
+            pstmtOrder.setInt(3, order.getTotalCount());
+            pstmtOrder.setString(4, order.getStatus());
+            pstmtOrder.setString(5, order.getReceiverName());
+            pstmtOrder.setString(6, order.getReceiverPhone());
+            pstmtOrder.setString(7, order.getReceiverAddress());
+            pstmtOrder.setString(8, order.getRemark());
+            pstmtOrder.setTimestamp(9, new Timestamp(order.getCreateTime().getTime()));
+            pstmtOrder.setString(10, order.getOrderId());
+            pstmtOrder.setDouble(11, order.getTotalAmount());
+            if (pstmtOrder.executeUpdate() <= 0) throw new SQLException("插入订单主表失败");
+            rs = pstmtOrder.getGeneratedKeys();
+            if (!rs.next()) throw new SQLException("获取订单ID失败");
+            Integer generatedId = rs.getInt(1);
+            pstmtItem = conn.prepareStatement(itemSql);
+            for (CartItem item : order.getItems()) {
+                pstmtItem.setInt(1, generatedId);
+                pstmtItem.setInt(2, item.getProductId());
+                pstmtItem.setString(3, item.getProductName());
+                pstmtItem.setDouble(4, item.getProductPrice());
+                pstmtItem.setInt(5, item.getQuantity());
+                pstmtItem.setDouble(6, item.getProductPrice() * item.getQuantity());
+                pstmtItem.addBatch();
+            }
+            for (int r : pstmtItem.executeBatch()) if (r <= 0) throw new SQLException("插入订单明细失败");
             return true;
         } catch (SQLException e) {
             System.err.println("[DAO] " + e.getMessage());
@@ -179,6 +236,22 @@ public class OrderDao {
         } catch (SQLException e) { throw new RuntimeException("更新订单状态失败", e); }
     }
 
+    /**
+     * 根据数据库自增 ID 查询订单编号(order_no)
+     */
+    public String findOrderNoById(int id) {
+        if (id <= 0) return null;
+        String sql = "SELECT order_no FROM orders WHERE id = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) return rs.getString("order_no");
+            }
+        } catch (SQLException e) { System.err.println("[DAO] " + e.getMessage()); }
+        return null;
+    }
+
     public boolean updateWlNo(int orderId, String wlNo) {
         String sql = "UPDATE orders SET wl_no = ? WHERE id = ?";
         try (Connection conn = DBUtil.getConnection();
@@ -214,7 +287,7 @@ public class OrderDao {
             int rows = pstmt.executeUpdate();
             if (rows > 0) recordStatusHistoryByOrderNo(conn, orderNo, newStatus, remark);
             return rows > 0;
-        } catch (SQLException e) { throw new RuntimeException("更新订单状态失败", e); }
+        } catch (SQLException e) { System.err.println("[OrderDao] 更新订单状态失败: " + e.getMessage()); return false; }
         finally { closeQuietly(pstmt); if (conn != null) { try { conn.close(); } catch (SQLException e) {} } }
     }
 
@@ -225,8 +298,8 @@ public class OrderDao {
             pstmt.setString(2, remark != null ? remark : "");
             pstmt.setString(3, orderNo);
             pstmt.executeUpdate();
-        } catch (SQLException e) {
-            /* 历史记录失败不影响主流程 */
+        } catch (Exception e) {
+            System.err.println("[OrderDao] 记录状态历史失败（已忽略）: " + e.getMessage());
         }
     }
 

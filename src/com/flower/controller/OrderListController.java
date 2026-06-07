@@ -34,7 +34,7 @@ public class OrderListController extends HttpServlet {
         Integer userId = (Integer) session.getAttribute("userId");
 
         if (username == null || userId == null) {
-            resp.sendRedirect("login.jsp?redirect=orders");
+            resp.sendRedirect("login?redirect=orders");
             return;
         }
 

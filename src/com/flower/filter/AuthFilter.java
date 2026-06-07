@@ -37,7 +37,7 @@ public class AuthFilter implements Filter {
 
         // 检查是否登录
         if (session == null || session.getAttribute("userId") == null) {
-            resp.sendRedirect(req.getContextPath() + "/login.jsp?redirect=" + req.getRequestURI());
+            resp.sendRedirect(req.getContextPath() + "/login?redirect=" + req.getRequestURI());
             return;
         }
 

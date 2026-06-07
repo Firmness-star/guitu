@@ -4,7 +4,6 @@ import com.flower.dao.*;
 import com.flower.entity.Order;
 import com.flower.entity.Message;
 import com.flower.entity.Category;
-import com.flower.entity.SeckillActivity;
 import com.flower.entity.Sp;
 import com.flower.entity.User;
 import com.flower.util.JsonUtil;
@@ -34,7 +33,6 @@ public class AdminController extends HttpServlet {
     private CategoryDao categoryDao;
     private BannerDao bannerDao;
     private MessageDao messageDao;
-    private SeckillDao seckillDao;
 
     @Override
     public void init() throws ServletException {
@@ -45,7 +43,6 @@ public class AdminController extends HttpServlet {
         this.categoryDao = new CategoryDao();
         this.bannerDao = new BannerDao();
         this.messageDao = new MessageDao();
-        this.seckillDao = new SeckillDao();
     }
 
     /**
@@ -85,8 +82,6 @@ public class AdminController extends HttpServlet {
             showStatistics(req, resp);
         } else if ("/coupons".equals(pathInfo)) {
             showCouponManagement(req, resp);
-        } else if ("/seckill".equals(pathInfo)) {
-            showSeckillManagement(req, resp);
         } else {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
@@ -130,8 +125,6 @@ public class AdminController extends HttpServlet {
             handleMerchantPost(req, resp, action);
         } else if ("/coupons".equals(pathInfo)) {
             handleCouponAction(req, resp, action);
-        } else if ("/seckill".equals(pathInfo)) {
-            handleSeckillAction(req, resp, action);
         } else {
             doGet(req, resp);
         }
@@ -629,37 +622,15 @@ public class AdminController extends HttpServlet {
         }
         stats.put("regionStats", regionStats);
 
-        // 年龄分布（基于注册时间推算）
+        // 年龄分布（暂无真实数据，标记为功能规划中）
         Map<String, Long> ageStats = new LinkedHashMap<>();
         ageStats.put("18岁以下", 0L); ageStats.put("18-25岁", 0L); ageStats.put("26-35岁", 0L);
         ageStats.put("36-45岁", 0L); ageStats.put("46岁以上", 0L);
-        for (User u : allUsers) {
-            if ("管理员".equals(u.getRole()) || "商家".equals(u.getRole())) continue;
-            ageStats.merge("18-25岁", 1L, Long::sum); // 模拟分配
-        }
-        // 真实按比例分散
-        long[] simulated = {2, 8, 12, 6, 3};
-        String[] ranges = {"18岁以下", "18-25岁", "26-35岁", "36-45岁", "46岁以上"};
-        long userCount = allUsers.stream().filter(u -> !"管理员".equals(u.getRole()) && !"商家".equals(u.getRole())).count();
-        if (userCount > 0) {
-            long assigned = 0;
-            for (int i = 0; i < simulated.length; i++) {
-                long n = Math.round(userCount * simulated[i] / 31.0);
-                if (i == simulated.length - 1) n = userCount - assigned;
-                ageStats.put(ranges[i], n);
-                assigned += n;
-            }
-        }
         stats.put("ageStats", ageStats);
 
-        // 网购习惯分布
+        // 网购习惯分布（暂无数据，标记为功能规划中）
         Map<String, Long> habitStats = new LinkedHashMap<>();
         habitStats.put("手机端购物", 0L); habitStats.put("电脑端购物", 0L); habitStats.put("两者兼顾", 0L);
-        if (userCount > 0) {
-            habitStats.put("手机端购物", Math.round(userCount * 0.65));
-            habitStats.put("电脑端购物", Math.round(userCount * 0.15));
-            habitStats.put("两者兼顾", userCount - Math.round(userCount * 0.65) - Math.round(userCount * 0.15));
-        }
         stats.put("habitStats", habitStats);
 
         req.setAttribute("stats", stats);
@@ -1058,6 +1029,8 @@ public class AdminController extends HttpServlet {
             try {
                 int speed = Integer.parseInt(req.getParameter("speed"));
                 int showHot = Integer.parseInt(req.getParameter("showHot"));
+                getServletContext().setAttribute("bannerSpeed", speed);
+                getServletContext().setAttribute("showHot", showHot);
                 session.setAttribute("bannerSpeed", speed);
                 session.setAttribute("showHot", showHot);
                 session.setAttribute("adminSuccess", "轮播设置已保存");
@@ -1134,115 +1107,5 @@ public class AdminController extends HttpServlet {
             }
         }
         resp.sendRedirect(req.getContextPath() + "/admin/coupons?tab=coupons");
-    }
-
-    /**
-     * 展示秒杀管理页面
-     */
-    private void showSeckillManagement(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        HttpSession session = req.getSession();
-        if (session.getAttribute("adminSuccess") != null) {
-            req.setAttribute("adminSuccess", session.getAttribute("adminSuccess"));
-            session.removeAttribute("adminSuccess");
-        }
-        if (session.getAttribute("adminError") != null) {
-            req.setAttribute("adminError", session.getAttribute("adminError"));
-            session.removeAttribute("adminError");
-        }
-
-        String keyword = req.getParameter("keyword");
-        String statusFilter = req.getParameter("status");
-
-        List<SeckillActivity> activities = seckillDao.findAll();
-
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            String searchKey = keyword.trim().toLowerCase();
-            activities = activities.stream()
-                    .filter(a -> a.getProductName() != null && a.getProductName().toLowerCase().contains(searchKey))
-                    .collect(Collectors.toList());
-        }
-        if (statusFilter != null && !statusFilter.isEmpty()) {
-            if ("ongoing".equals(statusFilter)) {
-                activities = activities.stream().filter(SeckillActivity::isOngoing).collect(Collectors.toList());
-            } else if ("waiting".equals(statusFilter)) {
-                activities = activities.stream().filter(a -> a.getStatus() == 1 && !a.isStarted()).collect(Collectors.toList());
-            } else if ("ended".equals(statusFilter)) {
-                activities = activities.stream().filter(a -> a.isEnded() || a.getStatus() == 0).collect(Collectors.toList());
-            }
-        }
-
-        req.setAttribute("seckillList", activities);
-        req.setAttribute("allProducts", spDao.findAll());
-        req.setAttribute("seckillKeyword", keyword);
-        req.setAttribute("seckillStatusFilter", statusFilter);
-        req.getRequestDispatcher("/admin.jsp").forward(req, resp);
-    }
-
-    /**
-     * 处理秒杀管理的 POST 操作
-     */
-    private void handleSeckillAction(HttpServletRequest req, HttpServletResponse resp, String action)
-            throws ServletException, IOException {
-        HttpSession session = req.getSession();
-        try {
-            if ("add".equals(action)) {
-                SeckillActivity activity = new SeckillActivity();
-                activity.setProductId(Integer.parseInt(req.getParameter("productId")));
-                activity.setSeckillPrice(Double.parseDouble(req.getParameter("seckillPrice")));
-                activity.setSeckillStock(Integer.parseInt(req.getParameter("seckillStock")));
-                activity.setPerUserLimit(Integer.parseInt(req.getParameter("perUserLimit")));
-                activity.setStatus(Integer.parseInt(req.getParameter("status")));
-
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
-                activity.setStartTime(sdf.parse(req.getParameter("startTime")));
-                activity.setEndTime(sdf.parse(req.getParameter("endTime")));
-
-                // 校验：秒杀价必须低于原价
-                Sp product = spDao.findByIdAnyStatus(activity.getProductId());
-                if (product != null && activity.getSeckillPrice() >= product.getPrice()) {
-                    session.setAttribute("adminError", "秒杀价必须低于原价（¥" + product.getPrice() + "）");
-                } else if (activity.getStartTime().after(activity.getEndTime())) {
-                    session.setAttribute("adminError", "开始时间不能晚于结束时间");
-                } else if (seckillDao.save(activity)) {
-                    session.setAttribute("adminSuccess", "秒杀活动已创建");
-                } else {
-                    session.setAttribute("adminError", "创建失败");
-                }
-            } else if ("update".equals(action)) {
-                SeckillActivity activity = new SeckillActivity();
-                activity.setId(Integer.parseInt(req.getParameter("id")));
-                activity.setProductId(Integer.parseInt(req.getParameter("productId")));
-                activity.setSeckillPrice(Double.parseDouble(req.getParameter("seckillPrice")));
-                activity.setSeckillStock(Integer.parseInt(req.getParameter("seckillStock")));
-                activity.setPerUserLimit(Integer.parseInt(req.getParameter("perUserLimit")));
-                activity.setStatus(Integer.parseInt(req.getParameter("status")));
-
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
-                activity.setStartTime(sdf.parse(req.getParameter("startTime")));
-                activity.setEndTime(sdf.parse(req.getParameter("endTime")));
-
-                if (seckillDao.update(activity)) {
-                    session.setAttribute("adminSuccess", "秒杀活动已更新");
-                } else {
-                    session.setAttribute("adminError", "更新失败");
-                }
-            } else if ("delete".equals(action)) {
-                int id = Integer.parseInt(req.getParameter("id"));
-                seckillDao.deleteById(id);
-                session.setAttribute("adminSuccess", "秒杀活动已删除");
-            } else if ("enable".equals(action)) {
-                int id = Integer.parseInt(req.getParameter("id"));
-                seckillDao.updateStatus(id, 1);
-                session.setAttribute("adminSuccess", "秒杀活动已开启");
-            } else if ("disable".equals(action)) {
-                int id = Integer.parseInt(req.getParameter("id"));
-                seckillDao.updateStatus(id, 0);
-                session.setAttribute("adminSuccess", "秒杀活动已关闭");
-            }
-        } catch (Exception e) {
-            session.setAttribute("adminError", "操作失败：" + e.getMessage());
-        }
-        resp.sendRedirect(req.getContextPath() + "/admin/seckill?tab=seckill");
     }
 }

@@ -26,7 +26,7 @@ public class CommentController extends HttpServlet {
         String username = (String) session.getAttribute("username");
 
         if (userId == null || username == null) {
-            resp.sendRedirect("login.jsp");
+            resp.sendRedirect("login");
             return;
         }
 

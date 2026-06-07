@@ -42,7 +42,7 @@
     <div class="error-container">
         <h1 class="error-code">404</h1>
         <p class="error-message">抱歉，您访问的页面不存在</p>
-        <a href="${pageContext.request.contextPath}/index.jsp" class="btn btn-primary btn-lg">返回首页</a>
+        <a href="${pageContext.request.contextPath}/index" class="btn btn-primary btn-lg">返回首页</a>
     </div>
 </body>
 </html>

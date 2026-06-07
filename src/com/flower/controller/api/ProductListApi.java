@@ -71,13 +71,41 @@ public class ProductListApi extends ApiBaseServlet {
         }
         data.put("categories", parentCats);
 
-        // 轮播
-        data.put("banners", bannerDao.findAll());
-
         // 热卖
         List<Sp> hot = new ArrayList<>(products);
         hot.sort((a, b) -> Integer.compare(b.getSales(), a.getSales()));
         data.put("hotProducts", hot.subList(0, Math.min(6, hot.size())));
+
+        // 轮播：根据管理员设置决定展示内容
+        Object showHotObj = getServletContext().getAttribute("showHot");
+        int showHot = (showHotObj instanceof Integer) ? (Integer) showHotObj : 1;
+        List<Map<String, Object>> carouselItems = new ArrayList<>();
+
+        // 热卖前5个始终加入轮播
+        for (int i = 0; i < Math.min(hot.size(), 5); i++) {
+            Sp p = hot.get(i);
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", p.getId());
+            item.put("imgUrl", p.getPic());
+            item.put("productId", p.getId());
+            item.put("type", "product");
+            carouselItems.add(item);
+        }
+
+        // 仅当 showHot != 1 时才展示管理员上传的海报
+        if (showHot != 1) {
+            List<Banner> banners = bannerDao.findAll();
+            for (Banner b : banners) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", b.getId());
+                item.put("imgUrl", b.getImgUrl());
+                item.put("productId", b.getProductId());
+                item.put("type", "banner");
+                carouselItems.add(item);
+            }
+        }
+
+        data.put("banners", carouselItems);
 
         ok(resp, data);
     }

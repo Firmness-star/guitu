@@ -50,7 +50,7 @@
 <div class="error-container">
     <h1 class="error-code">500</h1>
     <p class="error-message">服务器内部错误</p>
-    <a href="${pageContext.request.contextPath}/index.jsp" class="btn btn-primary btn-lg">返回首页</a>
+    <a href="${pageContext.request.contextPath}/index" class="btn btn-primary btn-lg">返回首页</a>
 
     <!-- 显示具体的异常信息，便于调试和排查问题 -->
     <div class="error-detail mt-4">

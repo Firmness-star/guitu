@@ -43,14 +43,14 @@ public class SecurityController extends HttpServlet {
         String username = (String) session.getAttribute("username");
 
         if (userId == null || username == null) {
-            resp.sendRedirect("login.jsp");
+            resp.sendRedirect("login");
             return;
         }
 
         User user = userDao.findByUsername(username);
         if (user == null) {
             session.invalidate();
-            resp.sendRedirect("login.jsp");
+            resp.sendRedirect("login");
             return;
         }
 
@@ -88,7 +88,7 @@ public class SecurityController extends HttpServlet {
         String username = (String) session.getAttribute("username");
 
         if (userId == null) {
-            resp.sendRedirect("login.jsp");
+            resp.sendRedirect("login");
             return;
         }
 

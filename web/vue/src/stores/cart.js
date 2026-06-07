@@ -25,22 +25,17 @@ export const useCartStore = defineStore('cart', {
       return res
     },
     async update(productId, quantity) {
-      const body = new URLSearchParams()
-      body.append('productId', productId)
-      body.append('quantity', quantity)
-      const res = await put('/cart', body)
+      const res = await put(`/cart?productId=${productId}&quantity=${quantity}`)
       if (res.code === 200) await this.fetch()
       return res
     },
     async remove(productId) {
-      const body = new URLSearchParams()
-      body.append('productId', productId)
-      const res = await del('/cart', body)
+      const res = await del(`/cart?productId=${productId}`)
       if (res.code === 200) await this.fetch()
       return res
     },
     async clear() {
-      const res = await del('/cart', new URLSearchParams({ action: 'clear' }))
+      const res = await del('/cart?action=clear')
       if (res.code === 200) this.items = []
       return res
     }

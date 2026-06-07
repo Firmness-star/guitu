@@ -25,15 +25,7 @@
     </style>
 </head>
 <body>
-<nav class="top-navbar">
-    <div class="container d-flex justify-content-between align-items-center">
-        <a href="index.jsp" class="brand-logo">归途</a>
-        <div>
-            <span class="text-muted me-3">欢迎，${sessionScope.username}</span>
-            <a href="usercenter" class="btn btn-outline-danger btn-sm">返回个人中心</a>
-        </div>
-    </div>
-</nav>
+<jsp:include page="common/navbar.jsp"/>
 
 <div class="msg-container">
     <h4 class="mb-4"><i class="bi bi-chat-dots"></i> 我的留言</h4>

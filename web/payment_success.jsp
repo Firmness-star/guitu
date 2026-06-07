@@ -130,17 +130,7 @@
 </head>
 <body>
 
-<nav style="background:#fff;padding:0;position:sticky;top:0;z-index:1000;box-shadow:0 2px 12px rgba(0,0,0,0.08);margin-bottom:30px;">
-    <div style="max-width:1200px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:70px;">
-        <a href="index.jsp" style="font-weight:700;font-size:22px;letter-spacing:2px;background:linear-gradient(135deg,#e74c3c,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;cursor:pointer;text-decoration:none;">归途</a>
-        <ul style="display:flex;gap:20px;list-style:none;align-items:center;margin:0;padding:0;">
-            <li><a href="index.jsp" style="color:#555;text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.color='#e74c3c';this.style.background='#fff5f5'" onmouseout="this.style.color='#555';this.style.background='transparent'">返回首页</a></li>
-            <c:if test="${not empty sessionScope.username}">
-                <li><a href="orders" style="color:#555;text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.color='#e74c3c';this.style.background='#fff5f5'" onmouseout="this.style.color='#555';this.style.background='transparent'">我的订单</a></li>
-            </c:if>
-        </ul>
-    </div>
-</nav>
+<jsp:include page="common/navbar.jsp"/>
 
 <div class="success-container">
     <div class="success-card">
@@ -175,7 +165,7 @@
             <a href="orders" class="btn-view-order">
                 <i class="bi bi-receipt"></i> 查看订单
             </a>
-            <a href="index.jsp" class="btn-continue">
+            <a href="index" class="btn-continue">
                 <i class="bi bi-shop"></i> 继续购物
             </a>
         </div>

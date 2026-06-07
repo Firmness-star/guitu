@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vue-mobile",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "workingDirectory": "web/vue",
+      "port": 5173
+    }
+  ]
+}

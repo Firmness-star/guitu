@@ -21,7 +21,7 @@ public class MessageController extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = req.getSession();
         Integer userId = (Integer) session.getAttribute("userId");
-        if (userId == null) { resp.sendRedirect("login.jsp"); return; }
+        if (userId == null) { resp.sendRedirect("login"); return; }
         // 用户点击"我的留言"时，将该用户所有未读标为已读
         messageDao.markUserRead(userId);
         req.setAttribute("myMessages", messageDao.findByUserId(userId));
@@ -35,7 +35,7 @@ public class MessageController extends HttpServlet {
         HttpSession session = req.getSession();
         Integer userId = (Integer) session.getAttribute("userId");
         String username = (String) session.getAttribute("username");
-        if (userId == null || username == null) { resp.sendRedirect("login.jsp"); return; }
+        if (userId == null || username == null) { resp.sendRedirect("login"); return; }
 
         String action = req.getParameter("action");
 

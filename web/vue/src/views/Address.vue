@@ -40,11 +40,22 @@ async function fetchAddresses() {
 
 async function saveAddress(data) {
   try {
+    const payload = {
+      receiverName: data.name,
+      receiverPhone: data.tel,
+      province: data.province,
+      city: data.city,
+      district: data.county,
+      detailAddress: data.addressDetail,
+      areaCode: data.areaCode,
+      isDefault: data.isDefault ? '1' : '0'
+    }
     let res
     if (editMode.value === 'add') {
-      res = await post('/address', data)
+      res = await post('/address', payload)
     } else {
-      res = await put('/address', { ...data, id: editId.value })
+      const qs = new URLSearchParams({ id: editId.value, ...payload }).toString()
+      res = await put(`/address?${qs}`)
     }
     if (res.code === 200) {
       showToast(editMode.value === 'add' ? '添加成功' : '修改成功')
@@ -60,7 +71,7 @@ async function saveAddress(data) {
 
 async function deleteAddress(id) {
   try {
-    const res = await del('/address', { id })
+    const res = await del(`/address?id=${id}`)
     if (res.code === 200) {
       showToast('删除成功')
       await fetchAddresses()
@@ -74,8 +85,11 @@ async function deleteAddress(id) {
 
 async function setDefaultAddress(id) {
   try {
-    const res = await put('/address', { id, isDefault: true })
+    const qs = `id=${id}&action=setDefault`
+    const res = await put(`/address?${qs}`)
     if (res.code === 200) {
+      // 乐观更新
+      addresses.value.forEach(a => { a.default = (a.id === id) })
       showToast('已设为默认地址')
       await fetchAddresses()
     } else {
@@ -98,30 +112,24 @@ function onEdit(addr) {
   editMode.value = 'edit'
   editId.value = addr.id
   Object.assign(editData, {
-    name: addr.name || '',
-    tel: addr.tel || '',
+    name: addr.receiverName || '',
+    tel: addr.receiverPhone || '',
     province: addr.province || '',
     city: addr.city || '',
-    county: addr.county || '',
-    addressDetail: addr.addressDetail || '',
+    county: addr.district || '',
+    addressDetail: addr.detailAddress || '',
     areaCode: addr.areaCode || '',
-    isDefault: !!addr.isDefault
+    isDefault: !!addr.default
   })
   showEdit.value = true
 }
 
+
+
 function onSave(data) {
-  saveAddress({
-    name: data.name,
-    tel: data.tel,
-    province: data.province,
-    city: data.city,
-    county: data.county,
-    addressDetail: data.addressDetail,
-    areaCode: data.areaCode,
-    isDefault: data.isDefault
-  })
+  saveAddress(data)
 }
+
 
 function onEditDelete() {
   showDialog({
@@ -139,7 +147,7 @@ function onEditDelete() {
 function onDelete(addr) {
   showDialog({
     title: '确认删除',
-    message: `确定要删除 ${addr.name} 的地址吗？`,
+    message: `确定要删除 ${addr.receiverName} 的地址吗？`,
     showCancelButton: true,
     confirmButtonText: '删除',
     confirmButtonColor: '#ee0a24'
@@ -149,12 +157,12 @@ function onDelete(addr) {
 }
 
 function onClickDefault(addr) {
-  if (addr.isDefault) return
+  if (addr.default) return
   setDefaultAddress(addr.id)
 }
 
 function formatAddress(addr) {
-  return `${addr.province}${addr.city}${addr.county} ${addr.addressDetail}`
+  return `${addr.province || ''}${addr.city || ''}${addr.district || ''} ${addr.detailAddress || ''}`
 }
 
 // ---------- lifecycle ----------
@@ -182,9 +190,9 @@ onMounted(() => {
         >
           <template #title>
             <div class="address-cell-title">
-              <span class="address-name">{{ addr.name }}</span>
-              <span class="address-tel">{{ addr.tel }}</span>
-              <van-tag v-if="addr.isDefault" type="danger" size="medium" round>
+              <span class="address-name">{{ addr.receiverName }}</span>
+              <span class="address-tel">{{ addr.receiverPhone }}</span>
+              <van-tag v-if="addr.default" type="danger" size="medium" round>
                 默认
               </van-tag>
             </div>
@@ -194,17 +202,11 @@ onMounted(() => {
             <van-icon name="edit" class="edit-icon" />
           </template>
           <template #label>
-            <div class="address-label-actions">
-              <van-button
-                v-if="!addr.isDefault"
-                size="small"
-                plain
-                type="primary"
-                @click.stop="onClickDefault(addr)"
-              >
-                设为默认
-              </van-button>
-            </div>
+            <span
+              v-if="!addr.default"
+              class="set-default-link"
+              @click.stop="onClickDefault(addr)"
+            >设为默认</span>
           </template>
         </van-cell>
         <template #right>
@@ -245,6 +247,7 @@ onMounted(() => {
       :style="{ width: '100%', height: '100%' }"
       closeable
       close-icon-position="top-left"
+      :key="editId || 'new'"
     >
       <van-address-edit
         :address-info="editData"
@@ -302,10 +305,15 @@ onMounted(() => {
   color: #999;
 }
 
-.address-label-actions {
-  display: flex;
-  gap: 8px;
-  padding-top: 8px;
+.set-default-link {
+  font-size: 12px;
+  color: #1989fa;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+.set-default-link:active {
+  opacity: 0.7;
 }
 
 .swipe-delete-btn {

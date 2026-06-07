@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import {
   NavBar, Tabs, Tab, PullRefresh, List,
   Empty, Tag, Image, Button, showToast, showDialog
@@ -10,6 +10,7 @@ import { fixImg } from '../utils/img'
 import { useUserStore } from '../stores/user'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 
 if (!userStore.loggedIn) {
@@ -25,7 +26,7 @@ const tabs = [
   { title: '已收货', status: '已收货' },
   { title: '已取消', status: '已取消' }
 ]
-const activeTab = ref(0)
+const activeTab = ref(Number(route.query.tab) || 0)
 const currentStatus = computed(() => tabs[activeTab.value].status)
 
 // ── Data state ──
@@ -114,21 +115,12 @@ function onTabChange(index) {
   page.value = 0
   finished.value = false
   fetched.value = false
+  fetchOrders()
 }
 
 // ── Actions ──
 async function payOrder(orderId) {
-  try {
-    await showDialog({ title: '确认支付', message: '确认支付该订单？' })
-  } catch { return }
-
-  const res = await post('/payment', formBody({ orderId }))
-  if (res.code === 200) {
-    showToast('支付成功')
-    onRefresh()
-  } else {
-    showToast(res.message || '支付失败')
-  }
+  router.push({ path: '/payment', query: { orderId } })
 }
 
 async function cancelOrder(orderId) {
@@ -136,7 +128,7 @@ async function cancelOrder(orderId) {
     await showDialog({ title: '取消订单', message: '确认取消该订单？' })
   } catch { return }
 
-  const res = await put('/order/status', formBody({ orderId, action: 'cancel' }))
+  const res = await put(`/order/status?orderId=${orderId}&action=cancel`)
   if (res.code === 200) {
     showToast('已取消')
     onRefresh()
@@ -150,7 +142,7 @@ async function confirmOrder(orderId) {
     await showDialog({ title: '确认收货', message: '确认已收到商品？' })
   } catch { return }
 
-  const res = await put('/order/status', formBody({ orderId, action: 'confirm' }))
+  const res = await put(`/order/status?orderId=${orderId}&action=confirm`)
   if (res.code === 200) {
     showToast('已确认收货')
     onRefresh()
@@ -179,36 +171,19 @@ function formatTime(val) {
 }
 
 function statusTagType(status) {
-  const map = {
-    '待付款': 'warning',
-    '已付款': 'primary',
-    '已发货': '',
-    '已收货': 'success',
-    '已取消': ''
-  }
-  return map[status] || ''
+  return { '待付款': 'warning', '已付款': '', '已发货': 'primary', '已收货': 'success', '已完成': 'success', '已取消': 'default' }[status] || ''
 }
 
-function statusTagColor(status) {
-  const map = {
-    '已发货': '#722ed1',
-    '已取消': '#999'
-  }
-  return map[status] || undefined
+function statusTagPlain(status) {
+  return { '已取消': true, '已收货': true, '已完成': true }[status] || false
 }
 
 function actionsFor(status) {
-  const map = {
-    '待付款': ['pay', 'cancel'],
-    '已付款': ['cancel'],
-    '已发货': ['confirm']
-  }
-  return map[status] || []
+  return { '待付款': ['pay', 'cancel'], '已发货': ['confirm'], '已收货': ['review'], '已完成': ['review'] }[status] || []
 }
 
 function actionText(action) {
-  const map = { pay: '立即支付', cancel: '取消订单', confirm: '确认收货' }
-  return map[action] || action
+  return { pay: '立即支付', cancel: '取消订单', confirm: '确认收货', review: '评价' }[action] || action
 }
 
 function actionType(action) {
@@ -236,14 +211,14 @@ function actionType(action) {
 
         <div v-for="order in displayOrders" :key="order.orderId" class="order-card">
           <!-- Header -->
-          <div class="order-header">
+          <div class="order-header" @click="router.push('/order/' + order.orderId)">
             <div class="order-meta">
               <span class="order-id">订单号：{{ order.orderId }}</span>
               <span class="order-time">{{ formatTime(order.createTime) }}</span>
             </div>
             <van-tag
               :type="statusTagType(order.status)"
-              :color="statusTagColor(order.status)"
+              :plain="statusTagPlain(order.status)"
               size="medium"
               round
             >
@@ -308,7 +283,8 @@ function actionType(action) {
                 @click="
                   act === 'pay' ? payOrder(order.orderId) :
                   act === 'cancel' ? cancelOrder(order.orderId) :
-                  act === 'confirm' ? confirmOrder(order.orderId) : null
+                  act === 'confirm' ? confirmOrder(order.orderId) :
+                  act === 'review' ? router.push('/product/' + (order.items && order.items[0]?.productId || '')) : null
                 "
               >
                 {{ actionText(act) }}

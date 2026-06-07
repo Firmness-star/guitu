@@ -20,45 +20,6 @@
     :root { --sidebar-width: 240px; }
     body { background: var(--bg-gray); }
     .sidebar { width: var(--sidebar-width); }
-    .top-navbar {
-      background: white;
-      border-bottom: 1px solid #e0e0e0;
-      padding: 15px 0;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .brand-logo {
-      font-size: 20px;
-      font-weight: 700;
-      color: #333;
-      text-decoration: none;
-      cursor: pointer;
-      background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      transition: transform 0.2s;
-    }
-
-    .brand-logo:hover {
-      transform: scale(1.05);
-    }
-
-    /* 版权说明模态框 */
-    .copyright-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; }
-    .copyright-modal.show { display: flex; }
-    .copyright-content { background: white; padding: 50px; border-radius: 16px; text-align: center; max-width: 550px; width: 90%; animation: modalSlideIn 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
-    @keyframes modalSlideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-    .copyright-icon { font-size: 64px; margin-bottom: 20px; }
-    .copyright-title { font-size: 28px; background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; font-weight: 700; }
-    .copyright-divider { width: 60px; height: 3px; background: linear-gradient(90deg, var(--primary-red) 0%, #ff6b6b 100%); margin: 0 auto 20px; border-radius: 2px; }
-    .copyright-message { color: #666; font-size: 16px; line-height: 1.8; margin-bottom: 15px; }
-    .copyright-warning { background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%); border-left: 4px solid var(--primary-red); padding: 15px 20px; border-radius: 8px; margin: 20px 0; text-align: left; }
-    .copyright-warning p { color: #666; font-size: 14px; margin: 0; line-height: 1.6; }
-    .copyright-warning strong { color: var(--primary-red); }
-    .copyright-btn { background: linear-gradient(135deg, var(--primary-red) 0%, #ff6b6b 100%); color: white; border: none; padding: 14px 50px; border-radius: 8px; font-size: 16px; cursor: pointer; transition: all 0.3s; margin-top: 20px; font-weight: 600; }
-    .copyright-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4); }
 
     .center-container {
       max-width: 1200px;
@@ -353,15 +314,7 @@
 </head>
 <body>
 
-<nav class="top-navbar">
-  <div class="container d-flex justify-content-between align-items-center">
-    <a href="javascript:void(0)" onclick="showCopyright()" class="brand-logo"> 归途</a>
-    <div>
-      <span class="text-muted me-3">欢迎，${sessionScope.username}</span>
-      <a href="index.jsp" class="btn btn-outline-danger btn-sm">返回首页</a>
-    </div>
-  </div>
-</nav>
+<jsp:include page="common/navbar.jsp"/>
 
 <div class="center-container">
   <aside class="sidebar">
@@ -649,42 +602,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- 版权说明模态框 -->
-<div class="copyright-modal" id="copyrightModal">
-  <div class="copyright-content">
-    <div class="copyright-icon">🌸</div>
-    <h2 class="copyright-title">关于「归途」</h2>
-    <div class="copyright-divider"></div>
-    <p class="copyright-message">「归途花店」是一款基于 Java Web 技术开发的电商学习项目</p>
-    <div class="copyright-warning">
-      <p><strong>️ 声明：</strong>本项目仅供个人学习与技术研究使用，所有代码、设计及内容版权归开发者本人所有。</p>
-      <p style="margin-top: 10px;"><strong>🚫 请勿抄袭：</strong>未经授权，任何人不得将本项目或其部分内容用于商业目的、课程作业提交或任何形式的抄袭行为。</p>
-      <p style="margin-top: 10px;">如有学习需求，欢迎交流探讨，但请尊重他人劳动成果。</p>
-    </div>
-    <p class="copyright-message" style="font-size: 14px; color: #999; margin-top: 25px;">© 2026 归途花店 · 保留所有权利</p>
-    <button class="copyright-btn" onclick="closeCopyright()">我知道了</button>
-  </div>
-</div>
 <script>
-  // ── 全国省市区数据 ──
-  const REGIONS = {
-    "北京市":{"北京市":["东城区","西城区","朝阳区","海淀区","丰台区","石景山区","通州区","大兴区","昌平区","顺义区","房山区","门头沟区","怀柔区","密云区","延庆区","平谷区"]},
-    "上海市":{"上海市":["黄浦区","徐汇区","长宁区","静安区","普陀区","虹口区","杨浦区","浦东新区","闵行区","宝山区","嘉定区","金山区","松江区","青浦区","奉贤区","崇明区"]},
-    "天津市":{"天津市":["和平区","河东区","河西区","南开区","河北区","红桥区","滨海新区","东丽区","西青区","津南区","北辰区","武清区","宝坻区","宁河区","静海区","蓟州区"]},
-    "重庆市":{"重庆市":["渝中区","江北区","南岸区","沙坪坝区","九龙坡区","大渡口区","北碚区","渝北区","巴南区","万州区","涪陵区","黔江区","长寿区","江津区","永川区","合川区"]},
-    "河北省":{"石家庄市":["长安区","桥西区","新华区","裕华区","井陉矿区","藁城区","鹿泉区","栾城区"],"唐山市":["路北区","路南区","古冶区","开平区","丰润区","丰南区"],"保定市":["竞秀区","莲池区","满城区","清苑区","徐水区"]},
-    "山西省":{"太原市":["杏花岭区","小店区","迎泽区","尖草坪区","万柏林区","晋源区"],"大同市":["平城区","云冈区","新荣区","云州区"],"运城市":["盐湖区","永济市","河津市"]},
-    "内蒙古自治区":{"呼和浩特市":["新城区","回民区","玉泉区","赛罕区"],"包头市":["昆都仑区","青山区","东河区","九原区"],"赤峰市":["红山区","元宝山区","松山区"]},
-    "辽宁省":{"沈阳市":["和平区","沈河区","大东区","皇姑区","铁西区","浑南区","于洪区"],"大连市":["中山区","西岗区","沙河口区","甘井子区","旅顺口区","金州区"]},
-    "吉林省":{"长春市":["南关区","宽城区","朝阳区","二道区","绿园区","净月区"],"吉林市":["昌邑区","龙潭区","船营区","丰满区"]},
-    "黑龙江省":{"哈尔滨市":["道里区","南岗区","道外区","平房区","松北区","香坊区","呼兰区"],"齐齐哈尔市":["龙沙区","建华区","铁锋区"]},
-    "江苏省":{"南京市":["玄武区","秦淮区","建邺区","鼓楼区","浦口区","栖霞区","雨花台区","江宁区"],"苏州市":["姑苏区","虎丘区","吴中区","相城区","吴江区","苏州工业园区"],"无锡市":["梁溪区","锡山区","惠山区","滨湖区","新吴区"],"常州市":["天宁区","钟楼区","新北区","武进区","金坛区"]},
-    "浙江省":{"杭州市":["上城区","拱墅区","西湖区","滨江区","萧山区","余杭区","临平区","钱塘区","富阳区","临安区"],"宁波市":["海曙区","江北区","北仑区","镇海区","鄞州区","奉化区"],"温州市":["鹿城区","龙湾区","瓯海区","洞头区"]},
-    "安徽省":{"合肥市":["瑶海区","庐阳区","蜀山区","包河区","肥西县","肥东县","长丰县"],"芜湖市":["镜湖区","弋江区","鸠江区","三山区"]},
-    "福建省":{"福州市":["鼓楼区","台江区","仓山区","马尾区","晋安区","长乐区"],"厦门市":["思明区","湖里区","集美区","海沧区","同安区","翔安区"],"泉州市":["鲤城区","丰泽区","洛江区","泉港区","晋江市","石狮市"]},
-    "江西省":{"南昌市":["东湖区","西湖区","青云谱区","青山湖区","新建区","红谷滩区"],"赣州市":["章贡区","南康区","赣县区"]},
-    "山东省":{"济南市":["历下区","市中区","槐荫区","天桥区","历城区","长清区","章丘区"],"青岛市":["市南区","市北区","李沧区","崂山区","黄岛区","城阳区","即墨区"],"烟台市":["芝罘区","福山区","牟平区","莱山区"]},
-    "河南省":{"郑州市":["中原区","二七区","管城回族区","金水区","惠济区","上街区","郑东新区"],"洛阳市":["老城区","西工区","瀍河区","涧西区","洛龙区"],"开封市":["龙亭区","顺河区","鼓楼区","禹王台区","祥符区"]},
     "湖北省":{"武汉市":["江岸区","江汉区","硚口区","汉阳区","武昌区","青山区","洪山区","东西湖区","汉南区","蔡甸区","江夏区","黄陂区"],"宜昌市":["西陵区","伍家岗区","点军区","猇亭区","夷陵区"]},
     "湖南省":{"长沙市":["芙蓉区","天心区","岳麓区","开福区","雨花区","望城区"],"株洲市":["荷塘区","芦淞区","石峰区","天元区"],"衡阳市":["珠晖区","雁峰区","石鼓区","蒸湘区"]},
     "广东省":{"广州市":["越秀区","荔湾区","海珠区","天河区","白云区","黄埔区","番禺区","花都区","南沙区","从化区","增城区"],"深圳市":["罗湖区","福田区","南山区","宝安区","龙岗区","盐田区","龙华区","坪山区","光明区"],"珠海市":["香洲区","斗门区","金湾区"],"佛山市":["禅城区","南海区","顺德区","三水区","高明区"],"东莞市":["南城街道","莞城街道","东城街道","万江街道","虎门镇","长安镇","厚街镇"],"中山市":["石岐街道","东区街道","西区街道","南区街道","火炬开发区"]},
@@ -803,8 +721,6 @@
     if (prov) setEditRegion(prov, city, dist);
   });
 
-  function showCopyright() { document.getElementById('copyrightModal').classList.add('show'); }
-  function closeCopyright() { document.getElementById('copyrightModal').classList.remove('show'); }
 </script>
 </body>
 </html>

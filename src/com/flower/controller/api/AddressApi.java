@@ -72,13 +72,14 @@ public class AddressApi extends ApiBaseServlet {
                 String detailAddress = req.getParameter("detailAddress");
                 Address addr = addressDao.findById(id);
                 if (addr == null || addr.getUserId() != uid) { fail(resp, 404, "地址不存在"); return; }
-                addr.setReceiverName(receiverName);
-                addr.setReceiverPhone(receiverPhone);
-                addr.setProvince(province);
-                addr.setCity(city);
-                addr.setDistrict(district);
-                addr.setDetailAddress(detailAddress);
-                if ("1".equals(req.getParameter("isDefault"))) addr.setDefault(true);
+                if (receiverName != null && !receiverName.isEmpty()) addr.setReceiverName(receiverName);
+                if (receiverPhone != null && !receiverPhone.isEmpty()) addr.setReceiverPhone(receiverPhone);
+                if (province != null && !province.isEmpty()) addr.setProvince(province);
+                if (city != null && !city.isEmpty()) addr.setCity(city);
+                if (district != null && !district.isEmpty()) addr.setDistrict(district);
+                if (detailAddress != null && !detailAddress.isEmpty()) addr.setDetailAddress(detailAddress);
+                String isDefStr = req.getParameter("isDefault");
+                addr.setDefault("1".equals(isDefStr) || "true".equalsIgnoreCase(isDefStr));
                 addressDao.update(addr);
                 ok(resp, "修改成功", null);
             }

@@ -42,7 +42,7 @@ public class User implements Serializable {
         this.pass = pass;
         this.tel = tel;
         this.email = email;
-        this.gender = "未知";
+        this.gender = "保密";
         this.state = "可用";
         this.role = "用户";
         this.jf = 0;

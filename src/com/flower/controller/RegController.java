@@ -124,7 +124,7 @@ public class RegController extends HttpServlet {
             if (saved != null) {
                 jfDao.addLog(saved.getId(), 200, "register", "新用户注册赠送200积分");
             }
-            resp.sendRedirect("login.jsp?registered=1");
+            resp.sendRedirect("login?registered=1");
         } else {
             req.setAttribute("error", "注册失败，请稍后重试");
             preserveFormData(req, username, tel, email);

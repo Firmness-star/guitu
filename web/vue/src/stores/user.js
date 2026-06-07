@@ -8,11 +8,29 @@ export const useUserStore = defineStore('user', {
     role: '',
     email: '',
     phone: '',
+    gender: '',
     avatar: '',
     jf: 0,
+    createTime: '',
+    lastLoginTime: '',
     loggedIn: false
   }),
   actions: {
+    _applyProfile(data) {
+      Object.assign(this, {
+        id: data.id,
+        username: data.username,
+        role: data.role,
+        email: data.email || '',
+        phone: data.tel || data.phone || '',
+        gender: data.gender || '',
+        avatar: data.avatar || '',
+        jf: data.jf || 0,
+        createTime: data.createTime || '',
+        lastLoginTime: data.lastLoginTime || '',
+        loggedIn: true
+      })
+    },
     async login(username, password, verifyCode) {
       const body = new URLSearchParams()
       body.append('username', username)
@@ -20,7 +38,7 @@ export const useUserStore = defineStore('user', {
       body.append('verifyCode', verifyCode)
       const res = await post('/login', body)
       if (res.code === 200) {
-        Object.assign(this, { ...res.data, loggedIn: true })
+        this._applyProfile(res.data)
       }
       return res
     },
@@ -34,25 +52,30 @@ export const useUserStore = defineStore('user', {
     async fetchProfile() {
       const res = await get('/user')
       if (res.code === 200) {
-        Object.assign(this, { ...res.data, loggedIn: true })
+        this._applyProfile(res.data)
       }
       return res
     },
-    async updateProfile(tel, email) {
-      const body = new URLSearchParams()
-      body.append('action', 'updateInfo')
-      body.append('tel', tel)
-      body.append('email', email)
-      return await put('/user', body)
+    async updateProfile(tel, email, gender) {
+      return await post('/user', {
+        action: 'updateInfo',
+        tel: tel,
+        email: email,
+        gender: gender || ''
+      })
     },
     async changePwd(oldPassword, newPassword) {
-      const body = new URLSearchParams()
-      body.append('action', 'changePwd')
-      body.append('oldPassword', oldPassword)
-      body.append('newPassword', newPassword)
-      return await put('/user', body)
+      return await post('/user', {
+        action: 'changePwd',
+        oldPassword: oldPassword,
+        newPassword: newPassword
+      })
     },
-    logout() {
+    async fetchJfLogs(limit = 50) {
+      return await get('/user', { action: 'jfLogs', limit })
+    },
+    async logout() {
+      try { await post('/logout') } catch {}
       this.$reset()
     }
   }

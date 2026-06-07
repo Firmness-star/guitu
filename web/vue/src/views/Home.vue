@@ -49,7 +49,19 @@ async function fetchHomeData() {
       products.value = productRes.data.list || []
       categories.value = productRes.data.categories || []
       hotProducts.value = productRes.data.hotProducts || []
-      banners.value = productRes.data.banners || []
+      // 如果没有 banner 或 banner 为空，用热卖商品作为轮播
+      const b = productRes.data.banners || []
+      if (b.length > 0) {
+        banners.value = b
+      } else if (hotProducts.value.length > 0) {
+        banners.value = hotProducts.value.slice(0, 5).map(p => ({
+          id: p.id,
+          imgUrl: p.pic,
+          productId: p.id
+        }))
+      } else {
+        banners.value = []
+      }
       startBannerAutoplay()
     }
   } catch (err) {
@@ -140,7 +152,8 @@ onUnmounted(() => {
             :style="{ opacity: idx === currentBanner ? 1 : 0 }"
             @click="goBanner(banner)"
           >
-            <img :src="fixImg(banner.imgUrl)" alt="轮播海报" />
+            <img :src="fixImg(banner.imgUrl)" alt="轮播海报"
+              @error="$event.target.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%221200%22 height=%22380%22><defs><linearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%22100%25%22 y2=%22100%25%22><stop offset=%220%25%22 stop-color=%22%23e74c3c%22/><stop offset=%22100%25%22 stop-color=%22%23ff6b6b%22/></linearGradient></defs><rect fill=%22url(%23g)%22 width=%221200%22 height=%22380%22 rx=%2212%22/><text x=%22600%22 y=%22200%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2260%22 font-weight=%22700%22>🌸 归途花店</text><text x=%22600%22 y=%22250%22 text-anchor=%22middle%22 fill=%22rgba(255,255,255,0.8)%22 font-size=%2220%22>让每一束花传递温暖</text></svg>'" />
           </div>
         </div>
         <div v-if="banners.length > 1" class="banner-dots">
@@ -243,7 +256,6 @@ onUnmounted(() => {
 
 /* ============= Category ============= */
 .category-section { margin:12px;background:#fff;border-radius:12px;padding:8px 0; }
-
 /* ============= Section Title ============= */
 .section-title-bar { display:flex;align-items:center;justify-content:space-between;padding:13px 14px 8px; }
 .section-title { font-size:18px;font-weight:700;color:#333; }
@@ -288,7 +300,7 @@ onUnmounted(() => {
 .back-top-btn { position:fixed;bottom:80px;right:16px;width:44px;height:44px;background:#e74c3c;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.2);cursor:pointer;z-index:99; }
 .product-ribbon { position:absolute;top:6px;right:-28px;width:90px;background:linear-gradient(135deg,#e74c3c,#ff6b6b);color:#fff;text-align:center;padding:3px 0;font-size:11px;font-weight:600;transform:rotate(45deg);z-index:1; }
 .product-ribbon-warn { background:linear-gradient(135deg,#f39c12,#e67e22); }
-.product-info { padding:10px; }
+.product-info { padding:10px; padding-right:48px; }
 .product-name { font-size:14px;font-weight:600;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
 .product-desc { font-size:12px;color:#999;line-height:1.4;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
 .product-bottom { display:flex;align-items:center;justify-content:space-between;margin-top:8px; }

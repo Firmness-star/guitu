@@ -4,7 +4,7 @@
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <c:if test="${empty sessionScope.userId}">
-  <c:redirect url="login.jsp?redirect=favorite"/>
+  <c:redirect url="login?redirect=favorite"/>
 </c:if>
 
 <!DOCTYPE html>
@@ -88,16 +88,7 @@
 </head>
 <body>
 
-<nav style="background:#fff;position:sticky;top:0;z-index:1000;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:0 20px;height:64px;display:flex;align-items:center;justify-content:space-between;">
-  <a href="index.jsp" style="font-weight:700;font-size:20px;background:linear-gradient(135deg,#e74c3c,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none;">归途</a>
-  <div style="display:flex;gap:16px;align-items:center;font-size:14px;">
-    <c:if test="${not empty sessionScope.username}"><span style="color:#666;">${sessionScope.username}</span><a href="logout" style="color:#555;text-decoration:none;">退出</a></c:if>
-    <a href="cart" style="color:#555;text-decoration:none;"><i class="bi bi-cart3"></i> 购物车</a>
-    <a href="orders" style="color:#555;text-decoration:none;">订单</a>
-    <a href="usercenter" style="color:#555;text-decoration:none;">个人中心</a>
-    <c:if test="${sessionScope.userRole == '管理员'}"><a href="admin/index" style="color:#e74c3c;text-decoration:none;font-weight:600;">管理</a></c:if>
-  </div>
-</nav>
+<jsp:include page="common/navbar.jsp"/>
 
 <div class="fav-container">
   <div class="page-title">
@@ -110,7 +101,7 @@
       <div class="empty-state">
         <i class="bi bi-heartbreak"></i>
         <p>还没有收藏任何商品</p>
-        <a href="index.jsp" class="btn btn-danger mt-2">去逛逛</a>
+        <a href="index" class="btn btn-danger mt-2">去逛逛</a>
       </div>
     </c:when>
 

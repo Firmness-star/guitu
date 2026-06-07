@@ -1,4 +1,4 @@
-package com.flower.controller;
+package com.flower.controller.api;
 
 import com.flower.dao.UserDao;
 import org.apache.commons.fileupload.FileItem;
@@ -7,41 +7,33 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
-@WebServlet("/avatar")
-public class AvatarController extends HttpServlet {
+@WebServlet("/api/avatar")
+public class AvatarApi extends ApiBaseServlet {
+
+    private UserDao userDao = new UserDao();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
 
-        HttpSession session = req.getSession();
-        Integer userId = (Integer) session.getAttribute("userId");
-        if (userId == null) {
-            resp.sendRedirect("login");
-            return;
-        }
+        Integer userId = getUserId(req);
+        if (userId == null) { unauth(resp); return; }
 
-        // 检查是否是 multipart 请求（文件上传）
         if (!ServletFileUpload.isMultipartContent(req)) {
-            session.setAttribute("updateError", "请选择要上传的头像文件");
-            resp.sendRedirect("usercenter");
+            fail(resp, 400, "请选择要上传的头像文件");
             return;
         }
 
         try {
             DiskFileItemFactory factory = new DiskFileItemFactory();
             ServletFileUpload upload = new ServletFileUpload(factory);
-            upload.setSizeMax(2 * 1024 * 1024); // 2MB 限制
+            upload.setSizeMax(2 * 1024 * 1024); // 2MB
 
             List<FileItem> items = upload.parseRequest(req);
             for (FileItem item : items) {
@@ -49,12 +41,10 @@ public class AvatarController extends HttpServlet {
                     String fileName = item.getName();
                     String ext = fileName.substring(fileName.lastIndexOf(".")).toLowerCase();
                     if (!ext.equals(".jpg") && !ext.equals(".jpeg") && !ext.equals(".png") && !ext.equals(".gif")) {
-                        session.setAttribute("updateError", "仅支持 JPG、PNG、GIF 格式的图片");
-                        resp.sendRedirect("usercenter");
+                        fail(resp, 400, "仅支持 JPG、PNG、GIF 格式的图片");
                         return;
                     }
 
-                    // 保存到 uploads 目录
                     String uploadDir = getServletContext().getRealPath("/") + "uploads";
                     File dir = new File(uploadDir);
                     if (!dir.exists()) dir.mkdirs();
@@ -63,22 +53,19 @@ public class AvatarController extends HttpServlet {
                     File savedFile = new File(dir, savedName);
                     item.write(savedFile);
 
-                    // 更新数据库
-                    UserDao userDao = new UserDao();
                     String avatarPath = "uploads/" + savedName;
                     userDao.updateAvatar(userId, avatarPath);
 
-                    // 更新 session 中的头像信息（用于即时显示）
-                    session.setAttribute("userAvatar", avatarPath);
-                    session.setAttribute("updateSuccess", "头像上传成功");
-                    break;
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("avatar", avatarPath);
+                    ok(resp, "头像上传成功", data);
+                    return;
                 }
             }
+            fail(resp, 400, "未选择文件");
         } catch (Exception e) {
-            System.err.println("[CTRL] " + e.getMessage());
-            session.setAttribute("updateError", "头像上传失败：" + e.getMessage());
+            System.err.println("[AvatarApi] " + e.getMessage());
+            fail(resp, 500, "头像上传失败");
         }
-
-        resp.sendRedirect("usercenter");
     }
 }

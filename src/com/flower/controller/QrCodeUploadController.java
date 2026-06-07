@@ -25,7 +25,7 @@ public class QrCodeUploadController extends HttpServlet {
         req.setCharacterEncoding("UTF-8");
         HttpSession session = req.getSession();
         if (!"管理员".equals(session.getAttribute("userRole"))) {
-            resp.sendRedirect("login.jsp");
+            resp.sendRedirect("login");
             return;
         }
 

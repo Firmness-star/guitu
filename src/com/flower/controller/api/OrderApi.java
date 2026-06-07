@@ -4,10 +4,12 @@ import com.flower.dao.OrderDao;
 import com.flower.dao.AddressDao;
 import com.flower.dao.UserDao;
 import com.flower.dao.CartDao;
+import com.flower.dao.SpDao;
 import com.flower.util.TransactionManager;
 import com.flower.entity.Order;
 import com.flower.entity.CartItem;
 import com.flower.entity.Address;
+import com.flower.entity.Sp;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -22,6 +24,7 @@ public class OrderApi extends ApiBaseServlet {
     private AddressDao addressDao = new AddressDao();
     private UserDao userDao = new UserDao();
     private CartDao cartDao = new CartDao();
+    private SpDao spDao = new SpDao();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -30,7 +33,11 @@ public class OrderApi extends ApiBaseServlet {
         List<Order> orders = orderDao.findByUserId(uid);
         String status = req.getParameter("status");
         if (status != null && !status.isEmpty()) {
-            orders.removeIf(o -> !status.equals(o.getStatus()));
+            if ("已收货".equals(status)) {
+                orders.removeIf(o -> !"已收货".equals(o.getStatus()) && !"已完成".equals(o.getStatus()));
+            } else {
+                orders.removeIf(o -> !status.equals(o.getStatus()));
+            }
         }
         ok(resp, orders);
     }
@@ -51,15 +58,35 @@ public class OrderApi extends ApiBaseServlet {
             fail(resp, 400, "请填写完整的收货信息"); return;
         }
 
-        List<CartItem> cart = cartDao.findByUserId(uid);
+        // directBuy mode: use productId + quantity from query
+        String action = req.getParameter("action");
         List<CartItem> selected = new ArrayList<>();
         double total = 0;
         int count = 0;
-        for (CartItem item : cart) {
-            if (item.isSelected()) {
-                selected.add(item);
-                total += item.getProductPrice() * item.getQuantity();
-                count += item.getQuantity();
+
+        if ("directBuy".equals(action)) {
+            int pid = Integer.parseInt(req.getParameter("productId"));
+            int qty = Integer.parseInt(req.getParameter("quantity"));
+            Sp p = spDao.findById(pid);
+            if (p == null || p.getStock() < qty) { fail(resp, 400, "商品不存在或库存不足"); return; }
+            CartItem item = new CartItem();
+            item.setProductId(p.getId());
+            item.setProductName(p.getName());
+            item.setProductPic(p.getPic());
+            item.setProductPrice(p.getPrice());
+            item.setQuantity(qty);
+            item.setSelected(true);
+            selected.add(item);
+            total = p.getPrice() * qty;
+            count = qty;
+        } else {
+            List<CartItem> cart = cartDao.findByUserId(uid);
+            for (CartItem item : cart) {
+                if (item.isSelected()) {
+                    selected.add(item);
+                    total += item.getProductPrice() * item.getQuantity();
+                    count += item.getQuantity();
+                }
             }
         }
         if (selected.isEmpty()) { fail(resp, 400, "请选择商品"); return; }
@@ -74,7 +101,7 @@ public class OrderApi extends ApiBaseServlet {
                 if (usePoints > 0) {
                     int userJf = userDao.getJf(uid);
                     if (usePoints > userJf) usePoints = userJf;
-                    int maxDeduct = (int)(total * 50);  // 50% of total in points
+                    int maxDeduct = (int)(total * 100);  // max 100% of total in points
                     if (usePoints > maxDeduct) usePoints = maxDeduct;
                     actualAmount = total - usePoints / 100.0;
                     if (actualAmount < 0) actualAmount = 0;
@@ -101,7 +128,7 @@ public class OrderApi extends ApiBaseServlet {
             int earnJf = (int)(actualAmount * 0.1);
             if (earnJf > 0) userDao.addJf(uid, earnJf);
 
-            cartDao.clearCart(uid);
+            if (!"directBuy".equals(action)) cartDao.clearCart(uid);
             Map<String, Object> data = new HashMap<>();
             data.put("orderId", order.getOrderId());
             data.put("amount", order.getTotalAmount());

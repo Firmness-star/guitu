@@ -208,6 +208,35 @@ public class SpDao {
         return 0;
     }
 
+    /**
+     * 扣减商品库存（事务内使用，防止超卖）
+     * @return true 扣减成功，false 库存不足
+     */
+    public boolean deductStock(int productId, int quantity, Connection conn) throws SQLException {
+        if (productId <= 0 || quantity <= 0) return false;
+        String sql = "UPDATE product SET stock = stock - ?, sales = sales + ? WHERE id = ? AND stock >= ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, quantity);
+            pstmt.setInt(2, quantity);
+            pstmt.setInt(3, productId);
+            pstmt.setInt(4, quantity);
+            return pstmt.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * 返还商品库存（订单取消/退款时使用）
+     */
+    public boolean restoreStock(int productId, int quantity, Connection conn) throws SQLException {
+        if (productId <= 0 || quantity <= 0) return false;
+        String sql = "UPDATE product SET stock = stock + ? WHERE id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, quantity);
+            pstmt.setInt(2, productId);
+            return pstmt.executeUpdate() > 0;
+        }
+    }
+
     public boolean batchUpdateStatus(List<Integer> ids, int status) {
         if (ids == null || ids.isEmpty()) return false;
         String sql = "UPDATE product SET status = ? WHERE id = ?";

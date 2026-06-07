@@ -83,7 +83,7 @@
         <button type="submit" class="register-btn" id="submitBtn">注 册</button>
     </form>
     <div class="text-center mt-4 text-muted">
-        已有账户？<a href="login.jsp" style="color:var(--primary-red);" class="fw-medium">立即登录</a> | <a href="index.jsp" style="color:var(--primary-red);" class="fw-medium">返回首页</a>
+        已有账户？<a href="login" style="color:var(--primary-red);" class="fw-medium">立即登录</a> | <a href="index" style="color:var(--primary-red);" class="fw-medium">返回首页</a>
     </div>
 </div>
 

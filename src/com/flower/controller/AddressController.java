@@ -41,7 +41,7 @@ public class AddressController extends HttpServlet {
         Integer userId = (Integer) session.getAttribute("userId");
 
         if (username == null || userId == null) {
-            resp.sendRedirect("login.jsp?redirect=address");
+            resp.sendRedirect("login?redirect=address");
             return;
         }
 
@@ -68,7 +68,7 @@ public class AddressController extends HttpServlet {
         Integer userId = (Integer) session.getAttribute("userId");
 
         if (username == null || userId == null) {
-            resp.sendRedirect("login.jsp?redirect=address");
+            resp.sendRedirect("login?redirect=address");
             return;
         }
 
